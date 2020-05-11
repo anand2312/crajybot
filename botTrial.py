@@ -13,7 +13,7 @@ client =  discord.Client()
 
 @client.event
 async def on_message(message):
-    if message.content == "popi":
+    if message.content == "popi" or "Popi":
         await message.channel.send("poopi do be lookin poopie")
 
 
