@@ -4,20 +4,21 @@
 
 print("Popi do be lookin kinda poopi")
 
-class nigga(self):
+class nigga:
   
   def __init__(self,first,last):
     self.first=first
     self.last=last
   
-  def full_name:
+  def full_name(self):
     f_name="{} {}".format(self.first,self.last)
+    return f_name
     
-  def is_nigga(self):
-    if f_name="Shriram Shekar":
+  def is_nigga(self,name):
+    if name=="Shriram Shekar":
       return True
 
 user1=nigga("Shriram","Shekar")
-user1.full_name()
-if user1.is__nigga:
+name = user1.full_name()
+if user1.is_nigga(name):
   print("popi")
