@@ -14,7 +14,7 @@ client =  discord.Client()
 @client.event
 async def on_message(message):
     if message.content == "popi":
-        await message.channel.send("poopi really do be poopie tho")
+        await message.channel.send("poopi do be lookin poopie")
 
 
 client.run(token)
