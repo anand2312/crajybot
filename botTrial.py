@@ -12,6 +12,9 @@ token_ = "NzA5NDA3MjY4NDg3MDM3MDE5.XrllLQ.FbL2vivvNxjxPT-wOfAvH32fK4QZ"
 token = token_[:len(token_)-1]
 
 client =  discord.Client()
+@client.event
+async def on_ready():    #sends this message when bot starts working in #bot-tests
+    await client.get_channel(703141348131471440).send("I'm ready to fuck your mom.")
 
 @client.event
 async def on_message(message):
@@ -27,22 +30,16 @@ async def on_message(message):
                 await message.channel.send(f"""Number of members = {guild_id.member_count}""")
 
             elif message.content.lower() == "$popi":   #popi
-                await message.channel.send("poopie really do be poopie though")
+                n = random.randint(1,2)
+                if n == 1:
+                    await message.channel.send(f"poopi really do be poopie though")
+                elif n == 2:
+                    await message.channel.send(f"{message.author.mention} is a poopie?oh no......")
 
             elif message.content.lower() == "$sexrating":   #returns random sex rating value b/w 1 and 5
-                await message.channel.send(f"{random.randint(1,5)} {client.get_emoji(708951950162395166)}")
-
-            elif message.content.lower() == "$reversepopi":  #testing message.author
-                await message.channel.send(f"{message.author} turns out to be poopie? oh nooo.....")
-
-            
-
-            
-            
+                await message.channel.send(f"{random.randint(1,5)} {client.get_emoji(703648807271006379)}")
 
     
-
-
 
 client.run(token)
 
