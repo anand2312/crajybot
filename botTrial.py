@@ -58,6 +58,7 @@ async def balance(ctx):
     response.add_field(name="Bank balance : ",value=f"{data_bal['bal']}", inline = False)
     response.add_field(name="Debt : ",value=f"{-(data_loan["debt"])}", inline = False)
     response.add_field(name="Net Worth : ",value=f"{data_bal['bal']-data_loan["debt"]}", inline = False)
+                       #all this is for 1) in Bank, 2) Debt, 3) Total bal
 
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
@@ -81,7 +82,8 @@ async def loan(ctx,loan_val:int):
     response = discord.Embed(title=str(ctx.message.author),description=f"You took a loan of {loan_val}!",colour=discord.Colour.red())
 
     db.economyvalues.update_one({"name":str(ctx.message.author)} , {'$set':{"debt" : loan_val + curr_loan,"bal" : data_loan["bal"] + loan_val}})
-
+    
+    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
 bot.run(token)
 
