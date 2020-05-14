@@ -58,7 +58,7 @@ async def balance(ctx):
     response.add_field(name="Bank balance : ",value=f"{data_bal['bal']}", inline = False)
     response.add_field(name="Debt : ",value=f"{-(data_loan["debt"])}", inline = False)
     response.add_field(name="Net Worth : ",value=f"{data_bal['bal']-data_loan["debt"]}", inline = False)
-                       #all this is for 1) in Bank, 2) Debt, 3) Total bal
+    #all this is for 1) in Bank, 2) Debt, 3) Total bal
 
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
@@ -74,14 +74,15 @@ async def work(ctx):
  
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
-@bot.command(name="rl" or "req-loan" or "request-loan")
+@bot.command(name="rl" or "req-loan" or "request-loan") #self explanatory tbh
 async def loan(ctx,loan_val:int):
-    data_loan=db.economyvalues.find_one({"name":str(ctx.message.author)})
-    curr_loan=data_loan["debt"]
+    data_loan=db.economyvalues.find_one({"name":str(ctx.message.author)}) #Accessing values from mongo server
+    curr_loan=data_loan["debt"] #Checking if any debt on the user
 
-    response = discord.Embed(title=str(ctx.message.author),description=f"You took a loan of {loan_val}!",colour=discord.Colour.red())
+    response = discord.Embed(title=str(ctx.message.author),description=f"You took a loan of {loan_val}!",colour=discord.Colour.red()) # red bc u did a dum dum
 
-    db.economyvalues.update_one({"name":str(ctx.message.author)} , {'$set':{"debt" : loan_val + curr_loan,"bal" : data_loan["bal"] + loan_val}})
+    db.economyvalues.update_one({"name":str(ctx.message.author)} , {'$set':{"debt" : loan_val + curr_loan,"bal" : data_loan["bal"] + loan_val}}) 
+    #updating debt and balance of user in mongo sever
     
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
