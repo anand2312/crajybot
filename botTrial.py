@@ -7,11 +7,7 @@ import os
 import random
 import discord 
 from discord.ext import commands
-from pymongo import MongoClient
-
-#mongodb initialization for economy stats
-client = MongoClient("mongodb+srv://shriram:a1s2d3f4g5@cluster0-efytb.gcp.mongodb.net/test?retryWrites=true&w=majority")
-db = client.botuserdata
+import json
 
 #bot token stuff; not to be messed with :linus_gun:
 token_ = "NzA5NDA3MjY4NDg3MDM3MDE5.XrllLQ.FbL2vivvNxjxPT-wOfAvH32fK4QZ"
@@ -52,37 +48,62 @@ async def help(ctx):
 
 @bot.command(name='bal')
 async def balance(ctx):
-    data_bal = db.economyvalues.find_one({"name":str(ctx.message.author)})
+    with open("economy-data.json","r") as data:
+        data_bal = json.load(data)
+        '''data_bal_str = data.readline()
+    data_bal = json.loads(data_bal_str)'''
+    for i in data_bal:
+        if i["user"] == str(ctx.message.author):
+            user_dict = i                 #gets right dictionary with all user vals from a list of dicts.
+    
+    networth = user_dict["bal"] - user_dict["debt"]
 
     response = discord.Embed(title=str(ctx.message.author), description="Your Balance is:")
-    response.add_field(name="Bank balance : ",value=f"{data_bal['bal']}", inline = False)
-    response.add_field(name="Debt : ",value=f"{-(data_loan["debt"])}", inline = False)
-    response.add_field(name="Net Worth : ",value=f"{data_bal['bal']-data_loan["debt"]}", inline = False)
+    response.add_field(name="Bank balance : ",value=f"{user_dict['bal']}", inline = False)
+    response.add_field(name="Debt : ",value=f"{user_dict['debt'] * (-1)}", inline = False)
+    response.add_field(name="Net Worth : ",value=networth, inline = False)
                        #all this is for 1) in Bank, 2) Debt, 3) Total bal
 
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
 @bot.command(name='work')
 async def work(ctx):
-    data_earn = db.economyvalues.find_one({"name":str(ctx.message.author)})
-    curr_bal = data_earn["bal"]
-    rand_val = random.randint(35,150)
+    data = open("economy-data.json","r")
+    data_bal = json.loads(data.readline())
+    data.close()
+    for i in data_bal:
+        if i["user"] == str(ctx.message.author):
+            user_index = data_bal.index(i)
     
+
+    rand_val = random.randint(35,150)
+    print(data_bal[user_index]["bal"],type(data_bal[user_index]["bal"]))
+    data_bal[user_index]["bal"] = data_bal[user_index]["bal"] + rand_val
+    data = open("economy-data.json","w")
+    print(data_bal)
+    json.dump(data_bal,data)    #changing value in main json file as well
+    data.close()
+
     response = discord.Embed(title=str(ctx.message.author),description=f"You earned {rand_val}",colour=discord.Colour.green())
 
-    db.economyvalues.update_one({"name":str(ctx.message.author)} , {'$set':{"bal" : rand_val + curr_bal}})
  
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
-@bot.command(name="rl" or "req-loan" or "request-loan")
+@bot.command(name="req-loan")    #beta loan command! repayment not yet made
 async def loan(ctx,loan_val:int):
-    data_loan=db.economyvalues.find_one({"name":str(ctx.message.author)})
-    curr_loan=data_loan["debt"]
+    with open("economy-data.json","r") as data:
+        loan_data = json.load(data)
+    for i in loan_data:
+        if i["user"] == str(ctx.message.author):
+            user_index = loan_data.index(i)
 
     response = discord.Embed(title=str(ctx.message.author),description=f"You took a loan of {loan_val}!",colour=discord.Colour.red())
 
-    db.economyvalues.update_one({"name":str(ctx.message.author)} , {'$set':{"debt" : loan_val + curr_loan,"bal" : data_loan["bal"] + loan_val}})
+    loan_data[user_index]["debt"] = loan_data[user_index]["debt"] + loan_val
+    loan_data[user_index]["bal"] = loan_data[user_index]["bal"] + loan_val
     
+    with open("economy-data.json","w") as data:
+        json.dump(loan_data,data)
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
 bot.run(token)
