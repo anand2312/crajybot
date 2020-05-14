@@ -97,7 +97,7 @@ async def loan(ctx,loan_val:int):
         if i["user"] == str(ctx.message.author):
             user_index = loan_data.index(i)
 
-    response = discord.Embed(title=str(ctx.message.author),description=f"You took a loan of {loan_val}!",colour=discord.Colour.red())
+    response = discord.Embed(title=str(ctx.message.author),description=f"You took a loan of {loan_val}!",colour=discord.Colour.red()) # red bc u did a dum dum
 
     loan_data[user_index]["debt"] = loan_data[user_index]["debt"] + loan_val
     loan_data[user_index]["bal"] = loan_data[user_index]["bal"] + loan_val
