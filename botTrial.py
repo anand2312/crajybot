@@ -50,14 +50,12 @@ async def help(ctx):
 async def balance(ctx):
     with open("economy-data.json","r") as data:
         data_bal = json.load(data)
-        '''data_bal_str = data.readline()
-    data_bal = json.loads(data_bal_str)'''
     for i in data_bal:
         if i["user"] == str(ctx.message.author):
             user_dict = i                 #gets right dictionary with all user vals from a list of dicts.
     
     networth = user_dict["bal"] - user_dict["debt"]
-
+    
     response = discord.Embed(title=str(ctx.message.author), description="Your Balance is:")
     response.add_field(name="Bank balance : ",value=f"{user_dict['bal']}", inline = False)
     response.add_field(name="Debt : ",value=f"{user_dict['debt'] * (-1)}", inline = False)
@@ -66,30 +64,36 @@ async def balance(ctx):
 
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
+'''@balance.error
+async def bal_error(ctx,error):
+    pass'''
+
+
+
+
 @bot.command(name='work')
+@commands.cooldown(1, 60, commands.BucketType.user)            #remember to increase the cooldown to at least an hour!
 async def work(ctx):
-    data = open("economy-data.json","r")
-    data_bal = json.loads(data.readline())
-    data.close()
-    for i in data_bal:
-        if i["user"] == str(ctx.message.author):
-            user_index = data_bal.index(i)
+        data = open("economy-data.json","r")
+        data_bal = json.loads(data.readline())
+        data.close()
+        for i in data_bal:
+            if i["user"] == str(ctx.message.author):
+                user_index = data_bal.index(i)
+        
+
+        rand_val = random.randint(35,150)
+        data_bal[user_index]["bal"] = data_bal[user_index]["bal"] + rand_val
+        data = open("economy-data.json","w")
+        json.dump(data_bal,data)    #changing value in main json file as well
+        data.close()
+
+        response = discord.Embed(title=str(ctx.message.author),description=f"You earned {rand_val}",colour=discord.Colour.green())
+
     
+        if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
-    rand_val = random.randint(35,150)
-    print(data_bal[user_index]["bal"],type(data_bal[user_index]["bal"]))
-    data_bal[user_index]["bal"] = data_bal[user_index]["bal"] + rand_val
-    data = open("economy-data.json","w")
-    print(data_bal)
-    json.dump(data_bal,data)    #changing value in main json file as well
-    data.close()
-
-    response = discord.Embed(title=str(ctx.message.author),description=f"You earned {rand_val}",colour=discord.Colour.green())
-
- 
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
-
-@bot.command(name="req-loan")    #beta loan command! repayment not yet made
+@bot.command(name="req-loan", aliases = ["rl","request-loan"])    #beta loan command! repayment not yet made
 async def loan(ctx,loan_val:int):
     with open("economy-data.json","r") as data:
         loan_data = json.load(data)
@@ -105,6 +109,12 @@ async def loan(ctx,loan_val:int):
     with open("economy-data.json","w") as data:
         json.dump(loan_data,data)
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
+
+@work.error
+async def work_error(ctx,error):             #only says "CommandOnCooldown", not the time remaining
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.message.channel.send(commands.CommandOnCooldown.__name__)
+
 
 bot.run(token)
 
