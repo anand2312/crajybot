@@ -6,7 +6,8 @@ econ_stats =[
         "inv" : [
             {"stock" : 0}
         ],
-        "debt" : 0
+        "debt" : 0,
+        "zodiac_sign" : ""
 
     },
     {
@@ -15,7 +16,8 @@ econ_stats =[
         "inv" : [
             {"stock" : 0}
         ],
-        "debt" : 0
+        "debt" : 0,
+        "zodiac_sign" : ""
     },
     {
         "user" : "Foxwid#8333",
@@ -23,7 +25,8 @@ econ_stats =[
         "inv" : [
             {"stock" : 0}
         ],
-        "debt" : 0
+        "debt" : 0,
+        "zodiac_sign" : ""
     },
     {
         "user" : "MANDARIN#8024",
@@ -31,7 +34,8 @@ econ_stats =[
         "inv" : [
             {"stock" : 0}
         ],
-        "debt" : 0
+        "debt" : 0,
+        "zodiac_sign" : ""
     },
     {
         "user" : "humanboiii#5837",
@@ -39,7 +43,8 @@ econ_stats =[
         "inv" : [
             {"stock" : 0}
         ],
-        "debt" : 0
+        "debt" : 0,
+        "zodiac_sign" : ""
     },
     {
         "user" : "Windsmith#4272",
@@ -47,7 +52,8 @@ econ_stats =[
         "inv" : [
             {"stock" : 0}
         ],
-        "debt" : 0
+        "debt" : 0,
+        "zodiac_sign" : ""
     },
     {
         "user" : "BOOOZ#4084",
@@ -55,7 +61,8 @@ econ_stats =[
         "inv" : [
             {"stock" : 0}
         ],
-        "debt" : 0
+        "debt" : 0,
+        "zodiac_sign" : ""
     },
     {
         "user" : "CrashGamer#7883",
@@ -63,7 +70,8 @@ econ_stats =[
         "inv" : [
             {"stock" : 0}
         ],
-        "debt" : 0
+        "debt" : 0,
+        "zodiac_sign" : ""
     },
     {
         "user" : "maafi_username#7152",
@@ -71,7 +79,8 @@ econ_stats =[
         "inv" : [
             {"stock" : 0}
         ],
-        "debt" : 0
+        "debt" : 0,
+        "zodiac_sign" : ""
     },
     {
         "user" : "prakhar5723#3126",
@@ -79,7 +88,8 @@ econ_stats =[
         "inv" : [
             {"stock" : 0}
         ],
-        "debt" : 0
+        "debt" : 0,
+        "zodiac_sign" : ""
     },
     {
         "user" : "smelly farts#9535",
@@ -87,7 +97,8 @@ econ_stats =[
         "inv" : [
             {"stock" : 0}
         ],
-        "debt" : 0
+        "debt" : 0,
+        "zodiac_sign" : ""
     },
     {
         "user" : "Sugeeth2401#3350",
@@ -95,7 +106,8 @@ econ_stats =[
         "inv" : [
             {"stock" : 0}
         ],
-        "debt" : 0
+        "debt" : 0,
+        "zodiac_sign" : ""
     },
     {
         "user" : "shreyash0368#2025",
@@ -103,10 +115,11 @@ econ_stats =[
         "inv" : [
             {"stock" : 0}
         ],
-        "debt" : 0
+        "debt" : 0,
+        "zodiac_sign" : ""
     }
 ]
 
-with open("economy-user-data.json","w+") as data:
+with open("economy-data.json","w+") as data:
     json.dump(econ_stats,data)
 
