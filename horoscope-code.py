@@ -1,64 +1,64 @@
 import json
 horoscopes=[
     {
-        "date_low" : '21-03',
-        "date_high" : '19-04',
+        "day_low" : 80,
+        "day_high" : 110,
         "Zodiac" : "Aries"
     },
     {
-        "date_low" : '20-04',
-        "date_high" : '20-05',
+        "day_low" : 111,
+        "day_high" : 141,
         "Zodiac" : "Taurus" 
     },
     {
-        "date_low" : '21-05',
-        "date_high" : '20-06',
+        "day_low" : 142,
+        "day_high" : 172,
         "Zodiac" : "Gemini"
     },
     {
-        "date_low" : '21-06',
-        "date_high" : '22-07',
+        "day_low" : 173,
+        "day_high" : 204,
         "Zodiac" : "Cancer"
     },
     {
-        "date_low" : '23-07',
-        "date_high" : '22-08',
+        "day_low" : 205,
+        "day_high" : 235,
         "Zodiac" : "Leo"
     },
     {
-        "date_low" : '23-08',
-        "date_high" : '22-09',
+        "day_low" : 236,
+        "day_high" : 266,
         "Zodiac" : "Virgo"
     },
     {
-        "date_low" : '23-09',
-        "date_high" : '22-10',
+        "day_low" : 267,
+        "day_high" : 296,
         "Zodiac" : "Libra"
     },
     {
-        "date_low" : '23-10',
-        "date_high" : '21-11',
+        "day_low" : 297,
+        "day_high" : 326,
         "Zodiac" : "Scorpio"
     },
         
     {
-        "date_low" : '22-11',
-        "date_high" : '21-12',
+        "day_low" : 327,
+        "day_high" : 356,
         "Zodiac" : "Sagittarius"
     },
     {
-        "date_low" : '22-12',
-        "date_high" : '19-01',
+        "day_low" : 357,
+        "day_high" : 385,
         "Zodiac" : "Capricorn"
     },
     {
-        "date_low" : '20-01',
-        "date_high" : '18-02',
+        "day_low" : 20,
+        "day_high" : 49,
         "Zodiac" : "Aquarius"
     },
     {
-        "date_low" : '19-02',
-        "date_high" : '20-03',
+        "day_low" : 50,
+        "day_high" : 79,
         "Zodiac" : "Pisces"
     }
     

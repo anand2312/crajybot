@@ -21,8 +21,6 @@ async def on_ready():
 @bot.command(name='horo-assign')
 async def assign_horoscope(ctx):
 
-
-
     def check(author):
         def inner_check(message):
             if message.author != author:
@@ -41,12 +39,22 @@ async def assign_horoscope(ctx):
     with open("horo-data.json","r") as data:
         data_horo = json.load(data)
     for i in data_horo:
-        if msg.content > i["date_low"] and int(msg.content) < i["date_high"]:
-            sign = i["Zodiac"]
+        if check_date(i,msg): sign = i["Zodiac"]
+
 
  
     response = discord.Embed(title='Horoscope',description=f'Congratulations! You are a {sign}')
     await ctx.message.channel.send(embed=response)
     
+def check_date(jsondata, authordata):
+    date = authordata.content.split('-')
+    days = [31,28,31,30,31,30,31,31,30,31,30,31]
+    sum = 0
+    for i in range(int(date[1])-1):
+        sum+=days[i]
+    sum+=int(date[0])
+    if 0<sum<19:sum+=366
+    if jsondata["day_low"]<=sum<=jsondata["day_high"]: return True
+
 bot.run(token)
     
