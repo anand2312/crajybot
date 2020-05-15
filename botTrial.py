@@ -115,6 +115,41 @@ async def work_error(ctx,error):             #only says "CommandOnCooldown", not
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.message.channel.send(commands.CommandOnCooldown.__name__)
 
+#ECONOMY COMMANDS FOR ADMINS AND MODS (REMOVE BOT_DEV ONCE BOT IS DONE)
+
+@bot.command(name="add-money",aliases=["am"])                  #gives admins, mods the permission to add money to their own bank (for now)
+@commands.has_role(admin=True,Moderators=True,bot_dev=True)
+async def add_money(ctx,add_money_val):
+    with open("economy-data.json","r") as data:
+        add_money_data = json.load(data)             #Anand pls fix the json part I just copied what u did before
+    for i in add_money_data:
+        if i["user"] == str(ctx.message.author):
+            user_index = add_money_data.index(i)
+
+    response = discord.Embed(title = str(ctx.message.author), description=f"Added {add_money_val} to {ctx.message.author}'s bank!'",colour=discord.Colour.green())
+    
+    add_money_data[user_index]["bal"] = add_money_data[user_index]["bal"] + add_money_val
+
+    with open("economy-data.json","w") as data:
+        json.dump(add_money_data,data)
+    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,enbed=response)
+
+@bot.command(name="remove-money",aliases=["rm"])                  #gives admins, mods the permission to remove money from their own bank (for now)
+@commands.has_role(admin=True,Moderators=True,bot_dev=True)
+async def remove_money(ctx,remove_money_val):
+    with open("economy-data.json","r") as data:
+        remove_money_data = json.load(data)             #Anand here too thank
+    for i in remove_money_data:
+        if i["user"] == str(ctx.message.author):
+            user_index = remove_money_data.index(i)
+
+    response = discord.Embed(title = str(ctx.message.author), description=f"Removed {add_money_val} from {ctx.message.author}'s bank!'",colour=discord.Colour.red())
+    
+    remove_money_data[user_index]["bal"] = remove_money_data[user_index]["bal"] - remove_money_val
+
+    with open("economy-data.json","w") as data:
+        json.dump(remove_money_data,data)
+    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,enbed=response)
 
 bot.run(token)
 
