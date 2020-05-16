@@ -132,7 +132,7 @@ async def add_money(ctx,add_money_val):
 
     with open("economy-data.json","w") as data:
         json.dump(add_money_data,data)
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,enbed=response)
+    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
 @bot.command(name="remove-money",aliases=["rm"])                  #gives admins, mods the permission to remove money from their own bank (for now)
 @commands.has_role(admin=True,Moderators=True,bot_dev=True)
@@ -149,7 +149,7 @@ async def remove_money(ctx,remove_money_val):
 
     with open("economy-data.json","w") as data:
         json.dump(remove_money_data,data)
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,enbed=response)
+    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
 bot.run(token)
 
