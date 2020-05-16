@@ -20,7 +20,13 @@ async def on_ready():
 
 @bot.command(name='horo-assign')
 async def assign_horoscope(ctx):
-
+    msg = await ask_date(ctx)
+    sign = get_zodiac(msg)
+    update_json_database(msg,sign)
+    response = discord.Embed(title='Horoscope',description=f'Congratulations! You are a {sign}')
+    await ctx.message.channel.send(embed=response)
+    
+async def ask_date(ctx):
     def check(author):
         def inner_check(message):
             if message.author != author:
@@ -31,21 +37,10 @@ async def assign_horoscope(ctx):
             except ValueError:
                 return False
         return inner_check
-
     response = discord.Embed(title='Horoscope',description='Please enter your date of birth: ')
     await ctx.message.channel.send(embed=response)
-    msg = await bot.wait_for('message',check=check)
- 
-    with open("horo-data.json","r") as data:
-        data_horo = json.load(data)
-    for i in data_horo:
-        if check_date(i,msg): sign = i["Zodiac"]
+    return await bot.wait_for('message',check=check)
 
-
- 
-    response = discord.Embed(title='Horoscope',description=f'Congratulations! You are a {sign}')
-    await ctx.message.channel.send(embed=response)
-    
 def check_date(jsondata, authordata):
     date = authordata.content.split('-')
     days = [31,28,31,30,31,30,31,31,30,31,30,31]
@@ -55,6 +50,28 @@ def check_date(jsondata, authordata):
     sum+=int(date[0])
     if 0<sum<19:sum+=366
     if jsondata["day_low"]<=sum<=jsondata["day_high"]: return True
+
+def get_zodiac(msg):
+    data = open("horo-data.json","r")
+    data_horo = json.load(data)
+    for i in data_horo:
+        if check_date(i,msg): 
+            zodiac = i["Zodiac"]
+            data.close()
+            return zodiac
+
+def update_json_database(msg,sign):
+    data = open("economy-user-data.json","r")
+    econ_data = json.loads(data.readline())
+    data.close()
+
+    for i in econ_data:
+        if i["user"] == str(msg.author):
+            user_index = econ_data.index(i)
+
+    econ_data[user_index]["zodiac_sign"] = sign
+    with open("economy-user-data.json","w") as data:
+        json.dump(econ_data,data)
 
 bot.run(token)
     
