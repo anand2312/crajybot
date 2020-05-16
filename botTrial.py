@@ -42,6 +42,9 @@ async def help(ctx):
     response = discord.Embed(title='Help',description='List of commands')
     response.add_field(name="$popi", value="popi", inline = False)
     response.add_field(name="$members", value="Returns number of members in server", inline = False)
+    response.add_field(name="$bal", value="Displays balance in Bank, Debt and Net Worth", inline = False)
+    response.add_field(name="$work", value="You work, lazy popi", inline = False)
+    response.add_field(name="$request-loan", value="You take out a loan of specified amount", inline = False)
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
 #ECONOMY CODE; ADD SPACE ABOVE THIS FOR OTHER UNRELATED FUNCTIONS PLEASE :linus_gun:
@@ -118,10 +121,10 @@ async def work_error(ctx,error):             #only says "CommandOnCooldown", not
 #ECONOMY COMMANDS FOR ADMINS AND MODS (REMOVE BOT_DEV ONCE BOT IS DONE)
 
 @bot.command(name="add-money",aliases=["am"])                  #gives admins, mods the permission to add money to their own bank (for now)
-@commands.has_role(admin=True,Moderators=True,bot_dev=True)
-async def add_money(ctx,add_money_val):
+@commands.has_any_role("Bot Dev","Moderators","admin")         #this allows multiple roles to have access to one command
+async def add_money(ctx,add_money_val:int):
     with open("economy-data.json","r") as data:
-        add_money_data = json.load(data)             #Anand pls fix the json part I just copied what u did before
+        add_money_data = json.load(data)             
     for i in add_money_data:
         if i["user"] == str(ctx.message.author):
             user_index = add_money_data.index(i)
@@ -135,10 +138,10 @@ async def add_money(ctx,add_money_val):
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
 @bot.command(name="remove-money",aliases=["rm"])                  #gives admins, mods the permission to remove money from their own bank (for now)
-@commands.has_role(admin=True,Moderators=True,bot_dev=True)
-async def remove_money(ctx,remove_money_val):
+@commands.has_any_role("Bot Dev","Moderators","admin")      
+async def remove_money(ctx,remove_money_val:int):
     with open("economy-data.json","r") as data:
-        remove_money_data = json.load(data)             #Anand here too thank
+        remove_money_data = json.load(data)            
     for i in remove_money_data:
         if i["user"] == str(ctx.message.author):
             user_index = remove_money_data.index(i)
