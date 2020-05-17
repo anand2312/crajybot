@@ -52,7 +52,8 @@ async def help(ctx):
 
 @bot.command(name='bal')
 async def balance(ctx,user:str):
-    
+    global guild
+    global members
     guild = bot.get_guild(298871492924669954)
     members = guild.members
 
@@ -146,10 +147,8 @@ async def work_error(ctx,error):             #only says "CommandOnCooldown", not
 @bot.command(name="add-money",aliases=["am"])                  #gives admins, mods the permission to add money to their own bank (for now)
 @commands.has_any_role("Bot Dev","Moderators","admin")         #this allows multiple roles to have access to one command
 async def add_money(ctx,add_money_val:int,user:str):
-
     guild = bot.get_guild(298871492924669954)
     members = guild.members
-
     for i in members:
         if user == i.nick or user == i.name:
             username = str(i)
@@ -157,10 +156,10 @@ async def add_money(ctx,add_money_val:int,user:str):
     with open("economy-data.json","r") as data:
         add_money_data = json.load(data)             
     for i in add_money_data:
-        if i["user"] == str(ctx.message.author):
+        if i["user"] == username:
             user_index = add_money_data.index(i)
 
-    response = discord.Embed(title = str(ctx.message.author), description=f"Added {add_money_val} to {ctx.message.author}'s bank!'",colour=discord.Colour.green())
+    response = discord.Embed(title = str(ctx.message.author), description=f"Added {add_money_val} to {username}'s bank!'",colour=discord.Colour.green())
     
     add_money_data[user_index]["bal"] = add_money_data[user_index]["bal"] + add_money_val
 
@@ -170,10 +169,7 @@ async def add_money(ctx,add_money_val:int,user:str):
 
 @bot.command(name="remove-money",aliases=["rm"])                  #gives admins, mods the permission to remove money from their own bank (for now)
 @commands.has_any_role("Bot Dev","Moderators","admin")      
-async def remove_money(ctx,ctx,remove_money_val:int,user:str):
-
-    guild = bot.get_guild(298871492924669954)
-    members = guild.members
+async def remove_money(ctx,remove_money_val:int,user:str):
 
     for i in members:
         if user == i.nick or user == i.name:
@@ -182,16 +178,100 @@ async def remove_money(ctx,ctx,remove_money_val:int,user:str):
     with open("economy-data.json","r") as data:
         remove_money_data = json.load(data)            
     for i in remove_money_data:
-        if i["user"] == str(ctx.message.author):
+        if i["user"] == username:
             user_index = remove_money_data.index(i)
 
-    response = discord.Embed(title = str(ctx.message.author), description=f"Removed {remove_money_val} from {ctx.message.author}'s bank!'",colour=discord.Colour.red())
+    response = discord.Embed(title = str(ctx.message.author), description=f"Removed {remove_money_val} from {username}'s bank!'",colour=discord.Colour.red())
     
     remove_money_data[user_index]["bal"] = remove_money_data[user_index]["bal"] - remove_money_val
 
     with open("economy-data.json","w") as data:
         json.dump(remove_money_data,data)
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
+
+@bot.command(name = "inventory", aliases = ["inv"])
+async def inventory(ctx, user:str):
+    guild = bot.get_guild(298871492924669954)
+    members = guild.members
+    for i in members:
+        if user == i.nick or user == i.name:
+            username = str(i)
+
+    with open("economy-data.json","r") as data:
+        data_inv = json.load(data)
+
+    for i in data_inv:
+        if i["user"] == username:
+            user_index = data_inv.index(i)
+
+    response = discord.Embed(title = username, description = "Inventory")
+    response.add_field(name = "Stock", value = data_inv[user_index]["inv"][0]["stock"], inline = False)
+    
+    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
+
+@inventory.error
+async def inventory_error(ctx,error):
+    if isinstance(error , commands.errors.MissingRequiredArgument):
+        with open("economy-data.json","r") as data:
+            data_inv = json.load(data)
+    
+    for x in data_inv:
+            if x["user"] == str(ctx.message.author):
+                user_dict = x
+
+    response = discord.Embed(title = f"{str(ctx.message.author)}", description = "Inventory")
+    response.add_field(name = "Stock", value = user_dict["inv"][0]["stock"], inline  = False)
+
+    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
+
+@bot.command(name = "shop")
+async def shop(ctx):
+    with open("store-data.json","r") as data:
+        shop_data = json.load(data)
+    print(shop_data)
+    
+    response = discord.Embed(title = f"Shop", description = f"All available items")
+    response.add_field(name = f"Stock", value = f"""Price : {shop_data[0]["price"]} | Remaining Stock : {shop_data[0]["stock"]}""" )
+
+    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
+
+@bot.command(name = "buy")
+async def buy(ctx, number:int, item:str):         #pls dont ask me how this code works even i'm not sure anymore...........
+    with open("store-data.json","r") as data:
+        buy_data_store = json.load(data)
+    
+    for i in buy_data_store:
+        if i["name"].lower() == item.lower():
+            item_index = buy_data_store.index(i)
+    price_per_item = buy_data_store[item_index]["price"]
+
+    with open("economy-data.json","r") as data:
+        buy_data_user = json.load(data)
+
+    for j in buy_data_user:
+        if j["user"] == str(ctx.message.author):
+            user_index = buy_data_user.index(j)
+
+    for k in buy_data_user[user_index]["inv"]:
+        if item.lower() in k.keys():
+            user_item_details = k
+    if buy_data_user[user_index]["bal"] >= (number * price_per_item):
+        buy_data_user[user_index]["bal"] = buy_data_user[user_index]["bal"] - (number * price_per_item)
+        buy_data_store[item_index]["stock"] = buy_data_store[item_index]["stock"] - number
+        with open("store-data.json","w") as data:     #updates stock rmeaining in store-data.json
+            json.dump(buy_data_store, data)
+        user_item_details[item] = user_item_details[item] + number
+
+        with open("economy-data.json","w") as data:
+            json.dump(buy_data_user,data)
+
+        response = discord.Embed(title = str(ctx.message.author), description = f"You bought {number} {item}s!", colour = discord.Color.green())
+    
+        if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
+    else:
+        if ctx.message.channel.name in channels_available: await ctx.message.channel.send(f"poopi you don't have enough moni {bot.get_emoji(703648812669075456)} ")
+    
+
 
 #TESTING AUTO PRICE CHANGE OF STOCK
 @tasks.loop(seconds =  10800)
@@ -209,6 +289,7 @@ async def stock_price_before():
     global message_channel
     await bot.wait_until_ready()
     message_channel = bot.get_channel(703141348131471440)
+
 stock_price.start()
 bot.run(token)
 
