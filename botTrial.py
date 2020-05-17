@@ -145,7 +145,15 @@ async def work_error(ctx,error):             #only says "CommandOnCooldown", not
 
 @bot.command(name="add-money",aliases=["am"])                  #gives admins, mods the permission to add money to their own bank (for now)
 @commands.has_any_role("Bot Dev","Moderators","admin")         #this allows multiple roles to have access to one command
-async def add_money(ctx,add_money_val:int,):
+async def add_money(ctx,add_money_val:int,user:str):
+
+    guild = bot.get_guild(298871492924669954)
+    members = guild.members
+
+    for i in members:
+        if user == i.nick or user == i.name:
+            username = str(i)
+
     with open("economy-data.json","r") as data:
         add_money_data = json.load(data)             
     for i in add_money_data:
@@ -162,7 +170,15 @@ async def add_money(ctx,add_money_val:int,):
 
 @bot.command(name="remove-money",aliases=["rm"])                  #gives admins, mods the permission to remove money from their own bank (for now)
 @commands.has_any_role("Bot Dev","Moderators","admin")      
-async def remove_money(ctx,remove_money_val:int):
+async def remove_money(ctx,ctx,remove_money_val:int,user:str):
+
+    guild = bot.get_guild(298871492924669954)
+    members = guild.members
+
+    for i in members:
+        if user == i.nick or user == i.name:
+            username = str(i)
+
     with open("economy-data.json","r") as data:
         remove_money_data = json.load(data)            
     for i in remove_money_data:
