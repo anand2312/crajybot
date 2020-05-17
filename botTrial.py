@@ -6,7 +6,7 @@ insert further documentation here, insert documentation near new functions or va
 import os
 import random
 import discord 
-from discord.ext import commands
+from discord.ext import commands,tasks
 import json
 
 #bot token stuff; not to be messed with :linus_gun:
@@ -22,7 +22,8 @@ bot.remove_command('help')
 
 @bot.event
 async def on_ready(): #sends this message when bot starts working in #bot-tests
-    await bot.get_channel(703141348131471440).send("I'm ready to fuck your mom.")
+    await bot.get_channel(703141348131471440).send("its popi time")
+    
 
 #ctx stands for context
 @bot.command(name='members') #name of the command $members
@@ -50,16 +51,26 @@ async def help(ctx):
 #ECONOMY CODE; ADD SPACE ABOVE THIS FOR OTHER UNRELATED FUNCTIONS PLEASE :linus_gun:
 
 @bot.command(name='bal')
-async def balance(ctx):
+async def balance(ctx,user:str):
+    
+    guild = bot.get_guild(298871492924669954)
+    members = guild.members
+
+    for i in members:
+        if user == i.nick or user == i.name:
+            username = str(i)
+
     with open("economy-data.json","r") as data:
         data_bal = json.load(data)
-    for i in data_bal:
-        if i["user"] == str(ctx.message.author):
-            user_dict = i                 #gets right dictionary with all user vals from a list of dicts.
+
+
+    for x in data_bal:
+        if x["user"] == username:
+            user_dict = x                 #gets right dictionary with all user vals from a list of dicts.
     
     networth = user_dict["bal"] - user_dict["debt"]
     
-    response = discord.Embed(title=str(ctx.message.author), description="Your Balance is:")
+    response = discord.Embed(title=username, description="Balance is:")
     response.add_field(name="Bank balance : ",value=f"{user_dict['bal']}", inline = False)
     response.add_field(name="Debt : ",value=f"{user_dict['debt'] * (-1)}", inline = False)
     response.add_field(name="Net Worth : ",value=networth, inline = False)
@@ -67,12 +78,24 @@ async def balance(ctx):
 
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
-'''@balance.error
+@balance.error
 async def bal_error(ctx,error):
-    pass'''
+    if isinstance(error , commands.errors.MissingRequiredArgument):
+        with open("economy-data.json","r") as data:
+            data_bal = json.load(data)
+        
+        for x in data_bal:
+            if x["user"] == str(ctx.message.author):
+                user_dict = x
 
+        networth = user_dict["bal"] - user_dict["debt"]
 
+        response = discord.Embed(title=str(ctx.message.author), description="Your balance is:")
+        response.add_field(name="Bank balance : ",value=f"{user_dict['bal']}", inline = False)
+        response.add_field(name="Debt : ",value=f"{user_dict['debt'] * (-1)}", inline = False)
+        response.add_field(name="Net Worth : ",value=networth, inline = False)
 
+        if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
 @bot.command(name='work')
 @commands.cooldown(1, 60, commands.BucketType.user)            #remember to increase the cooldown to at least an hour!
@@ -122,7 +145,7 @@ async def work_error(ctx,error):             #only says "CommandOnCooldown", not
 
 @bot.command(name="add-money",aliases=["am"])                  #gives admins, mods the permission to add money to their own bank (for now)
 @commands.has_any_role("Bot Dev","Moderators","admin")         #this allows multiple roles to have access to one command
-async def add_money(ctx,add_money_val:int):
+async def add_money(ctx,add_money_val:int,):
     with open("economy-data.json","r") as data:
         add_money_data = json.load(data)             
     for i in add_money_data:
@@ -146,7 +169,7 @@ async def remove_money(ctx,remove_money_val:int):
         if i["user"] == str(ctx.message.author):
             user_index = remove_money_data.index(i)
 
-    response = discord.Embed(title = str(ctx.message.author), description=f"Removed {add_money_val} from {ctx.message.author}'s bank!'",colour=discord.Colour.red())
+    response = discord.Embed(title = str(ctx.message.author), description=f"Removed {remove_money_val} from {ctx.message.author}'s bank!'",colour=discord.Colour.red())
     
     remove_money_data[user_index]["bal"] = remove_money_data[user_index]["bal"] - remove_money_val
 
@@ -154,5 +177,22 @@ async def remove_money(ctx,remove_money_val:int):
         json.dump(remove_money_data,data)
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
+#TESTING AUTO PRICE CHANGE OF STOCK
+@tasks.loop(seconds =  10800)
+async def stock_price():
+    with open("store-data.json","r") as data:
+        stock_data = json.load(data)
+    new_price = random.randint(10,40)
+    stock_data[0]["price"] = new_price
+    with open("store-data.json","w+") as data:
+        json.dump(stock_data,data)
+    await message_channel.send(f"Stock price : {new_price}")
+
+@stock_price.before_loop
+async def stock_price_before():
+    global message_channel
+    await bot.wait_until_ready()
+    message_channel = bot.get_channel(703141348131471440)
+stock_price.start()
 bot.run(token)
 
