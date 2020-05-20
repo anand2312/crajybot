@@ -7,6 +7,7 @@ import os
 import random
 import discord 
 from discord.ext import commands,tasks
+import asyncio
 import json
 
 #bot token stuff; not to be messed with :linus_gun:
@@ -258,6 +259,136 @@ async def sell(ctx, n:int, item:str):
 
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
 
+@bot.command(name = "roulette")
+async def roulette(ctx,amount:int,bet:str):
+    with open("economy-data.json","r") as data:
+        roulette_user_data = json.load(data)
+
+    for i in roulette_user_data:
+        if i["user"] == str(ctx.message.author):
+            user_bal = i["bal"]
+
+    if amount < user_bal:
+        roulette_table = {
+            "red" : [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36],
+            "black" : [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 31, 33, 35],
+            "1st" : [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34],
+            "2nd" : [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35],
+            "3rd" : [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
+            "odd" : None,
+            "even" : None,
+            "1-12": None,
+            "13-24": None,
+            "25-36":None,
+            "1-18":None,
+            "19-36":None
+
+        }
+        if bet in roulette_table.keys():
+            win_number = random.randint(0,36)
+
+            response1 = discord.Embed(title = str(ctx.message.author), description = f"You've placed a bet on {bet}.")
+            response1.set_footer(text = f"Please wait 10 seconds")
+            await ctx.message.channel.send(content = None, embed = response1)
+            
+            user_win = False
+            if bet == "red" or bet == "black":          #colour
+                if win_number in roulette_table[bet]:
+                    user_win = True
+                    multiplier = 2
+                else:
+                    user_win = False
+
+            elif bet in ["1-12", "13-24", "25-36"]:         #dozens
+                if bet == "1-12":
+                    if win_number in list(range(1,13)):
+                        user_win = True
+                        multiplier = 3
+                    else:
+                        user_win = False
+                elif bet == "13-24":
+                    if win_number in list(range(13,25)):
+                        user_win = True
+                        multiplier = 3
+                    else:
+                        user_win = False
+                elif bet == "25-36":
+                    if win_number in list(range(25,37)):
+                        user_win = True
+                        multiplier = 3
+                    else:
+                        user_win = False
+
+            elif bet in ["even","odd"]:    #odd/even
+                if bet == "even":
+                    if win_number % 2 == 0:
+                        user_win = True
+                        multiplier = 3
+                elif bet == "odd":
+                    if win_number % 2 != 0:
+                        user_win = True
+                        multiplier = 3
+
+            elif bet in ["1-18","19-36"]:       #halves
+                if bet == "1-18":
+                    if win_number in list(range(1,19)):
+                        user_win = True
+                        multiplier = 2
+                else:
+                    if win_number in list(range(19,37)):
+                        user_win = True
+                        multiplier = 2
+
+            elif bet in ["1st", "2nd", "3rd"]:               #columns
+                if win_number in roulette_table[bet]:
+                    user_win = True
+                    multiplier = 3
+                
+            
+        elif int(bet) in list(range(0,37)):
+            win_number = random.randint(0,36)
+            user_win = False
+
+            response1 = discord.Embed(title = str(ctx.message.author), description = f"You've placed a bet on {bet}.")
+            response1.set_footer(text = f"Please wait 10 seconds")
+            await ctx.message.channel.send(content = None, embed = response1)
+
+            if win_number == int(bet):
+                user_win = True
+                multiplier = 36
+        
+        else:
+            await ctx.message.channel.send(f'Invalid bet.')
+            return
+
+        await asyncio.sleep(10)
+        if user_win is True:
+            response2 = discord.Embed(title = f"Roulette Results {str(ctx.message.author)}", description = f"You won {multiplier * amount}!", colour = discord.Color.green())
+            with open("economy-data.json", "r") as data:
+                roulette_data = json.load(data)
+            for i in roulette_data:
+                if i["user"] == str(ctx.message.author):
+                    i["bal"] = i["bal"] + (multiplier * amount)
+            with open("economy-data.json","w") as data:
+                json.dump(roulette_data, data)
+            if ctx.message.channel.name in channels_available: 
+                await ctx.message.channel.send(f"The ball fell on {win_number}")
+                await ctx.message.channel.send(content = None, embed = response2)
+        else:
+            response2 = discord.Embed(title = f"Roulette Results {str(ctx.message.author)}", description = f"You lost {amount} {bot.get_emoji(703648812669075456)}", colour = discord.Color.red())
+            with open("economy-data.json", "r") as data:
+                roulette_data = json.load(data)
+            for i in roulette_data:
+                if i["user"] == str(ctx.message.author):
+                    i["bal"] = i["bal"] - amount
+            with open("economy-data.json","w") as data:
+                json.dump(roulette_data, data)
+            if ctx.message.channel.name in channels_available: 
+                await ctx.message.channel.send(f"The ball fell on {win_number}")
+                await ctx.message.channel.send(content = None, embed = response2)
+    else:
+        await ctx.message.channel.send(f"nigga what you trying? you don't have that much moni")
+
 #ECONOMY COMMANDS FOR ADMINS AND MODS (REMOVE BOT_DEV ONCE BOT IS DONE)
 
 @bot.command(name="add-money",aliases=["am"])                  #gives admins, mods the permission to add money to their own bank (for now)
@@ -322,8 +453,6 @@ async def change_stock(ctx, item:str, n:int):
 
     response = discord.Embed(title = str(ctx.message.author.name), description = f"Updated stock of {item}")
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
-
-
 
 #TESTING AUTO PRICE CHANGE OF STOCK
 @tasks.loop(seconds =  10800)
