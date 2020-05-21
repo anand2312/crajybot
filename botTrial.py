@@ -23,7 +23,7 @@ bot.remove_command('help')
 
 @bot.event
 async def on_ready(): #sends this message when bot starts working in #bot-tests
-    await bot.get_channel(703141348131471440).send("its popi time")
+    await bot.get_channel(400969408371228683).send("its popi time!! i am now hosted, and running 24/7!")
     
 
 #ctx stands for context
@@ -208,7 +208,27 @@ async def loan(ctx,loan_val:int):
     else:
         await ctx.message.channel.send("You cannot take a loan greater than twice your current balance / you have an unpaid loan, repay it and try again.")
 
+@bot.command(name = "repay-loan", aliases = ["rl"])
+async def repay_loan(ctx):
+    with open("economy-data.json","r") as data:
+        repay_data = json.load(data)
+    for i in repay_data:
+        if i["user"] == str(ctx.message.author):
+            user_data = i
+    if user_data["debt"] > 0:
+        if user_data["bal"] >= user_data["debt"]:
+            user_data["bal"] = user_data["bal"] - user_data["debt"]
+            user_data["debt"] = 0
+            with open("economy-data.json","w") as data:
+                json.dump(repay_data,data)
+            response = discord.Embed(title = str(ctx.message.author), description = f"You've paid off your debt!", colour = discord.Color.green())
+            if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
+        else:
+            if ctx.message.channel.name in channels_available: await ctx.message.channel.send(f"You do not have enough balance to repay your debt.")
 
+    else:
+        if ctx.message.channel.name in channels_available: await ctx.message.channel.send(f"You do not have any debt")
+        
 @work.error
 async def work_error(ctx,error):             #only says "CommandOnCooldown", not the time remaining
     if isinstance(error, commands.CommandOnCooldown):
