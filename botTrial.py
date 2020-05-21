@@ -121,6 +121,56 @@ async def work(ctx):
     
         if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
+@bot.command(name='slut')
+@commands.cooldown(1, 60, commands.BucketType.user)            #remember to increase the cooldown to at least an hour!
+async def slut(ctx):
+    with open("economy-data.json","r") as data:
+        data_bal = json.load(data)
+    for i in data_bal:
+        if i["user"] == str(ctx.message.author):
+            user_index = data_bal.index(i)
+
+    winning_odds=[1,2,3,4,5,6]
+    if random.randint(1,10) in winning_odds:
+        rand_val = random.randint(60,300)
+        data_bal[user_index]["bal"] = data_bal[user_index]["bal"] + rand_val
+        response = discord.Embed(title=str(ctx.message.author),description=f"You whored out and earned {rand_val}!",colour=discord.Colour.green())
+    
+    else:
+        rand_val = random.randint(60,300)
+        data_bal[user_index]["bal"] = data_bal[user_index]["bal"] - rand_val
+        response = discord.Embed(title=str(ctx.message.author),description=f"You hooked up with a psychopath lost {rand_val}!",colour=discord.Colour.red())
+
+    with open("economy-data.json","w") as data:
+        json.dump(data_bal,data)
+
+    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
+
+@bot.command(name="crime")
+@commands.cooldown(1, 60, commands.BucketType.user)            #remember to increase the cooldown to at least an hour!
+async def crime(ctx):
+    with open("economy-data.json","r") as data:
+        data_bal = json.load(data)
+    for i in data_bal:
+        if i["user"] == str(ctx.message.author):
+            user_index = data_bal.index(i)
+
+    winning_odds=[1,2,3,4]
+    if random.randint(1,10) in winning_odds:
+        rand_val = random.randint(150,750)
+        data_bal[user_index]["bal"] = data_bal[user_index]["bal"] + rand_val
+        response = discord.Embed(title=str(ctx.message.author),description=f"You successfuly commited crime and earned {rand_val}!",colour=discord.Colour.green())
+    
+    else:
+        rand_val = random.randint(150,750)
+        data_bal[user_index]["bal"] = data_bal[user_index]["bal"] - rand_val
+        response = discord.Embed(title=str(ctx.message.author),description=f"You you got caught and were fined {rand_val}!",colour=discord.Colour.red())
+
+    with open("economy-data.json","w") as data:
+        json.dump(data_bal,data)
+
+    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
+
 @bot.command(name="req-loan", aliases = ["rl","request-loan"])    #beta loan command! repayment not yet made
 async def loan(ctx,loan_val:int):
     with open("economy-data.json","r") as data:
@@ -156,6 +206,16 @@ async def loan(ctx,loan_val:int):
 
 @work.error
 async def work_error(ctx,error):             #only says "CommandOnCooldown", not the time remaining
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.message.channel.send(commands.CommandOnCooldown.__name__)
+                           
+@slut.error
+async def slut_error(ctx,error):             #only says "CommandOnCooldown", not the time remaining
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.message.channel.send(commands.CommandOnCooldown.__name__)
+
+@crime.error
+async def crime_error(ctx,error):             #only says "CommandOnCooldown", not the time remaining
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.message.channel.send(commands.CommandOnCooldown.__name__)
 
@@ -200,7 +260,7 @@ async def shop(ctx):
         shop_data = json.load(data)
     
     response = discord.Embed(title = f"Shop", description = f"All available items")
-    response.add_field(name = f"Stock", value = f"""Price : {shop_data[0]["price"]} | Remaining Stock : {shop_data[0]["stock"]}""" )
+    response.add_field(name = f"Stock", value = f"Price : {shop_data[0]["price"]} | Remaining Stock : {shop_data[0]["stock"]}" )
 
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
 
@@ -407,9 +467,9 @@ async def roulette(ctx,amount:int,bet:str):
 
 #ECONOMY COMMANDS FOR ADMINS AND MODS (REMOVE BOT_DEV ONCE BOT IS DONE)
 
-@bot.command(name="add-money",aliases=["am"])                  #gives admins, mods the permission to add money to their own bank (for now)
-@commands.has_any_role("Bot Dev","Moderators","admin")         #this allows multiple roles to have access to one command
-async def add_money(ctx,add_money_val:int,user:str):
+@bot.command(name="change-money",aliases=["c-money","cm"])                  #gives admins, mods the permission to change money to their own bank (for now)
+@commands.has_any_role("Bot Dev","Moderators","admin")                      #this allows multiple roles to have access to one command
+async def change_money(ctx,action:str,amt:int,user:str):
     guild = bot.get_guild(298871492924669954)
     members = guild.members
     for i in members:
@@ -417,41 +477,27 @@ async def add_money(ctx,add_money_val:int,user:str):
             username = str(i)
 
     with open("economy-data.json","r") as data:
-        add_money_data = json.load(data)             
-    for i in add_money_data:
+        change_money_data = json.load(data)             
+    for i in change_money_data:
         if i["user"] == username:
-            user_index = add_money_data.index(i)
+            user_index = change_money_data.index(i)
 
-    response = discord.Embed(title = str(ctx.message.author), description=f"Added {add_money_val} to {username}'s bank!'",colour=discord.Colour.green())
-    
-    add_money_data[user_index]["bal"] = add_money_data[user_index]["bal"] + add_money_val
+    if amt > 0:
+        if action == "add":
+            change_money_data[user_index]["bal"] = change_money_data[user_index]["bal"] + amt
+            response = discord.Embed(title = str(ctx.message.author.name), description = f"Added {amt} to {user}\'s bank!" ,colour=discord.Colour.green())
+                
+        elif action == "remove":
+            change_money_data[user_index]["bal"] = change_money_data[user_index]["bal"] - amt
+            response = discord.Embed(title = str(ctx.message.author.name), description = f"Removed {amt} from {user}\'s bank!" ,colour=discord.Colour.red())
 
-    with open("economy-data.json","w") as data:
-        json.dump(add_money_data,data)
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
+        elif action == "set":
+            change_money_data[user_index]["bal"] = amt
+            response = discord.Embed(title = str(ctx.message.author.name), description = f"Set {amt} to {user}\'s bank!" ,colour=discord.Colour.orange()) 
 
-@bot.command(name="remove-money",aliases=["rm"])                  #gives admins, mods the permission to remove money from their own bank (for now)
-@commands.has_any_role("Bot Dev","Moderators","admin")      
-async def remove_money(ctx,remove_money_val:int,user:str):
-    guild = bot.get_guild(298871492924669954)
-    members = guild.members
-    for i in members:
-        if user == i.nick or user == i.name:
-            username = str(i)
-
-    with open("economy-data.json","r") as data:
-        remove_money_data = json.load(data)            
-    for i in remove_money_data:
-        if i["user"] == username:
-            user_index = remove_money_data.index(i)
-
-    response = discord.Embed(title = str(ctx.message.author), description=f"Removed {remove_money_val} from {username}'s bank!'",colour=discord.Colour.red())
-    
-    remove_money_data[user_index]["bal"] = remove_money_data[user_index]["bal"] - remove_money_val
-
-    with open("economy-data.json","w") as data:
-        json.dump(remove_money_data,data)
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
+        with open("economy-data.json","w") as data:
+            json.dump(change_money_data,data)
+        if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
 @bot.command(name = "change-stock")
 @commands.has_any_role("Moderators","admin","Bot Dev")
@@ -468,6 +514,40 @@ async def change_stock(ctx, item:str, n:int):
         json.dump(store_data,data)
 
     response = discord.Embed(title = str(ctx.message.author.name), description = f"Updated stock of {item}")
+    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
+    
+@bot.command(name = "change-inventory",aliases=["c-inv"])
+@commands.has_any_role("Moderators","admin","Bot Dev")
+async def change_inventory(ctx,action:str,amt:int,item:str,user:str):
+    guild = bot.get_guild(298871492924669954)
+    members = guild.members
+    for i in members:
+        if user == i.nick or user == i.name:
+            username = str(i)
+
+    with open("economy-data.json","r") as data:
+        data_inv = json.load(data)
+
+    for i in data_inv:
+        if i["user"] == username:
+            user_index = data_inv.index(i)
+    
+    if action == "add":
+        data_inv[user_index]["inv"][0][item] = data_inv[user_index]["inv"][0][item] + amt
+        response = discord.Embed(title = str(ctx.message.author.name), description = f"Added {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.green())
+             
+    elif action == "remove":
+        data_inv[user_index]["inv"][0][item] = data_inv[user_index]["inv"][0][item] - amt
+        response = discord.Embed(title = str(ctx.message.author.name), description = f"Removed {amt} {item}(s) from {user}\'s inventory!",colour=discord.Colour.red())
+
+    elif action == "set":
+        data_inv[user_index]["inv"][0][item] = amt
+        response = discord.Embed(title = str(ctx.message.author.name), description = f"Set {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.orange())
+        
+
+    with open("economy-data.json","w") as data:
+        json.dump(data_inv,data)
+    
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
 
 #TESTING AUTO PRICE CHANGE OF STOCK
