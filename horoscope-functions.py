@@ -75,21 +75,23 @@ def update_json_database(msg,sign):
 
 
 @bot.command(name='battle')
-async def battle(ctx,person:discord.Member):
-    battle_state = await begin_battle(ctx,person,ctx.message.author)
+async def battle(ctx,person:discord.Member,bet:int):
+    battle_state = await begin_battle(ctx,person,ctx.message.author,bet)
     
     
     
-async def begin_battle(ctx,person,author):  #main sub function 1
-    await send_challenge(ctx,person,author)
+async def begin_battle(ctx,person,author,bet):  #main sub function 1
+    await send_challenge(ctx,person,author,bet)
     reply = await get_reply(ctx,person)
-    battle_state = await check_reply(ctx,person,author,reply.content)
+    battle_state = await check_reply(ctx,person,author,reply.content,bet)
     contestant_data = get_contestant_data(person,author)
+    deduct_from_balance(person,author,bet,contestant_data)
     await display_beginning_stats(ctx,person,author,contestant_data)
     return battle_state
 
-async def send_challenge(ctx,person,author):
+async def send_challenge(ctx,person,author,bet):
     msg = discord.Embed(title='Battle', description=f'{author.mention} challenges {person.mention} to a battle \n\n {person.mention} do you accept?')
+    msg.add_field(name='Bet', value=bet)
     await ctx.message.channel.send(embed=msg)
 
 async def get_reply(ctx,person):
@@ -100,11 +102,12 @@ async def get_reply(ctx,person):
 
     return await bot.wait_for('message',check=check)
 
-async def check_reply(ctx,person,author,reply):
+async def check_reply(ctx,person,author,reply,bet):
     if reply == 'yes':
         msg = discord.Embed(title='Battle', description=f'{person.mention} has accepted the challenge')
         msg.add_field(name='Challenger', value=author.name)
         msg.add_field(name='Challengee', value=person.name)
+        msg.add_field(name='Winner\'s Prize: ', value=str(2*bet)+' + 5% winner\'s balance')
         await ctx.channel.send(embed = msg)
         return True
         
@@ -112,7 +115,7 @@ async def check_reply(ctx,person,author,reply):
         msg = discord.Embed(title='Battle', description=f'{person.mention} has declined the challenge')
         await ctx.channel.send(embed = msg)
         return False
-
+    
 def get_contestant_data(person,author):
     data = open("rpg-data.json","r")
     data_rpg = json.load(data)
@@ -120,10 +123,21 @@ def get_contestant_data(person,author):
     for i in data_rpg:
         if i['user'] == str(author):
             author_data = i
+            author_index = data_rpg.index(i)
         elif i['user'] == str(person):
             person_data = i
-    return [author_data,person_data]
+            person_index = data_rpg.index(i)
+    return [author_data,person_data,author_index,person_index]
     
+def deduct_from_balance(person,author,bet,contestant_data):
+    data = open('economy-data.json','r')
+    econ_data = json.load(data)
+    data.close()
+    econ_data[contestant_data[2]]['bal'] -= bet
+    econ_data[contestant_data[3]]['bal'] -= bet
+    with open('economy-data.json','w') as data:
+        json.dump(econ_data,data)
+
 async def display_beginning_stats(ctx,person,author,contestant_data):
     author_data = contestant_data[0]
     person_data = contestant_data[1]
