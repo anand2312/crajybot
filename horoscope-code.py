@@ -3,63 +3,76 @@ horoscopes=[
     {
         "day_low" : 80,
         "day_high" : 110,
-        "Zodiac" : "Aries"
+        "Zodiac" : "Aries",
+
     },
     {
         "day_low" : 111,
         "day_high" : 141,
-        "Zodiac" : "Taurus" 
+        "Zodiac" : "Taurus",
+
     },
     {
         "day_low" : 142,
         "day_high" : 172,
-        "Zodiac" : "Gemini"
+        "Zodiac" : "Gemini",
+
     },
     {
         "day_low" : 173,
         "day_high" : 204,
-        "Zodiac" : "Cancer"
+        "Zodiac" : "Cancer",
+
     },
     {
         "day_low" : 205,
         "day_high" : 235,
-        "Zodiac" : "Leo"
+        "Zodiac" : "Leo",
+
     },
     {
         "day_low" : 236,
         "day_high" : 266,
-        "Zodiac" : "Virgo"
+        "Zodiac" : "Virgo",
+
     },
     {
         "day_low" : 267,
         "day_high" : 296,
-        "Zodiac" : "Libra"
+        "Zodiac" : "Libra",
+
     },
     {
         "day_low" : 297,
         "day_high" : 326,
-        "Zodiac" : "Scorpio"
+        "Zodiac" : "Scorpio",
+
     },
         
     {
         "day_low" : 327,
         "day_high" : 356,
-        "Zodiac" : "Sagittarius"
+        "Zodiac" : "Sagittarius",
+
     },
     {
         "day_low" : 357,
         "day_high" : 385,
-        "Zodiac" : "Capricorn"
+        "Zodiac" : "Capricorn",
+
+
     },
     {
         "day_low" : 20,
         "day_high" : 49,
-        "Zodiac" : "Aquarius"
+        "Zodiac" : "Aquarius",
+
     },
     {
         "day_low" : 50,
         "day_high" : 79,
-        "Zodiac" : "Pisces"
+        "Zodiac" : "Pisces",
+
     }
     
 ]
