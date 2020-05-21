@@ -124,7 +124,7 @@ store_data = [
     {
         "name" : "Stock",
         "price" : 25,
-        "stock" : 10000
+        "stock" :10000
     }
 ]
 
@@ -133,5 +133,3 @@ with open("economy-data.json","w+") as data:
 
 with open("store-data.json","w+") as store:
     json.dump(store_data,store)
-
-
