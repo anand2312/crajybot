@@ -61,38 +61,35 @@ def get_zodiac(msg):
             return zodiac
 
 def update_json_database(msg,sign):
-    data = open("economy-user-data.json","r")
-    econ_data = json.loads(data.readline())
+    data = open("rpg-data.json","r")
+    rpg_data = json.loads(data.readline())
     data.close()
 
-    for i in econ_data:
+    for i in rpg_data:
         if i["user"] == str(msg.author):
-            user_index = econ_data.index(i)
+            user_index = rpg_data.index(i)
 
-    econ_data[user_index]["zodiac_sign"] = sign
-    with open("economy-user-data.json","w") as data:
-        json.dump(econ_data,data)
+    rpg_data[user_index]["zodiac_sign"] = sign
+    with open("rpg-data.json","w") as data:
+        json.dump(rpg_data,data)
 
 
 @bot.command(name='battle')
 async def battle(ctx,person:discord.Member):
     battle_state = await begin_battle(ctx,person,ctx.message.author)
-   
-
-    
     
     
     
 async def begin_battle(ctx,person,author):  #main sub function 1
-    author = ctx.message.author
-    await send_challenge(ctx,person)
+    await send_challenge(ctx,person,author)
     reply = await get_reply(ctx,person)
-    battle_state = await check_reply(ctx,person,reply)
-    display_beginning_stats(ctx,author,person)
+    battle_state = await check_reply(ctx,person,author,reply.content)
+    contestant_data = get_contestant_data(person,author)
+    await display_beginning_stats(ctx,person,author,contestant_data)
     return battle_state
 
-async def send_challenge(ctx,person):
-    msg = discord.Embed(title='Battle', description=f'{ctx.author.mention} challenges {person.mention} to a battle \n\n {person.mention} do you accept?')
+async def send_challenge(ctx,person,author):
+    msg = discord.Embed(title='Battle', description=f'{author.mention} challenges {person.mention} to a battle \n\n {person.mention} do you accept?')
     await ctx.message.channel.send(embed=msg)
 
 async def get_reply(ctx,person):
@@ -101,39 +98,50 @@ async def get_reply(ctx,person):
         if m.content in ['yes','no'] and m.author == person:
             return True
 
-    reply = await bot.wait_for('message',check=check)
-    return reply.content
+    return await bot.wait_for('message',check=check)
 
-async def check_reply(ctx,person,reply):
+async def check_reply(ctx,person,author,reply):
     if reply == 'yes':
         msg = discord.Embed(title='Battle', description=f'{person.mention} has accepted the challenge')
-        msg.add_field(name='Challenger', value=ctx.author.name)
+        msg.add_field(name='Challenger', value=author.name)
         msg.add_field(name='Challengee', value=person.name)
-        await ctx.message.channel.send(embed = msg)
+        await ctx.channel.send(embed = msg)
         return True
+        
     elif reply == 'no':
         msg = discord.Embed(title='Battle', description=f'{person.mention} has declined the challenge')
-        await ctx.message.channel.send(embed = msg)
+        await ctx.channel.send(embed = msg)
         return False
 
-async def display_beginning_stats(ctx,person,author):
-    data = open("horo-data.json","r")
-    data_horo = json.load(data)
+def get_contestant_data(person,author):
+    data = open("rpg-data.json","r")
+    data_rpg = json.load(data)
+    data.close()
+    for i in data_rpg:
+        if i['user'] == str(author):
+            author_data = i
+        elif i['user'] == str(person):
+            person_data = i
+    return [author_data,person_data]
+    
+async def display_beginning_stats(ctx,person,author,contestant_data):
+    author_data = contestant_data[0]
+    person_data = contestant_data[1]
+
     stats_beginning = discord.Embed(title='Battle: Stats')
     stats_beginning.add_field(name='|',value='|')
-    stats_beginning.add_field(name=author.name, value=data_horo[1]['Zodiac'])
-    stats_beginning.add_field(name=person.name, value=data_horo[2]['Zodiac'])
+    stats_beginning.add_field(name=author.name, value=author_data['zodiac_sign'])
+    stats_beginning.add_field(name=person.name, value=person_data['zodiac_sign'])
     stats_beginning.add_field(name='|',value='|')
-    stats_beginning.add_field(name='Health', value=data_horo[1]['hp'])
-    stats_beginning.add_field(name='Health', value=data_horo[2]['hp'])
+    stats_beginning.add_field(name='Health', value=author_data['hp'])
+    stats_beginning.add_field(name='Health', value=person_data['hp'])
     stats_beginning.add_field(name='|',value='|')
-    stats_beginning.add_field(name='Attack', value=data_horo[1]['attack'])
-    stats_beginning.add_field(name='Attack', value=data_horo[2]['attack'])
+    stats_beginning.add_field(name='Attack', value=author_data['attack'])
+    stats_beginning.add_field(name='Attack', value=person_data['attack'])
     stats_beginning.add_field(name='|',value='|')
-    stats_beginning.add_field(name='Defense', value=data_horo[1]['defense'])
-    stats_beginning.add_field(name='Defense', value=data_horo[2]['defense'])
+    stats_beginning.add_field(name='Defense', value=author_data['defense'])
+    stats_beginning.add_field(name='Defense', value=person_data['defense'])
+
     await ctx.channel.send(embed=stats_beginning)
-
-
 
 bot.run(token)
