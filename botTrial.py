@@ -131,12 +131,28 @@ async def loan(ctx,loan_val:int):
 
     response = discord.Embed(title=str(ctx.message.author),description=f"You took a loan of {loan_val}!",colour=discord.Colour.red()) # red bc u did a dum dum
 
-    loan_data[user_index]["debt"] = loan_data[user_index]["debt"] + loan_val
+    loan_data[user_index]["debt"] = loan_data[user_index]["debt"] + (loan_val + int(loan_val * 0.05))
     loan_data[user_index]["bal"] = loan_data[user_index]["bal"] + loan_val
     
     with open("economy-data.json","w") as data:
         json.dump(loan_data,data)
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
+    await asyncio.sleep(10)
+    await ctx.message.author.send("You're about to default on your loan")
+    await asyncio.sleep(10)
+
+    with open("economy-data.json","r") as data:
+        loan_data = json.load(data)
+    for i in loan_data:
+        if i["user"] == str(ctx.message.author):
+            user_index = loan_data.index(i)
+    if loan_data[user_index]["debt"] != 0:
+        loan_data[user_index]["debt"] = 0
+        loan_data[user_index]["bal"] = loan_data[user_index]["bal"] - (loan_val + int(loan_val * 0.1))
+        with open("economy-data.json","w") as data:
+            json.dump(loan_data,data)
+        await ctx.message.author.send(f"poopi you messed up big time")
+
 
 @work.error
 async def work_error(ctx,error):             #only says "CommandOnCooldown", not the time remaining
@@ -268,7 +284,7 @@ async def roulette(ctx,amount:int,bet:str):
         if i["user"] == str(ctx.message.author):
             user_bal = i["bal"]
 
-    if amount < user_bal:
+    if amount < user_bal and user_bal > 0:
         roulette_table = {
             "red" : [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36],
             "black" : [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 31, 33, 35],
