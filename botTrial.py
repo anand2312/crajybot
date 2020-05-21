@@ -27,11 +27,6 @@ async def on_ready(): #sends this message when bot starts working in #bot-tests
     
 
 #ctx stands for context
-@bot.command(name='members') #name of the command $members
-async def returnMembers(ctx):
-    membercount = ctx.guild.member_count #guild refers to the server.
-    response = discord.Embed(title="Members" , description=f"""Number of members = {membercount}""") #Embed is what displays it in a box thing (I think)
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
 @bot.command(name='popi')
 async def popi(ctx):
@@ -43,12 +38,19 @@ async def popi(ctx):
 async def help(ctx):
     response = discord.Embed(title='Help',description='List of commands')
     response.add_field(name="$popi", value="popi", inline = False)
-    response.add_field(name="$members", value="Returns number of members in server", inline = False)
+    response.add_field(name="Some economy function:", value = "----------", inline = False)
     response.add_field(name="$bal", value="Displays balance in Bank, Debt and Net Worth", inline = False)
     response.add_field(name="$work", value="You work, lazy popi", inline = False)
-    response.add_field(name="$request-loan", value="You take out a loan of specified amount", inline = False)
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
-
+    response.add_field(name="$slut", value="hoe life", inline = False)
+    response.add_field(name="$crime", value="gangsta tiem", inline = False)
+    response.add_field(name="$get-loan", value="You take out a loan of specified amount. Max amount of loan is twice your current balance. 5% interest applies on the loan (one time only,if you pay before 1 day after loan request you have to pay 5% interest as well). If you do not repay loan in 1 day, bot will auto deduct 10% extra from your balance.", inline = False)
+    response.add_field(name="$repay-loan", value="Repay your existing debts.", inline = False)
+    response.add_field(name="$inv", value="Checks inventory", inline = False)
+    response.add_field(name="$shop", value="Check shop", inline = False)
+    response.add_field(name=f"$buy <number> <item>", value="Buys item from store. No need to use those brackets", inline = False)
+    response.add_field(name=f"$sell <number> <item>", value="Sell item back to shop for current market price", inline = False)
+    response.add_field(name="$roulette", value="you know how this works", inline = False)
+    if ctx.message.channel in channels_available: await ctx.message.channel.send(content = None, embed = response)
 #ECONOMY CODE; ADD SPACE ABOVE THIS FOR OTHER UNRELATED FUNCTIONS PLEASE :linus_gun:
 
 @bot.command(name='bal')
@@ -171,37 +173,40 @@ async def crime(ctx):
 
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
-@bot.command(name="req-loan", aliases = ["rl","request-loan"])    #beta loan command! repayment not yet made
+@bot.command(name="get-loan", aliases = ["gl"])    #beta loan command! repayment not yet made
 async def loan(ctx,loan_val:int):
-    with open("economy-data.json","r") as data:
-        loan_data = json.load(data)
-    for i in loan_data:
-        if i["user"] == str(ctx.message.author):
-            user_index = loan_data.index(i)
-
-    response = discord.Embed(title=str(ctx.message.author),description=f"You took a loan of {loan_val}!",colour=discord.Colour.red()) # red bc u did a dum dum
-
-    loan_data[user_index]["debt"] = loan_data[user_index]["debt"] + (loan_val + int(loan_val * 0.05))
-    loan_data[user_index]["bal"] = loan_data[user_index]["bal"] + loan_val
     
-    with open("economy-data.json","w") as data:
-        json.dump(loan_data,data)
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
-    await asyncio.sleep(10)
-    await ctx.message.author.send("You're about to default on your loan")
-    await asyncio.sleep(10)
-
     with open("economy-data.json","r") as data:
         loan_data = json.load(data)
     for i in loan_data:
         if i["user"] == str(ctx.message.author):
             user_index = loan_data.index(i)
-    if loan_data[user_index]["debt"] != 0:
-        loan_data[user_index]["debt"] = 0
-        loan_data[user_index]["bal"] = loan_data[user_index]["bal"] - (loan_val + int(loan_val * 0.1))
+    if loan_val < loan_data[user_index]["bal"] * 2 and loan_data[user_index]["debt"] == 0:
+        response = discord.Embed(title=str(ctx.message.author),description=f"You took a loan of {loan_val}!",colour=discord.Colour.red()) # red bc u did a dum dum
+
+        loan_data[user_index]["debt"] = loan_data[user_index]["debt"] + (loan_val + int(loan_val * 0.05))
+        loan_data[user_index]["bal"] = loan_data[user_index]["bal"] + loan_val
+        
         with open("economy-data.json","w") as data:
             json.dump(loan_data,data)
-        await ctx.message.author.send(f"poopi you messed up big time")
+        if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
+        await asyncio.sleep(64800)
+        await ctx.message.author.send("You're about to default on your loan")
+        await asyncio.sleep(21600)
+
+        with open("economy-data.json","r") as data:
+            loan_data = json.load(data)
+        for i in loan_data:
+            if i["user"] == str(ctx.message.author):
+                user_index = loan_data.index(i)
+        if loan_data[user_index]["debt"] != 0:
+            loan_data[user_index]["debt"] = 0
+            loan_data[user_index]["bal"] = loan_data[user_index]["bal"] - (loan_val + int(loan_val * 0.1))
+            with open("economy-data.json","w") as data:
+                json.dump(loan_data,data)
+            await ctx.message.author.send(f"poopi you messed up big time")
+    else:
+        await ctx.message.channel.send("You cannot take a loan greater than twice your current balance / you have an unpaid loan, repay it and try again.")
 
 
 @work.error
@@ -260,7 +265,7 @@ async def shop(ctx):
         shop_data = json.load(data)
     
     response = discord.Embed(title = f"Shop", description = f"All available items")
-    response.add_field(name = f"Stock", value = f"Price : {shop_data[0]["price"]} | Remaining Stock : {shop_data[0]["stock"]}" )
+    response.add_field(name = f"Stock", value = f"""Price : {shop_data[0]["price"]} | Remaining Stock : {shop_data[0]["stock"]}""" )
 
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
 
@@ -555,7 +560,7 @@ async def change_inventory(ctx,action:str,amt:int,item:str,user:str):
 async def stock_price():
     with open("store-data.json","r") as data:
         stock_data = json.load(data)
-    new_price = random.randint(10,40)
+    new_price = random.randint(stock_data[0]["price"] - 5, stock_data[0]["price"] + 5)
     stock_data[0]["price"] = new_price
     with open("store-data.json","w+") as data:
         json.dump(stock_data,data)
@@ -565,7 +570,8 @@ async def stock_price():
 async def stock_price_before():
     global message_channel
     await bot.wait_until_ready()
-    message_channel = bot.get_channel(703141348131471440)
+    message_channel = bot.get_channel(704911379341115433)
+    
 
 stock_price.start()
 bot.run(token)
