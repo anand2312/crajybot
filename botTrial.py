@@ -381,10 +381,10 @@ async def roulette(ctx,amount:int,bet:str):
 
     for i in roulette_user_data:
         if i["user"] == str(ctx.message.author):
-            i["bal"] = i["bal"] - amount
             user_bal = i["bal"] 
 
     if amount <= user_bal and user_bal > 0:
+
         roulette_table = {
             "red" : [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36],
             "black" : [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 31, 33, 35],
@@ -402,7 +402,7 @@ async def roulette(ctx,amount:int,bet:str):
         }
         if bet in roulette_table.keys():
             win_number = random.randint(0,36)
-
+            user_bal = user_bal - amount
             response1 = discord.Embed(title = str(ctx.message.author), description = f"You've placed a bet on {bet}.")
             response1.set_footer(text = f"Please wait 10 seconds")
             await ctx.message.channel.send(content = None, embed = response1)
