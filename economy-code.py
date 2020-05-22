@@ -126,7 +126,9 @@ rpg_data = [
         "zodiac_sign" : "",
         'hp': 100,
         'attack':10,
-        'defense':10
+        'defense':10,
+        'battle_options':['attack','defend','use item'],
+        'battle_counters':{}
 
     },
     {
@@ -134,42 +136,54 @@ rpg_data = [
         "zodiac_sign" : "",
         'hp': 100,
         'attack':10,
-        'defense':10
+        'defense':10,
+        'battle_options':['attack','defend','use item'],
+        'battle_counters':{}
     },
     {
         "user" : "Foxwid#8333",
         "zodiac_sign" : "",
         'hp': 100,
         'attack':10,
-        'defense':10
+        'defense':10,
+        'battle_options':['attack','defend','use item'],
+        'battle_counters':{}
     },
     {
         "user" : "MANDARIN#8024",
         "zodiac_sign" : "",
         'hp': 100,
         'attack':10,
-        'defense':10
+        'defense':10,
+        'battle_options':['attack','defend','use item'],
+        'battle_counters':{}
     },
     {
         "user" : "humanboiii#5837",
         "zodiac_sign" : "",
         'hp': 100,
         'attack':10,
-        'defense':10
+        'defense':10,
+        'battle_options':['attack','defend','use item'],
+        'battle_counters':{}
     },
     {
         "user" : "Windsmith#4272",
         "zodiac_sign" : "",
         'hp': 100,
         'attack':10,
-        'defense':10
+        'defense':10,
+        'battle_options':['attack','defend','use item'],
+        'battle_counters':{}
     },
     {
         "user" : "BOOOZ#4084",
         "zodiac_sign" : "",
         'hp': 100,
         'attack':10,
-        'defense':10
+        'defense':10,
+        'battle_options':['attack','defend','use item'],
+        'battle_counters':{}
 
     },
     {
@@ -177,42 +191,54 @@ rpg_data = [
         "zodiac_sign" : "",
         'hp': 100,
         'attack':10,
-        'defense':10
+        'defense':10,
+        'battle_options':['attack','defend','use item'],
+        'battle_counters':{}
     },
     {
         "user" : "maafi_username#7152",
         "zodiac_sign" : "",
         'hp': 100,
         'attack':10,
-        'defense':10
+        'defense':10,
+        'battle_options':['attack','defend','use item'],
+        'battle_counters':{}
     },
     {
         "user" : "prakhar5723#3126",
         "zodiac_sign" : "",
         'hp': 100,
         'attack':10,
-        'defense':10
+        'defense':10,
+        'battle_options':['attack','defend','use item'],
+        'battle_counters':{}
     },
     {
         "user" : "smelly farts#9535",
         "zodiac_sign" : "",
         'hp': 100,
         'attack':10,
-        'defense':10
+        'defense':10,
+        'battle_options':['attack','defend','use item'],
+        'battle_counters':{}
     },
     {
         "user" : "Sugeeth2401#3350",
         "zodiac_sign" : "",
         'hp': 100,
         'attack':10,
-        'defense':10
+        'defense':10,
+        'battle_options':['attack','defend','use item'],
+        'battle_counters':{}
     },
     {
         "user" : "shreyash0368#2025",
         "zodiac_sign" : "",
         'hp': 100,
         'attack':10,
-        'defense':10
+        'defense':10,
+        'battle_options':['attack','defend','use item'],
+        'battle_counters':{}
     }
 ]
 

@@ -1,8 +1,8 @@
 import os
-import random
 import discord 
-from discord.ext import commands
 import json
+from discord.ext import commands
+from random import choice
 
 #bot token stuff; not to be messed with :linus_gun:
 token_ = "NzA5NDA3MjY4NDg3MDM3MDE5.XrllLQ.FbL2vivvNxjxPT-wOfAvH32fK4QZ"
@@ -16,7 +16,6 @@ channels_available = ["bot-test","botspam-v2","botspam"] #Channels where the bot
 @bot.event
 async def on_ready():
     await bot.get_channel(703141348131471440).send("Bruh")
-
 
 @bot.command(name='horo-assign')
 async def assign_horoscope(ctx):
@@ -76,18 +75,21 @@ def update_json_database(msg,sign):
 
 @bot.command(name='battle')
 async def battle(ctx,person:discord.Member,bet:int):
-    battle_state = await begin_battle(ctx,person,ctx.message.author,bet)
+    battle_state, contestant_data = await begin_battle(ctx,person,ctx.message.author,bet)
+    await process_battle(battle_state,ctx,contestant_data)
     
     
-    
-async def begin_battle(ctx,person,author,bet):  #main sub function 1
+#Battle beginning    
+async def begin_battle(ctx,person,author,bet):
     await send_challenge(ctx,person,author,bet)
     reply = await get_reply(ctx,person)
     battle_state = await check_reply(ctx,person,author,reply.content,bet)
     contestant_data = get_contestant_data(person,author)
-    deduct_from_balance(person,author,bet,contestant_data)
+    #deduct_from_balance(person,author,bet,contestant_data)
     await display_beginning_stats(ctx,person,author,contestant_data)
-    return battle_state
+    return battle_state, contestant_data
+
+#Sub Functions of Begin Battle:
 
 async def send_challenge(ctx,person,author,bet):
     msg = discord.Embed(title='Battle', description=f'{author.mention} challenges {person.mention} to a battle \n\n {person.mention} do you accept?')
@@ -124,7 +126,7 @@ def get_contestant_data(person,author):
         if i['user'] == str(author):
             author_data = i
             author_index = data_rpg.index(i)
-        elif i['user'] == str(person):
+        if i['user'] == str(person):
             person_data = i
             person_index = data_rpg.index(i)
     return [author_data,person_data,author_index,person_index]
@@ -156,6 +158,82 @@ async def display_beginning_stats(ctx,person,author,contestant_data):
     stats_beginning.add_field(name='Defense', value=author_data['defense'])
     stats_beginning.add_field(name='Defense', value=person_data['defense'])
 
+    starter = discord.Embed(title='The Battle Begins!')
+
     await ctx.channel.send(embed=stats_beginning)
+    await ctx.channel.send(embed=starter)
+
+#Battle Process
+async def process_battle(battle_state,ctx,contestant_data):
+    turn_count = 0
+    player_1 = 0
+    player_2 = 0
+    while battle_state:
+        turn_count+=1
+        player_1, player_2 = await get_turn(ctx,contestant_data,turn_count,player_1,player_2)
+        action = await get_player_choice(ctx,contestant_data,player_1)
+        await process_action(ctx,contestant_data,player_1,player_2,action.content)
+        update_statuses(contestant_data,player_1,player_2)
+        player_1, player_2 = await change_turn(ctx,contestant_data,player_1,player_2)
+    
+    
+
+#Sub Functions of Process Battle:
+
+async def get_turn(ctx,contestant_data,turn_count,player_1=0,player_2=0):
+    if turn_count == 1: 
+        player_1 = choice([0,1])
+        if player_1 == 0: player_2 = 1
+        else: player_2 = 0
+    response = discord.Embed(title=f'Turn {turn_count}: ',description=f"{contestant_data[player_1]['user']}'s Turn")
+    await ctx.channel.send(embed=response)
+    return player_1, player_2
+    
+async def get_player_choice(ctx,contestant_data,player_1):
+    def check(msg):
+        if str(msg.author) == contestant_data[player_1]['user'] and msg.content in contestant_data[player_1]['battle_options']: return True
+        
+    a = contestant_data[player_1]['battle_options'][0]
+    b = contestant_data[player_1]['battle_options'][1]
+    c = contestant_data[player_1]['battle_options'][2]
+        
+    response = f''' {contestant_data[player_1]['user']}, What would you like to do?\n{a,b,c}'''
+    await ctx.channel.send(response)
+    return await bot.wait_for('message',check=check)
+
+async def process_action(ctx,contestant_data,player_1,player_2,action):
+    if action == 'attack': await process_attack(ctx,contestant_data,player_1,player_2)
+    elif action == 'defend': await process_defense(ctx,contestant_data,player_1)
+    #elif action == 'use item': await process_use_item(ctx,contestant_data,player_1,player_2)  Will implement once items are made
+
+def update_statuses(contestant_data,player_1,player_2):
+    for i in contestant_data[0:1]:
+        for j in i['battle_counters']:
+            if i['battle_counters'][j][0] >=1:
+                i['battle_counters'][j][0]-=1
+                if i['battle_counters'][j][0]==0:
+                    i[j] -= i['battle_counters'][j][1]
+
+async def change_turn(ctx,contestant_data,player_1,player_2):
+    response = discord.Embed(title='Battle Outcome: ',description=f"{contestant_data[player_1]['user']}'s turn has ended'")
+    player_1, player_2 = player_2, player_1
+    await ctx.channel.send(embed=response)
+    return player_1, player_2
+
+
+#Sub functions of process action:
+async def process_attack(ctx,contestant_data,player_1,player_2):
+    damage = contestant_data[player_1]['attack'] - contestant_data[player_2]['defense']//10 + choice([-3,-2,-1,0,1,2,3])
+    contestant_data[player_2]['hp'] -= damage
+    response = discord.Embed(title='Battle Status:',description=f"{contestant_data[player_1]['user']} dealt {damage} damage to the opposing player!")
+    await ctx.channel.send(embed = response)
+
+async def process_defense(ctx,contestant_data,player_1):
+    contestant_data[player_1]['battle_counters']['defense']=[2,40]
+    contestant_data[player_1]['defense'] += 40
+    response = discord.Embed(title='Battle Status:',description=f"{contestant_data[player_1]['user']} defended!")
+    await ctx.channel.send(embed = response)
+
+
 
 bot.run(token)
