@@ -2,7 +2,8 @@ import json
 econ_stats =[
     {
         "user" : "Ares#7286",
-        "bal" : 2500,
+        "cash" : 0,
+        "bank" : 2500,
         "inv" : [
             {"stock" : 0},
             {"chicken" : 0}
@@ -13,7 +14,8 @@ econ_stats =[
     },
     {
         "user" : "Sir Poopy Pants#0136",
-        "bal" : 2500,
+        "cash" : 0,
+        "bank" : 2500,
         "inv" : [
             {"stock" : 0},
             {"chicken" : 0}
@@ -23,7 +25,8 @@ econ_stats =[
     },
     {
         "user" : "Foxwid#8333",
-        "bal" : 2500,
+        "cash" : 0,
+        "bank" : 2500,
         "inv" : [
             {"stock" : 0},
             {"chicken" : 0}
@@ -33,7 +36,8 @@ econ_stats =[
     },
     {
         "user" : "MANDARIN#8024",
-        "bal" : 2500,
+        "cash" : 0,
+        "bank" : 2500,
         "inv" : [
             {"stock" : 0},
             {"chicken" : 0}
@@ -43,7 +47,8 @@ econ_stats =[
     },
     {
         "user" : "humanboiii#5837",
-        "bal" : 2500,
+        "cash" : 0,
+        "bank" : 2500,
         "inv" : [
             {"stock" : 0},
             {"chicken" : 0}
@@ -53,7 +58,8 @@ econ_stats =[
     },
     {
         "user" : "Windsmith#4272",
-        "bal" : 2500,
+        "cash" : 0,
+        "bank" : 2500,
         "inv" : [
             {"stock" : 0},
             {"chicken" : 0}
@@ -63,7 +69,8 @@ econ_stats =[
     },
     {
         "user" : "BOOOZ#4084",
-        "bal" : 2500,
+        "cash" : 0,
+        "bank" : 2500,
         "inv" : [
             {"stock" : 0},
             {"chicken" : 0}
@@ -73,7 +80,8 @@ econ_stats =[
     },
     {
         "user" : "CrashGamer#7883",
-        "bal" : 2500,
+        "cash" : 0,
+        "bank" : 2500,
         "inv" : [
             {"stock" : 0},
             {"chicken" : 0}
@@ -83,7 +91,8 @@ econ_stats =[
     },
     {
         "user" : "maafi_username#7152",
-        "bal" : 2500,
+        "cash" : 0,
+        "bank" : 2500,
         "inv" : [
             {"stock" : 0},
             {"chicken" : 0}
@@ -93,7 +102,8 @@ econ_stats =[
     },
     {
         "user" : "prakhar5723#3126",
-        "bal" : 2500,
+        "cash" : 0,
+        "bank" : 2500,
         "inv" : [
             {"stock" : 0},
             {"chicken" : 0}
@@ -103,7 +113,8 @@ econ_stats =[
     },
     {
         "user" : "smelly farts#9535",
-        "bal" : 2500,
+        "cash" : 0,
+        "bank" : 2500,
         "inv" : [
             {"stock" : 0},
             {"chicken" : 0}
@@ -113,7 +124,8 @@ econ_stats =[
     },
     {
         "user" : "Sugeeth2401#3350",
-        "bal" : 2500,
+        "cash" : 0,
+        "bank" : 2500,
         "inv" : [
             {"stock" : 0},
             {"chicken" : 0}
@@ -123,7 +135,8 @@ econ_stats =[
     },
     {
         "user" : "shreyash0368#2025",
-        "bal" : 2500,
+        "cash" : 0,
+        "bank" : 2500,
         "inv" : [
             {"stock" : 0},
             {"chicken" : 0}
@@ -133,7 +146,8 @@ econ_stats =[
     },
     {
         "user" : "Jackson Williams#4755",
-        "bal" : 2500,
+        "cash" : 0,
+        "bank" : 2500,
         "inv" : [
             {"stock" : 0},
             {"chicken" : 0}
@@ -143,7 +157,8 @@ econ_stats =[
     },
     {
         "user" : "kaanank90#4243",
-        "bal" : 2500,
+        "cash" : 0,
+        "bank" : 2500,
         "inv" : [
             {"stock" : 0},
             {"chicken" : 0}
