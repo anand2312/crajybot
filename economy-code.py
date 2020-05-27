@@ -177,7 +177,12 @@ store_data = [
     {
         "name" : "Chicken",
         "price" : 100,
-        "stock" : 99999999
+        "stock" : None
+    },
+    {
+        "name" : "Heist tools",
+        "price" : 250,
+        "stock" : None
     }
 ]
 

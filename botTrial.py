@@ -27,6 +27,22 @@ async def on_ready(): #sends this message when bot starts working in #bot-tests
 
 #ctx stands for context
 
+#tryna test a function that matches member list and brings user data from economy json
+def ReturnUserDict(inputName:str):           #function returns correct user dictionary from economy-data.json, AND the username (together in a tuple, unpack to use!)
+    guild = bot.get_guild(298871492924669954)
+    members = guild.members
+    
+    for i in members:
+        if inputName == i.nick or inputName == i.name:
+            username = str(i)
+
+    with open("economy-data.json","r") as data:
+        data_list = json.load(data)
+
+    for x in data_list:
+        if x["user"] == username:
+            return x,username
+
 @bot.command(name='popi')
 async def popi(ctx):
     reply = random.choice(["poopi really do be poopie though",f"{ctx.message.author.mention} is a poopie?oh no......"]) #Choice chooses 1 object from the list
@@ -83,22 +99,7 @@ async def withdraw(ctx,amount):
 
 @bot.command(name='bal')
 async def balance(ctx,user:str):
-    global guild
-    global members
-    guild = bot.get_guild(298871492924669954)
-    members = guild.members
-
-    for i in members:
-        if user == i.nick or user == i.name:
-            username = str(i)
-
-    with open("economy-data.json","r") as data:
-        data_bal = json.load(data)
-
-
-    for x in data_bal:
-        if x["user"] == username:
-            user_dict = x                 #gets right dictionary with all user vals from a list of dicts.
+    user_dict, username = ReturnUserDict(user)
     
     networth = (user_dict["cash"] + user_dict["bank"]) - user_dict["debt"]
     
@@ -294,21 +295,10 @@ async def repay_loan(ctx):
 
 @bot.command(name = "inventory", aliases = ["inv"])
 async def inventory(ctx, user:str):
-    guild = bot.get_guild(298871492924669954)
-    members = guild.members
-    for i in members:
-        if user.lower() == i.nick.lower() or user == i.name:
-            username = str(i)
-
-    with open("economy-data.json","r") as data:
-        data_inv = json.load(data)
-
-    for i in data_inv:
-        if i["user"] == username:
-            user_index = data_inv.index(i)
+    data_inv,username = ReturnUserDict(user)
 
     response = discord.Embed(title = username, description = "Inventory")
-    for k in data_inv[user_index]["inv"]:
+    for k in data_inv["inv"]:
         response.add_field(name = list(k.keys())[0], value = list(k.values())[0], inline = False)
     
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
@@ -363,9 +353,24 @@ async def buy(ctx, number:int, item:str):         #pls dont ask me how this code
         if item.lower() in k.keys():
             user_item_details = k
     if buy_data_user[user_index]["cash"] >= (number * price_per_item):
-        if buy_data_store[item_index]["stock"] >= number:
+        if buy_data_store[item_index]["stock"] is not None:
+            if buy_data_store[item_index]["stock"] >= number:
+                buy_data_user[user_index]["cash"] -= (number * price_per_item)
+                buy_data_store[item_index]["stock"] -= number
+                with open("store-data.json","w") as data:     #updates stock rmeaining in store-data.json
+                    json.dump(buy_data_store, data)
+                user_item_details[item.lower()] = user_item_details[item.lower()] + number
+
+                with open("economy-data.json","w") as data:
+                    json.dump(buy_data_user,data)
+
+                response = discord.Embed(title = str(ctx.message.author), description = f"You bought {number} {item}s!", colour = discord.Color.green())
+            
+                if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
+            else:
+                if ctx.message.channel.name in channels_available: await ctx.message.channel.send(f"Bruh not enough stock of this item is left.")
+        else:
             buy_data_user[user_index]["cash"] -= (number * price_per_item)
-            buy_data_store[item_index]["stock"] -= number
             with open("store-data.json","w") as data:     #updates stock rmeaining in store-data.json
                 json.dump(buy_data_store, data)
             user_item_details[item.lower()] = user_item_details[item.lower()] + number
@@ -374,10 +379,7 @@ async def buy(ctx, number:int, item:str):         #pls dont ask me how this code
                 json.dump(buy_data_user,data)
 
             response = discord.Embed(title = str(ctx.message.author), description = f"You bought {number} {item}s!", colour = discord.Color.green())
-        
             if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
-        else:
-            if ctx.message.channel.name in channels_available: await ctx.message.channel.send(f"Bruh not enough stock of this item is left.")
     else:
         if ctx.message.channel.name in channels_available: await ctx.message.channel.send(f"poopi you don't have enough moni {bot.get_emoji(703648812669075456)} ")
     
