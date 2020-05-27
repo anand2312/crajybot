@@ -23,7 +23,7 @@ bot.remove_command('help')
 
 @bot.event
 async def on_ready(): #sends this message when bot starts working in #bot-tests
-    await bot.get_channel(400969408371228683).send("its popi time!! i am now hosted, and running 24/7!")
+    await bot.get_channel(703141348131471440).send("its popi time!!")
     
 
 #ctx stands for context
@@ -182,6 +182,9 @@ async def leaderboard(ctx):
         for j in range(0,len(leaderboard_data) - 1 - i):
             if leaderboard_data[j]["bal"] > leaderboard_data[j + 1]["bal"]:
                 leaderboard_data[j],leaderboard_data[j+1] = leaderboard_data[j+1],leaderboard_data[j]
+
+    leaderboard_data.reverse()
+
     response = discord.Embed(title = "Crajy Leaderboard", description = "")
     for i in leaderboard_data:
         response.add_field(name = f"{leaderboard_data.index(i)}. {i['user']}", value = f"Balance {i['bal']}", inline = False)
@@ -274,7 +277,8 @@ async def inventory(ctx, user:str):
             user_index = data_inv.index(i)
 
     response = discord.Embed(title = username, description = "Inventory")
-    response.add_field(name = "Stock", value = data_inv[user_index]["inv"][0]["stock"], inline = False)
+    for k in data_inv[user_index]["inv"]:
+        response.add_field(name = list(k.keys())[0], value = list(k.values())[0], inline = False)
     
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
@@ -289,7 +293,9 @@ async def inventory_error(ctx,error):
                 user_dict = x
 
     response = discord.Embed(title = f"{str(ctx.message.author)}", description = "Inventory")
-    response.add_field(name = "Stock", value = user_dict["inv"][0]["stock"], inline  = False)
+    for i in user_dict["inv"]:
+        response.add_field(name = list(i.keys())[0],value = list(i.values())[0], inline = False)
+    
 
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
@@ -299,7 +305,9 @@ async def shop(ctx):
         shop_data = json.load(data)
     
     response = discord.Embed(title = f"Shop", description = f"All available items")
-    response.add_field(name = f"Stock", value = f"""Price : {shop_data[0]["price"]} | Remaining Stock : {shop_data[0]["stock"]}""" )
+
+    for i in shop_data:
+        response.add_field(name = f"""{i["name"]}""", value = f"""Price : {i["price"]} | Remaining Stock : {i["stock"]}""", inline = False )
 
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
 
@@ -329,7 +337,7 @@ async def buy(ctx, number:int, item:str):         #pls dont ask me how this code
             buy_data_store[item_index]["stock"] = buy_data_store[item_index]["stock"] - number
             with open("store-data.json","w") as data:     #updates stock rmeaining in store-data.json
                 json.dump(buy_data_store, data)
-            user_item_details[item] = user_item_details[item] + number
+            user_item_details[item.lower()] = user_item_details[item.lower()] + number
 
             with open("economy-data.json","w") as data:
                 json.dump(buy_data_user,data)
@@ -374,6 +382,23 @@ async def sell(ctx, n:int, item:str):
 
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
 
+@bot.command(name='givemoney')
+async def givemoney(ctx,person:discord.Member,amount:int):
+    with open("economy-data.json","r") as data:
+        econ_data = json.load(data)
+    
+    for i in econ_data:
+        if i['user'] == str(ctx.message.author):
+            i['bal'] -= amount
+        if i['user'] == str(person):
+            i['bal'] += amount
+    with open('economy-data.json','w') as data:
+        json.dump(econ_data,data)
+    
+    response = discord.Embed(title='Money Transfer: ', description=f"{ctx.author.mention} transferred {amount} to {person.mention}")
+    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(embed=response)
+
+#betting games
 @bot.command(name = "roulette")
 async def roulette(ctx,amount:int,bet:str):
     with open("economy-data.json","r") as data:
@@ -524,7 +549,10 @@ async def russian_roulette(ctx, amount:int):
     for member in users_list:
         for user_dict in rrr_data_full:
             if user_dict["user"] == str(member):
-                user_dict["bal"] = user_dict["bal"] - amount
+                if user_dict["bal"] <= amount:
+                    user_dict["bal"] = user_dict["bal"] - amount
+                else:
+                    users_list.remove(member)
      
     for i in users_list:
         if i != winner:
@@ -539,6 +567,29 @@ async def russian_roulette(ctx, amount:int):
                     user_dict["bal"] = user_dict["bal"] + (len(users_list) * amount)
     with open("economy-data.json","w") as data:
         json.dump(rrr_data_full,data)
+
+@bot.command(name = "cock-fight", aliases = ["cf","cockfight"])
+async def cockfight(ctx,amount:int):
+    with open("economy-data.json","r") as data:
+        cf_data = json.load(data)
+
+    win = random.choice([True,False,False,False])
+
+    for i in cf_data:
+        if i["user"] == str(ctx.message.author):
+            if i["inv"][1]["chicken"] > 0:
+                i["inv"][1]["chicken"] -= 1
+                if win is True:
+                    i["bal"] = i["bal"] + amount
+                    response = discord.Embed(title = str(ctx.message.author), description = f"Your little cock one the fight, making you {amount} richer!", colour = discord.Color.green())
+                else:
+                    i["bal"] = i["bal"] - amount
+                    response = discord.Embed(title = str(ctx.message.author), description = f"Your cock is weak. It lost the fight.", colour = discord.Color.red())
+            else:
+                await ctx.message.channel.send("You don't have enough cocks. Buy one!")
+    with open("economy-data.json","w") as data:
+        json.dump(cf_data,data)
+    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
 
 
     
@@ -644,7 +695,7 @@ async def stock_price():
 async def stock_price_before():
     global message_channel
     await bot.wait_until_ready()
-    message_channel = bot.get_channel(704911379341115433)
+    message_channel = bot.get_channel(703141348131471440)
     
 
 stock_price.start()

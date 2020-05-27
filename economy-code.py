@@ -4,7 +4,8 @@ econ_stats =[
         "user" : "Ares#7286",
         "bal" : 2500,
         "inv" : [
-            {"stock" : 0}
+            {"stock" : 0},
+            {"chicken" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -14,7 +15,8 @@ econ_stats =[
         "user" : "Sir Poopy Pants#0136",
         "bal" : 2500,
         "inv" : [
-            {"stock" : 0}
+            {"stock" : 0},
+            {"chicken" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -23,7 +25,8 @@ econ_stats =[
         "user" : "Foxwid#8333",
         "bal" : 2500,
         "inv" : [
-            {"stock" : 0}
+            {"stock" : 0},
+            {"chicken" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -32,7 +35,8 @@ econ_stats =[
         "user" : "MANDARIN#8024",
         "bal" : 2500,
         "inv" : [
-            {"stock" : 0}
+            {"stock" : 0},
+            {"chicken" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -41,7 +45,8 @@ econ_stats =[
         "user" : "humanboiii#5837",
         "bal" : 2500,
         "inv" : [
-            {"stock" : 0}
+            {"stock" : 0},
+            {"chicken" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -50,7 +55,8 @@ econ_stats =[
         "user" : "Windsmith#4272",
         "bal" : 2500,
         "inv" : [
-            {"stock" : 0}
+            {"stock" : 0},
+            {"chicken" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -59,7 +65,8 @@ econ_stats =[
         "user" : "BOOOZ#4084",
         "bal" : 2500,
         "inv" : [
-            {"stock" : 0}
+            {"stock" : 0},
+            {"chicken" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -68,7 +75,8 @@ econ_stats =[
         "user" : "CrashGamer#7883",
         "bal" : 2500,
         "inv" : [
-            {"stock" : 0}
+            {"stock" : 0},
+            {"chicken" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -77,7 +85,8 @@ econ_stats =[
         "user" : "maafi_username#7152",
         "bal" : 2500,
         "inv" : [
-            {"stock" : 0}
+            {"stock" : 0},
+            {"chicken" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -86,7 +95,8 @@ econ_stats =[
         "user" : "prakhar5723#3126",
         "bal" : 2500,
         "inv" : [
-            {"stock" : 0}
+            {"stock" : 0},
+            {"chicken" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -95,7 +105,8 @@ econ_stats =[
         "user" : "smelly farts#9535",
         "bal" : 2500,
         "inv" : [
-            {"stock" : 0}
+            {"stock" : 0},
+            {"chicken" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -104,7 +115,8 @@ econ_stats =[
         "user" : "Sugeeth2401#3350",
         "bal" : 2500,
         "inv" : [
-            {"stock" : 0}
+            {"stock" : 0},
+            {"chicken" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -113,7 +125,8 @@ econ_stats =[
         "user" : "shreyash0368#2025",
         "bal" : 2500,
         "inv" : [
-            {"stock" : 0}
+            {"stock" : 0},
+            {"chicken" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -122,7 +135,18 @@ econ_stats =[
         "user" : "Jackson Williams#4755",
         "bal" : 2500,
         "inv" : [
-            {"stock" : 0}
+            {"stock" : 0},
+            {"chicken" : 0}
+        ],
+        "debt" : 0,
+        "zodiac_sign" : ""
+    },
+    {
+        "user" : "kaanank90#4243",
+        "bal" : 2500,
+        "inv" : [
+            {"stock" : 0},
+            {"chicken" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -134,6 +158,11 @@ store_data = [
         "name" : "Stock",
         "price" : 25,
         "stock" :10000
+    },
+    {
+        "name" : "Chicken",
+        "price" : 100,
+        "stock" : 99999999
     }
 ]
 
