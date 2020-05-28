@@ -1,6 +1,7 @@
 import os
 import discord 
 import json
+import asyncio
 from discord.ext import commands
 from random import choice
 
@@ -85,6 +86,8 @@ async def battle(ctx,person:discord.Member,bet:int):
         battle_state, contestant_data, stats, battle_status = await begin_battle(ctx,person,ctx.message.author,bet)
         if battle_state == True:
             await process_battle(battle_state,ctx,contestant_data,stats,battle_status)
+            await end_battle(ctx,contestant_data,bet)
+            
     else:
         response = discord.Embed(title='Error',description='Another battle is ongoing. Please wait.')
         await ctx.message.channel.send(embed=response)
@@ -106,7 +109,7 @@ async def begin_battle(ctx,person,author,bet):
 
 async def send_challenge(ctx,person,author,bet):
     response = discord.Embed(title='Battle', description=f'{author.mention} challenges {person.mention} to a battle \n\n {person.mention} do you accept?')
-    response.add_field(name='Bet', value=bet)
+    response.add_field(name='Bet', value=str(bet)+" + 5% of your balance if you win")
     await ctx.message.channel.send(embed=response)
 
 async def get_reply(ctx,person):
@@ -194,12 +197,16 @@ async def process_battle(battle_state,ctx,contestant_data,stats,battle_status):
         if turn_count == 1:action, player_choice = await get_player_choice(ctx,contestant_data,player_1)
         else: action = await get_player_choice(ctx,contestant_data,player_1)
         battle_status_response = await process_action(ctx,contestant_data,player_1,player_2,action.content)
-        
         player_1, player_2 = await update_battle(ctx,contestant_data,player_1,player_2,stats,battle_status,player_turn,player_choice,battle_status_response,action)
+        if contestant_data[0]['hp']<=0 or contestant_data[1]['hp']<=0:
+            await asyncio.sleep(2)
+            await stats.delete()
+            await battle_status.delete()
+            await player_turn.delete()
+            await player_choice.delete()
+            battle_state=False
         
     
-    
-
 #Sub Functions of Process Battle:
 
 async def get_turn(ctx,contestant_data,player_1=0,player_2=0):
@@ -275,6 +282,24 @@ async def process_defense(ctx,contestant_data,player_1):
     battle_status_response = discord.Embed(title='Battle Status:',description=f"{contestant_data[player_1]['user']} defended!")
     return battle_status_response
 
+#End Battle
+async def end_battle(ctx,contestant_data,bet):
+    global battle_ongoing
+    battle_ongoing = False
+    if contestant_data[0]['hp'] == 0:
+        winner = contestant_data[2]
+    else: winner = contestant_data[3]
+    data = open('economy-data.json','r')
+    econ_data = json.load(data)
+    data.close()
+    amt = int(2*bet + 0.05*econ_data[winner]['bal'])
+    econ_data[winner]['bal'] += amt
+    response = discord.Embed(title=f"{econ_data[winner]['user']} wins!",
+    description=f"{econ_data[winner]['user']} wins {amt}")
+    with open('economy-data.json','w') as data:
+        json.dump(econ_data,data)
+
+    await ctx.channel.send(embed=response)
 
 
 bot.run(token)
