@@ -62,21 +62,48 @@ async def popi(ctx):
 
 @bot.command(name='help')
 async def help(ctx):
-    response = discord.Embed(title='Help',description='List of commands')
-    response.add_field(name="$popi", value="popi", inline = False)
-    response.add_field(name="Some economy function:", value = "----------", inline = False)
-    response.add_field(name="$bal", value="Displays balance in Bank, Debt and Net Worth", inline = False)
-    response.add_field(name="$work", value="You work, lazy popi", inline = False)
-    response.add_field(name="$slut", value="hoe life", inline = False)
-    response.add_field(name="$crime", value="gangsta tiem", inline = False)
-    response.add_field(name="$get-loan", value="You take out a loan of specified amount. Max amount of loan is twice your current balance. 5% interest applies on the loan (one time only,if you pay before 1 day after loan request you have to pay 5% interest as well). If you do not repay loan in 1 day, bot will auto deduct 10% extra from your balance.", inline = False)
-    response.add_field(name="$repay-loan", value="Repay your existing debts.", inline = False)
-    response.add_field(name="$inv", value="Checks inventory", inline = False)
-    response.add_field(name="$shop", value="Check shop", inline = False)
-    response.add_field(name=f"$buy <number> <item>", value="Buys item from store. No need to use those brackets", inline = False)
-    response.add_field(name=f"$sell <number> <item>", value="Sell item back to shop for current market price", inline = False)
-    response.add_field(name="$roulette", value="you know how this works", inline = False)
-    if ctx.message.channel in channels_available: await ctx.message.channel.send(content = None, embed = response)
+    response = discord.Embed(title = "Help", description = "Click on the appropriate emoji within 10 seconds")
+    response.add_field(name = "Economy Commands", value = "Click on the 🤑 emoji.", inline = False)
+    response.add_field(name = "Battle Commands", value = "Click on the ⚔️ emoji", inline = False)
+    response.add_field(name = "Moderator Commands", value = "Click on the 🔨 emoji", inline = False)
+    message = await ctx.message.channel.send(content = None, embed = response)
+
+    await message.add_reaction('🤑')
+    await message.add_reaction('⚔️')
+    await message.add_reaction('🔨')
+    await asyncio.sleep(10)
+
+    message = await ctx.message.channel.fetch_message(message.id)
+    rxns = message.reactions
+    for i in rxns:
+        if i.count > 1:
+            if i.emoji == '🤑':
+                embed=discord.Embed(title="Economy Commands", description="List of Economy commands")
+                embed.add_field(name="Income commands", value="work, slut, crime", inline=False)
+                embed.add_field(name="$shop", value="Displays available items in shop.", inline=False)
+                embed.add_field(name="$inv <user>", value="Displays selected user's inv, if not specified displays your inv", inline=False)
+                embed.add_field(name="$buy <number> <item>", value="Buys item from shop.", inline=False)
+                embed.add_field(name="$sell <number> <item>", value="Sells item back to shop.", inline=False)
+                embed.add_field(name="$bal <user>", value="Displays your balance. Works similar to inv", inline=False)
+                embed.add_field(name="$with <amount>", value="Withdraw amount from your bank", inline=False)
+                embed.add_field(name="$dep <amount>", value="Deposit amount to bank", inline=False)
+                embed.add_field(name="$givemoney <user> <amount>", value="Donate money to others.", inline=False)
+                embed.add_field(name="$get-loan <amount>", value="Get a loan of specified amount", inline=False)
+                embed.add_field(name="$repay-loan", value="Repay your loan (completely, not bit by bit)", inline=False)
+                embed.add_field(name="$roulette <amount> <bet>", value="Roulette", inline=False)
+                embed.add_field(name="$rrr <amount>", value="Starts a session of Reverse Russian Roulette", inline=False)
+                embed.add_field(name="$cf <amount>", value="Cock fight.", inline=False)
+                await message.edit(content = None, embed = embed)
+            elif i.emoji == '⚔️':   
+                embed = discord.Embed(title="Battle!", description="under development")
+                await message.edit(content = None, embed = embed)
+            elif i.emoji == '🔨':
+                embed = discord.Embed(title="Moderator Commands", description = "List of moderator commands")
+                embed.add_field(name="$change-money <action> <cash/bank> <user> <amount>", value = "Action can be remove/add/set.")
+                embed.add_field(name="$c-inv <action> <amount> <item> <user>", value = "Same actions as $cm, but for inventory.")
+                embed.add_field(name="$change-stock <item> <number>", value ="Used to change stock remaining of an item in shop.")
+            break
+     
 #ECONOMY CODE; ADD SPACE ABOVE THIS FOR OTHER UNRELATED FUNCTIONS PLEASE :linus_gun:
 @bot.command(name = "withdraw", aliases = ["with"])
 async def withdraw(ctx,amount):
@@ -668,16 +695,12 @@ async def rob(ctx, person:discord.Member):
             if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
     else:
         await ctx.message.channel.send("You do not have enough Heist tools items/ person doesn't have enough cash balance.")
-
-
-    
-
     
 #ECONOMY COMMANDS FOR ADMINS AND MODS (REMOVE BOT_DEV ONCE BOT IS DONE)
 
 @bot.command(name="change-money",aliases=["c-money","cm"])                  #gives admins, mods the permission to change money to their own bank (for now)
 @commands.has_any_role("Bot Dev","Moderators","admin")                      #this allows multiple roles to have access to one command
-async def change_money(ctx,action:str,amt:int,user:str):
+async def change_money(ctx,action:str,baltype:str,user:str,amt:int):
     guild = bot.get_guild(298871492924669954)
     members = guild.members
     for i in members:
@@ -692,16 +715,16 @@ async def change_money(ctx,action:str,amt:int,user:str):
 
     if amt > 0:
         if action == "add":
-            change_money_data[user_index]["bal"] = change_money_data[user_index]["bal"] + amt
-            response = discord.Embed(title = str(ctx.message.author.name), description = f"Added {amt} to {user}\'s bank!" ,colour=discord.Colour.green())
+            change_money_data[user_index][baltype] = change_money_data[user_index][baltype] + amt
+            response = discord.Embed(title = str(ctx.message.author.name), description = f"Added {amt} to {user}\'s {baltype}!" ,colour=discord.Colour.green())
                 
         elif action == "remove":
-            change_money_data[user_index]["bal"] = change_money_data[user_index]["bal"] - amt
-            response = discord.Embed(title = str(ctx.message.author.name), description = f"Removed {amt} from {user}\'s bank!" ,colour=discord.Colour.red())
+            change_money_data[user_index][baltype] = change_money_data[user_index][baltype] - amt
+            response = discord.Embed(title = str(ctx.message.author.name), description = f"Removed {amt} from {user}\'s {baltype}!" ,colour=discord.Colour.red())
 
         elif action == "set":
-            change_money_data[user_index]["bal"] = amt
-            response = discord.Embed(title = str(ctx.message.author.name), description = f"Set {amt} to {user}\'s bank!" ,colour=discord.Colour.orange()) 
+            change_money_data[user_index][baltype] = amt
+            response = discord.Embed(title = str(ctx.message.author.name), description = f"Set {amt} to {user}\'s {baltype}!" ,colour=discord.Colour.orange()) 
 
         with open("economy-data.json","w") as data:
             json.dump(change_money_data,data)
