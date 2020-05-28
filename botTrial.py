@@ -24,6 +24,7 @@ bot.remove_command('help')
 @bot.event
 async def on_ready(): #sends this message when bot starts working in #bot-tests
     await bot.get_channel(703141348131471440).send("its popi time!!")
+    await bot.change_presence(activity = discord.Game(name = "in pochinki"))
 
 @bot.event
 async def on_member_join(member):
@@ -135,6 +136,35 @@ async def withdraw(ctx,amount):
                         json.dump(with_data,data)
                     await ctx.message.channel.send(content = None, embed = response)
 
+@bot.command(name = "deposit", aliases = ["dep"])
+async def deposit(ctx,amount):
+        try:
+            amount = int(amount)
+            with open("economy-data.json","r") as data:
+                dep_data = json.load(data)
+                for i in dep_data:
+                    if i["user"] == str(ctx.message.author):
+                        if i["cash"] >= amount:
+                            i["bank"] += amount
+                            i["cash"] -= amount
+                            with open("economy-data.json","w") as data:
+                                json.dump(dep_data,data)
+                            response = discord.Embed(title = str(ctx.message.author), description = f"Deposited {amount}", colour = discord.Color.green())
+                            await ctx.message.channel.send(content = None, embed = response)
+                        else:
+                            await ctx.message.channel.send("Not that much moni to deposit")
+        except ValueError:
+            if amount.lower() == "all":
+                with open("economy-data.json","r") as data:
+                    dep_data = json.load(data)
+                for i in dep_data:
+                    if i["user"] == str(ctx.message.author):
+                        i["bank"] += i["cash"]
+                        response = discord.Embed(title = str(ctx.message.author), description = f"""Deposited {i["cash"]}""", colour = discord.Color.green())
+                        i["cash"] = 0
+                        with open("economy-data.json","w") as data:
+                            json.dump(dep_data,data)
+                        await ctx.message.channel.send(content = None, embed = response)
 @bot.command(name='bal')
 async def balance(ctx,user:discord.Member):
     user_dict, username = ReturnUserDict(user)
