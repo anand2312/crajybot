@@ -25,23 +25,34 @@ bot.remove_command('help')
 async def on_ready(): #sends this message when bot starts working in #bot-tests
     await bot.get_channel(703141348131471440).send("its popi time!!")
 
+@bot.event
+async def on_member_join(member):
+    with open("economy-data.json","r") as data:
+        update_user_data = json.load(data)
+    update_user_data.append({
+        "user" : str(member),
+        "cash" : 0,
+        "bank" : 2500,
+        "inv" : [
+            {"stock" : 0},
+            {"chicken" : 0},
+            {"heist tools" : 0}
+        ],
+        "debt" : 0,
+        "zodiac_sign" : ""
+    })
+    with open("economy-data.json", "w") as data:
+        json.dump(update_user_data,data)
+    await member.send("You have been added to our bot database!")
 #ctx stands for context
 
 #tryna test a function that matches member list and brings user data from economy json
-def ReturnUserDict(inputName:str):           #function returns correct user dictionary from economy-data.json, AND the username (together in a tuple, unpack to use!)
-    guild = bot.get_guild(298871492924669954)
-    members = guild.members
-    
-    for i in members:
-        if inputName == i.nick or inputName == i.name:
-            username = str(i)
-
+def ReturnUserDict(inputName:discord.Member):           #function returns correct user dictionary from economy-data.json, AND the username (together in a tuple, unpack to use!)
     with open("economy-data.json","r") as data:
-        data_list = json.load(data)
-
-    for x in data_list:
-        if x["user"] == username:
-            return x,username
+        user_data_list = json.load(data)
+    for i in user_data_list:
+        if i['user'] == str(inputName):
+            return i, str(inputName)
 
 @bot.command(name='popi')
 async def popi(ctx):
@@ -98,9 +109,9 @@ async def withdraw(ctx,amount):
                     await ctx.message.channel.send(content = None, embed = response)
 
 @bot.command(name='bal')
-async def balance(ctx,user:str):
+async def balance(ctx,user:discord.Member):
     user_dict, username = ReturnUserDict(user)
-    
+
     networth = (user_dict["cash"] + user_dict["bank"]) - user_dict["debt"]
     
     response = discord.Embed(title=username, description="Balance is:")
@@ -294,7 +305,7 @@ async def repay_loan(ctx):
         if ctx.message.channel.name in channels_available: await ctx.message.channel.send(f"You do not have any debt")
 
 @bot.command(name = "inventory", aliases = ["inv"])
-async def inventory(ctx, user:str):
+async def inventory(ctx, user:discord.Member):
     data_inv,username = ReturnUserDict(user)
 
     response = discord.Embed(title = username, description = "Inventory")
@@ -332,7 +343,7 @@ async def shop(ctx):
 
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
 
-@bot.command(name = "buy")
+@bot.command(name = "buy")                        #IMPORTANT!! - For items that should have unlimited stock, use stock value as None in store-data.json
 async def buy(ctx, number:int, item:str):         #pls dont ask me how this code works even i'm not sure anymore...........
     with open("store-data.json","r") as data:
         buy_data_store = json.load(data)
@@ -348,7 +359,7 @@ async def buy(ctx, number:int, item:str):         #pls dont ask me how this code
     for j in buy_data_user:
         if j["user"] == str(ctx.message.author):
             user_index = buy_data_user.index(j)
-
+    
     for k in buy_data_user[user_index]["inv"]:
         if item.lower() in k.keys():
             user_item_details = k
@@ -625,6 +636,38 @@ async def cockfight(ctx,amount:int):
     with open("economy-data.json","w") as data:
         json.dump(cf_data,data)
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
+
+@bot.command(name = "rob")
+async def rob(ctx, person:discord.Member):
+    with open("economy-data.json", "r") as data:
+        rob_data = json.load(data)
+    for i in rob_data:
+        if i["user"] == str(ctx.message.author):
+            robber_dict = i
+    person_dict, person_name = ReturnUserDict(person)
+    if robber_dict["inv"][2]["heist tools"] > 0 and person_dict["cash"] > 10:
+        robber_dict["inv"][2]["heist tools"] -= 1
+        
+        win_chance = random.choice([True,True,True,False])
+        win_percent = random.randint(50,80)
+        
+        if win_chance is True:
+            win_amount = int(person_dict["cash"] * (win_percent/100))
+            person_dict["cash"] -= win_amount
+            robber_dict["cash"] += win_amount
+            response = discord.Embed(title = str(ctx.message.author), description = f"You robbed {win_amount} from {person_name}", colour = discord.Color.green())
+            with open("economy-data.json","w") as data:
+                json.dump(rob_data,data)
+            if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
+        else:
+            fine_amount = random.randint(75, 200)
+            robber_dict["cash"] -= fine_amount
+            with open("economy-data.json","w") as data:
+                json.dump(rob_data,data)
+            response = discord.Embed(title = str(ctx.message.author), description = f"You were caught robbing, and fined {fine_amount}", colour = discord.Color.red())
+            if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
+    else:
+        await ctx.message.channel.send("You do not have enough Heist tools items/ person doesn't have enough cash balance.")
 
 
     

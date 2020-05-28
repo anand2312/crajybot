@@ -6,7 +6,8 @@ econ_stats =[
         "bank" : 2500,
         "inv" : [
             {"stock" : 0},
-            {"chicken" : 0}
+            {"chicken" : 0},
+            {"heist tools" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -18,7 +19,8 @@ econ_stats =[
         "bank" : 2500,
         "inv" : [
             {"stock" : 0},
-            {"chicken" : 0}
+            {"chicken" : 0},
+            {"heist tools" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -29,7 +31,8 @@ econ_stats =[
         "bank" : 2500,
         "inv" : [
             {"stock" : 0},
-            {"chicken" : 0}
+            {"chicken" : 0},
+            {"heist tools" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -40,7 +43,8 @@ econ_stats =[
         "bank" : 2500,
         "inv" : [
             {"stock" : 0},
-            {"chicken" : 0}
+            {"chicken" : 0},
+            {"heist tools" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -51,7 +55,8 @@ econ_stats =[
         "bank" : 2500,
         "inv" : [
             {"stock" : 0},
-            {"chicken" : 0}
+            {"chicken" : 0},
+            {"heist tools" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -62,7 +67,8 @@ econ_stats =[
         "bank" : 2500,
         "inv" : [
             {"stock" : 0},
-            {"chicken" : 0}
+            {"chicken" : 0},
+            {"heist tools" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -73,7 +79,8 @@ econ_stats =[
         "bank" : 2500,
         "inv" : [
             {"stock" : 0},
-            {"chicken" : 0}
+            {"chicken" : 0},
+            {"heist tools" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -84,7 +91,8 @@ econ_stats =[
         "bank" : 2500,
         "inv" : [
             {"stock" : 0},
-            {"chicken" : 0}
+            {"chicken" : 0},
+            {"heist tools" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -95,7 +103,8 @@ econ_stats =[
         "bank" : 2500,
         "inv" : [
             {"stock" : 0},
-            {"chicken" : 0}
+            {"chicken" : 0},
+            {"heist tools" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -106,7 +115,8 @@ econ_stats =[
         "bank" : 2500,
         "inv" : [
             {"stock" : 0},
-            {"chicken" : 0}
+            {"chicken" : 0},
+            {"heist tools" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -117,7 +127,8 @@ econ_stats =[
         "bank" : 2500,
         "inv" : [
             {"stock" : 0},
-            {"chicken" : 0}
+            {"chicken" : 0},
+            {"heist tools" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -128,7 +139,8 @@ econ_stats =[
         "bank" : 2500,
         "inv" : [
             {"stock" : 0},
-            {"chicken" : 0}
+            {"chicken" : 0},
+            {"heist tools" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -139,7 +151,8 @@ econ_stats =[
         "bank" : 2500,
         "inv" : [
             {"stock" : 0},
-            {"chicken" : 0}
+            {"chicken" : 0},
+            {"heist tools" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -150,7 +163,8 @@ econ_stats =[
         "bank" : 2500,
         "inv" : [
             {"stock" : 0},
-            {"chicken" : 0}
+            {"chicken" : 0},
+            {"heist tools" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
@@ -161,7 +175,8 @@ econ_stats =[
         "bank" : 2500,
         "inv" : [
             {"stock" : 0},
-            {"chicken" : 0}
+            {"chicken" : 0},
+            {"heist tools" : 0}
         ],
         "debt" : 0,
         "zodiac_sign" : ""
