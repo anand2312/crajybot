@@ -23,7 +23,7 @@ bot.remove_command('help')
 
 @bot.event
 async def on_ready(): #sends this message when bot starts working in #bot-tests
-    await bot.get_channel(703141348131471440).send("its popi time!!")
+    await bot.get_channel(400969408371228683).send("its popi time!!")
     await bot.change_presence(activity = discord.Game(name = "in pochinki"))
 
 @bot.event
@@ -103,6 +103,7 @@ async def help(ctx):
                 embed.add_field(name="$change-money <action> <cash/bank> <user> <amount>", value = "Action can be remove/add/set.")
                 embed.add_field(name="$c-inv <action> <amount> <item> <user>", value = "Same actions as $cm, but for inventory.")
                 embed.add_field(name="$change-stock <item> <number>", value ="Used to change stock remaining of an item in shop.")
+                await message.edit(content = None, embed = embed)
             break
      
 #ECONOMY CODE; ADD SPACE ABOVE THIS FOR OTHER UNRELATED FUNCTIONS PLEASE :linus_gun:
@@ -641,20 +642,23 @@ async def russian_roulette(ctx, amount:int):
     
     users_list = await rr_message.reactions[0].users().flatten()
     users_list.pop(0)
+    print(users_list)
 
     with open("economy-data.json","r") as data:
         rrr_data_full = json.load(data)
 
-    winner = random.choice(users_list)
-
     for member in users_list:
         for user_dict in rrr_data_full:
             if user_dict["user"] == str(member):
-                if user_dict["cash"] <= amount:
+                if user_dict["cash"] >= amount:
+                    print("removed!")
                     user_dict["cash"] -= amount
-                else:
+                elif user_dict["cash"] < amount:
                     users_list.remove(member)
-     
+
+    winner = random.choice(users_list)
+    print(users_list, "updated", len(users_list))
+    
     for i in users_list:
         if i != winner:
             response = discord.Embed(title = str(i), description = f"Got shot.", colour = discord.Color.red())
@@ -698,10 +702,13 @@ async def cockfight(ctx,amount:int):
 async def rob(ctx, person:discord.Member):
     with open("economy-data.json", "r") as data:
         rob_data = json.load(data)
+    
     for i in rob_data:
         if i["user"] == str(ctx.message.author):
             robber_dict = i
-    person_dict, person_name = ReturnUserDict(person)
+        elif i["user"] == str(person):
+            person_dict = i
+    print(f"person - {person_dict} \n robber - {robber_dict}")
     if robber_dict["inv"][2]["heist tools"] > 0 and person_dict["cash"] > 10:
         robber_dict["inv"][2]["heist tools"] -= 1
         
@@ -712,7 +719,8 @@ async def rob(ctx, person:discord.Member):
             win_amount = int(person_dict["cash"] * (win_percent/100))
             person_dict["cash"] -= win_amount
             robber_dict["cash"] += win_amount
-            response = discord.Embed(title = str(ctx.message.author), description = f"You robbed {win_amount} from {person_name}", colour = discord.Color.green())
+            print("person-",person_dict, "robber-", robber_dict)
+            response = discord.Embed(title = str(ctx.message.author), description = f"You robbed {win_amount} from {str(person)}", colour = discord.Color.green())
             with open("economy-data.json","w") as data:
                 json.dump(rob_data,data)
             if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
@@ -794,16 +802,22 @@ async def change_inventory(ctx,action:str,amt:int,item:str,user:str):
             user_index = data_inv.index(i)
     
     if action == "add":
-        data_inv[user_index]["inv"][0][item] = data_inv[user_index]["inv"][0][item] + amt
-        response = discord.Embed(title = str(ctx.message.author.name), description = f"Added {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.green())
+        for i in data_inv[user_index]["inv"]:
+            if item in i.keys():
+                i[item] = i[item] + amt
+                response = discord.Embed(title = str(ctx.message.author.name), description = f"Added {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.green())
              
     elif action == "remove":
-        data_inv[user_index]["inv"][0][item] = data_inv[user_index]["inv"][0][item] - amt
-        response = discord.Embed(title = str(ctx.message.author.name), description = f"Removed {amt} {item}(s) from {user}\'s inventory!",colour=discord.Colour.red())
+        for i in data_inv[user_index]["inv"]:
+            if item in i.keys():
+                i[item] = i[item] - amt
+                response = discord.Embed(title = str(ctx.message.author.name), description = f"Removed {amt} {item}(s) from {user}\'s inventory!",colour=discord.Colour.red())
 
     elif action == "set":
-        data_inv[user_index]["inv"][0][item] = amt
-        response = discord.Embed(title = str(ctx.message.author.name), description = f"Set {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.orange())
+        for i in data_inv[user_index]["inv"]:
+            if item in i.keys():
+                i[item] = amt
+                response = discord.Embed(title = str(ctx.message.author.name), description = f"Set {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.orange())
         
 
     with open("economy-data.json","w") as data:
@@ -826,7 +840,7 @@ async def stock_price():
 async def stock_price_before():
     global message_channel
     await bot.wait_until_ready()
-    message_channel = bot.get_channel(703141348131471440)
+    message_channel = bot.get_channel(704911379341115433)
     
 
 stock_price.start()
