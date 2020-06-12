@@ -11,8 +11,9 @@ import asyncio
 import json
 
 #bot token stuff; not to be messed with :linus_gun:
-token_ = "NzA5NDA3MjY4NDg3MDM3MDE5.XrllLQ.FbL2vivvNxjxPT-wOfAvH32fK4QZ"
+token_ = "NzA5NDA3MjY4NDg3MDM3MDE5.XuNH-A.sfVNk1d8Ky269KnpR4khtj6k6McY"
 token = token_[:len(token_)-1]
+
 
 #bot which controls everything; subclass of Client
 bot = commands.Bot(command_prefix='$')
@@ -23,28 +24,51 @@ bot.remove_command('help')
 
 @bot.event
 async def on_ready(): #sends this message when bot starts working in #bot-tests
-    await bot.get_channel(400969408371228683).send("its popi time!!")
-    await bot.change_presence(activity = discord.Game(name = "in pochinki"))
+    await bot.get_channel(703141348131471440).send("its popi time!!")
+    await bot.change_presence(activity = discord.Game(name = "with thug_sgt"))
 
 @bot.event
 async def on_member_join(member):
     with open("economy-data.json","r") as data:
         update_user_data = json.load(data)
-    update_user_data.append({
-        "user" : str(member),
-        "cash" : 0,
-        "bank" : 2500,
-        "inv" : [
-            {"stock" : 0},
-            {"chicken" : 0},
-            {"heist tools" : 0}
-        ],
-        "debt" : 0,
-        "zodiac_sign" : ""
-    })
-    with open("economy-data.json", "w") as data:
-        json.dump(update_user_data,data)
-    await member.send("You have been added to our bot database!")
+    
+    for i in update_user_data:
+        if i["user"] != str(member):
+            check = False
+        else:
+            check = True
+            break
+
+    if check is False:
+        update_user_data.append({
+                "user" : str(member),
+                "cash" : 0,
+                "bank" : 2500,
+                "inv" : [
+                    {"stock" : 0},
+                    {"chicken" : 0},
+                    {"heist tools" : 0}
+                ],
+                "debt" : 0,
+                "zodiac_sign" : ""
+            })
+        with open("economy-data.json", "w") as data:
+            json.dump(update_user_data,data)
+        await member.send("You have been added to our bot database!")
+
+@bot.event
+async def on_member_remove(member):
+    with open("economy-data.json","r") as data:
+        remove_user_data = json.load(data)
+    
+    user_dict = ReturnUserDict(member)[0]
+
+    remove_user_data.remove(user_dict)
+
+    with open("economy-data.json","w") as data:
+        json.dump(remove_user_data, data)
+    await member.send(f"haha popi you got deleted from the bot database")
+    
 #ctx stands for context
 
 #tryna test a function that matches member list and brings user data from economy json
@@ -508,9 +532,10 @@ async def roulette(ctx,amount:int,bet:str):
 
     for i in roulette_user_data:
         if i["user"] == str(ctx.message.author):
-            user_cash = i["cash"] 
+            user_dict = i
+            break
 
-    if amount <= user_cash and user_cash > 0:
+    if amount <= user_dict["cash"] and user_dict["cash"] > 0:
 
         roulette_table = {
             "red" : [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36],
@@ -529,7 +554,9 @@ async def roulette(ctx,amount:int,bet:str):
         }
         if bet in roulette_table.keys():
             win_number = random.randint(0,36)
-            user_cash -= amount
+            user_dict["cash"] -= amount
+            with open("economy-data.json","w") as data:
+                json.dump(roulette_user_data,data)
             response1 = discord.Embed(title = str(ctx.message.author), description = f"You've placed a bet on {bet}.")
             response1.set_footer(text = f"Please wait 10 seconds")
             await ctx.message.channel.send(content = None, embed = response1)
@@ -566,11 +593,11 @@ async def roulette(ctx,amount:int,bet:str):
                 if bet == "even":
                     if win_number % 2 == 0:
                         user_win = True
-                        multiplier = 3
+                        multiplier = 2
                 elif bet == "odd":
                     if win_number % 2 != 0:
                         user_win = True
-                        multiplier = 3
+                        multiplier = 2
 
             elif bet in ["1-18","19-36"]:       #halves
                 if bet == "1-18":
@@ -845,4 +872,3 @@ async def stock_price_before():
 
 stock_price.start()
 bot.run(token)
-
