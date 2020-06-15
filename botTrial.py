@@ -33,9 +33,10 @@ async def on_member_join(member):
         update_user_data = json.load(data)
     
     for i in update_user_data:
-        if i["user"] != str(member):
+        if str(member) != i["user"]:
             check = False
-        else:
+            continue
+        elif str(member) == i["user"]:
             check = True
             break
 
@@ -55,20 +56,9 @@ async def on_member_join(member):
         with open("economy-data.json", "w") as data:
             json.dump(update_user_data,data)
         await member.send("You have been added to our bot database!")
+    else:
+        return
 
-@bot.event
-async def on_member_remove(member):
-    with open("economy-data.json","r") as data:
-        remove_user_data = json.load(data)
-    
-    user_dict = ReturnUserDict(member)[0]
-
-    remove_user_data.remove(user_dict)
-
-    with open("economy-data.json","w") as data:
-        json.dump(remove_user_data, data)
-    await member.send(f"haha popi you got deleted from the bot database")
-    
 #ctx stands for context
 
 #tryna test a function that matches member list and brings user data from economy json
@@ -618,6 +608,9 @@ async def roulette(ctx,amount:int,bet:str):
         elif int(bet) in list(range(0,37)):
             win_number = random.randint(0,36)
             user_win = False
+            user_dict["cash"] -= amount
+            with open("economy-data.json","w") as data:
+                json.dump(roulette_user_data,data)
 
             response1 = discord.Embed(title = str(ctx.message.author), description = f"You've placed a bet on {bet}.")
             response1.set_footer(text = f"Please wait 10 seconds")
@@ -646,13 +639,6 @@ async def roulette(ctx,amount:int,bet:str):
                 await ctx.message.channel.send(content = None, embed = response2)
         else:
             response2 = discord.Embed(title = f"Roulette Results {str(ctx.message.author)}", description = f"You lost {amount} {bot.get_emoji(703648812669075456)}", colour = discord.Color.red())
-            with open("economy-data.json", "r") as data:
-                roulette_data = json.load(data)
-            for i in roulette_data:
-                if i["user"] == str(ctx.message.author):
-                    i["cash"] -= amount
-            with open("economy-data.json","w") as data:
-                json.dump(roulette_data, data)
             if ctx.message.channel.name in channels_available: 
                 await ctx.message.channel.send(f"The ball fell on {win_number}")
                 await ctx.message.channel.send(content = None, embed = response2)
@@ -811,6 +797,19 @@ async def change_stock(ctx, item:str, n:int):
 
     response = discord.Embed(title = str(ctx.message.author.name), description = f"Updated stock of {item}")
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
+@bot.command(name = "remove-user")
+@commands.has_any_role("Moderators","admin","Bot Dev")
+async def remove_user(member):
+    with open("economy-data.json","r") as data:
+        remove_user_data = json.load(data)
+    for i in remove_user_data:
+        if i["user"] == str(member):
+            remove_user_data.remove(i)
+            break
+
+    with open("economy-data.json","w") as data:
+        json.dump(remove_user_data, data)
+    await member.send(f"haha popi you got deleted from the bot database")
     
 @bot.command(name = "change-inventory",aliases=["c-inv"])
 @commands.has_any_role("Moderators","admin","Bot Dev")
