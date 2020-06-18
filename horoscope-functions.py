@@ -19,11 +19,6 @@ channels_available = ["bot-test","botspam-v2","botspam"]
 battle_ongoing = False
 turn_count = 1
 
-
-@bot.event
-async def on_ready():
-    await bot.get_channel(703141348131471440).send("Bruh")
-
 @bot.command(name='horo-assign')
 async def assign_horoscope(ctx):
     msg = await ask_date(ctx)
