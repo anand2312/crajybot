@@ -77,8 +77,9 @@ def update_json_database(response,sign):
 
 @bot.command(name='battle')
 async def battle(ctx,person:discord.Member,bet:int):
-    if battle_ongoing == False:
-        battle_state, contestant_data, stats, battle_status = await begin_battle(ctx,person,ctx.message.author,bet)
+    if person != ctx.author:
+        if battle_ongoing == False:
+            battle_state, contestant_data, stats, battle_status = await begin_battle(ctx,person,ctx.message.author,bet)
         if battle_state == True:
             await process_battle(battle_state,ctx,contestant_data,stats,battle_status)
             await end_battle(ctx,contestant_data,bet)
