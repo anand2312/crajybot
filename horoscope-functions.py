@@ -15,6 +15,8 @@ bot = commands.Bot(command_prefix='$')
 #Channels where the bot works
 channels_available = ["bot-test","botspam-v2","botspam"] 
 
+bot.remove_command('help')
+
 #global variables
 battle_ongoing = False
 turn_count = 1
