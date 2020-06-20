@@ -506,9 +506,13 @@ async def givemoney(ctx,person:discord.Member,amount:int):
     
     for i in econ_data:
         if i['user'] == str(ctx.message.author):
-            i['cash'] -= amount
-        if i['user'] == str(person):
-            i['cash'] += amount
+            if i['cash'] >= amount:
+                i['cash'] -= amount
+            else:
+                return await ctx.message.channel.send(f"{ctx.message.author.mention} doesn't have enough moni popi barin")
+        elif i['user'] == str(person):
+            i['user'] += amount
+
     with open('economy-data.json','w') as data:
         json.dump(econ_data,data)
     
@@ -516,6 +520,7 @@ async def givemoney(ctx,person:discord.Member,amount:int):
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(embed=response)
 
 #betting games
+
 @bot.command(name = "roulette")
 async def roulette(ctx,amount:int,bet:str):
     with open("economy-data.json","r") as data:
@@ -765,7 +770,7 @@ async def change_money(ctx,action:str,baltype:str,user:str,amt:int):
         if i["user"] == username:
             user_index = change_money_data.index(i)
 
-    if amt > 0:
+    if amt >= 0:
         if action == "add":
             change_money_data[user_index][baltype] = change_money_data[user_index][baltype] + amt
             response = discord.Embed(title = str(ctx.message.author.name), description = f"Added {amt} to {user}\'s {baltype}!" ,colour=discord.Colour.green())
@@ -883,12 +888,12 @@ async def ask_date(ctx):
 def check_date(jsondata, authordata):         #Is called inside ask_date()
     date = authordata.content.split('-')
     days = [31,28,31,30,31,30,31,31,30,31,30,31]
-    sum = 0
+    sum_ = 0                               #renamed sum to sum_ to retain sum functionality
     for i in range(int(date[1])-1):
-        sum+=days[i]
-    sum+=int(date[0])
-    if 0<sum<19:sum+=366
-    if jsondata["day_low"]<=sum<=jsondata["day_high"]: return True
+        sum_+=days[i]
+    sum_+=int(date[0])
+    if 0<sum_<19:sum_+=366
+    if jsondata["day_low"]<=sum_<=jsondata["day_high"]: return True
 
 def get_zodiac(response):
     data = open("horo-data.json","r")
@@ -986,10 +991,12 @@ def deduct_from_balance(person,author,bet,contestant_data):
     data = open('economy-data.json','r')
     econ_data = json.load(data)
     data.close()
-    econ_data[contestant_data[2]]['bal'] -= bet
-    econ_data[contestant_data[3]]['bal'] -= bet
-    with open('economy-data.json','w') as data:
-        json.dump(econ_data,data)
+    if econ_data[contestant_data[2]]['cash'] >= bet and econ_data[contestant_data[3]]['cash'] >= bet:
+        econ_data[contestant_data[2]]['cash'] -= bet
+        econ_data[contestant_data[3]]['cash'] -= bet
+        with open('economy-data.json','w') as data:
+            json.dump(econ_data,data)
+
 
 async def display_beginning_stats(ctx,person,author,contestant_data):
     stats_beginning = make_stats_embed(contestant_data)
@@ -1126,7 +1133,7 @@ async def end_battle(ctx,contestant_data,bet):
     data = open('economy-data.json','r')
     econ_data = json.load(data)
     data.close()
-    amt = int(2*bet + 0.05*econ_data[winner]['bal'])
+    amt = int(2*bet + 0.05*econ_data[winner]['cash'])
     econ_data[winner]['bal'] += amt
     response = discord.Embed(title=f"{econ_data[winner]['user']} wins!",
     description=f"{econ_data[winner]['user']} wins {amt}")
