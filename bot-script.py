@@ -12,7 +12,7 @@ import json
 from random import choice
 
 #bot token stuff; not to be messed with :linus_gun:
-token_ = "NzA5NDA3MjY4NDg3MDM3MDE5.XuNH-A.sfVNk1d8Ky269KnpR4khtj6k6McY"
+token_ = "NzA5NDA3MjY4NDg3MDM3MDE5.XxnIEg.qK4JaMLJU-ytUM_SRSCgRN-IoiMx"
 token = token_[:len(token_)-1]
 
 
@@ -511,7 +511,7 @@ async def givemoney(ctx,person:discord.Member,amount:int):
             else:
                 return await ctx.message.channel.send(f"{ctx.message.author.mention} doesn't have enough moni popi barin")
         elif i['user'] == str(person):
-            i['user'] += amount
+            i['cash'] += amount
 
     with open('economy-data.json','w') as data:
         json.dump(econ_data,data)
@@ -520,7 +520,6 @@ async def givemoney(ctx,person:discord.Member,amount:int):
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(embed=response)
 
 #betting games
-
 @bot.command(name = "roulette")
 async def roulette(ctx,amount:int,bet:str):
     with open("economy-data.json","r") as data:
