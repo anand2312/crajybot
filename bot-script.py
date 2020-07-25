@@ -9,12 +9,20 @@ import discord
 from discord.ext import commands,tasks
 import asyncio
 import json
+from pymongo import MongoClient
 from random import choice
 
 #bot token stuff; not to be messed with :linus_gun:
 token_ = "NzA5NDA3MjY4NDg3MDM3MDE5.XxnIEg.qK4JaMLJU-ytUM_SRSCgRN-IoiMx"
 token = token_[:len(token_)-1]
 
+#local mongodb database stuff
+client = MongoClient("mongodb://localhost:27017/")
+db = client["bot-data"]
+
+economy_collection = db["econ_data"]
+rpg_collection = db["rpg_data"]
+store_collection = db["store_data"]
 
 #bot which controls everything; subclass of Client
 bot = commands.Bot(command_prefix='$')
@@ -27,6 +35,12 @@ bot.remove_command('help')
 async def on_ready(): #sends this message when bot starts working in #bot-tests
     await bot.get_channel(703141348131471440).send("its popi time!!")
     await bot.change_presence(activity = discord.Game(name = "with thug_sgt"))
+
+@bot.event
+async def on_message(ctx):
+    #chat money
+    economy_collection.find_one_and_update({"user":str(ctx.author)}, {"$inc":{"cash":10}})
+    await bot.process_commands(message)
 
 @bot.event
 async def on_member_join(member):
@@ -1157,7 +1171,7 @@ async def stock_price_before():
     global message_channel
     await bot.wait_until_ready()
     message_channel = bot.get_channel(704911379341115433)
-    
+
 
 stock_price.start()
 bot.run(token)
