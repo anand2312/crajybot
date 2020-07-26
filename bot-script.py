@@ -8,7 +8,6 @@ import random
 import discord 
 from discord.ext import commands,tasks
 import asyncio
-import json
 from pymongo import MongoClient
 from random import choice
 
@@ -28,6 +27,7 @@ store_collection = db["store_data"]
 bot = commands.Bot(command_prefix='$')
 
 channels_available = ["bot-test","botspam-v2","botspam"] #Channels where the bot works
+chat_money_channels = ['another-chat']
 bot.remove_command('help') 
 #Lets us implement our own help command instead of the built in one
 
@@ -39,24 +39,16 @@ async def on_ready(): #sends this message when bot starts working in #bot-tests
 @bot.event
 async def on_message(ctx):
     #chat money
-    economy_collection.find_one_and_update({"user":str(ctx.author)}, {"$inc":{"cash":10}})
+    if ctx.channel in chat_money_channels:
+        economy_collection.find_one_and_update({"user":str(ctx.author)}, {"$inc":{"cash":10}})
     await bot.process_commands(ctx)
 
-@bot.event
+@bot.event    #to be tested!
 async def on_member_join(member):
-    with open("economy-data.json","r") as data:
-        update_user_data = json.load(data)
-    
-    for i in update_user_data:
-        if str(member) != i["user"]:
-            check = False
-            continue
-        elif str(member) == i["user"]:
-            check = True
-            break
+    check = economy_collection.find({'user':str(member)})
 
-    if check is False:
-        update_user_data.append({
+    if check is None:
+        economy_collection.insert({
                 "user" : str(member),
                 "cash" : 0,
                 "bank" : 2500,
@@ -68,28 +60,21 @@ async def on_member_join(member):
                 "debt" : 0,
                 "zodiac_sign" : ""
             })
-        with open("economy-data.json", "w") as data:
-            json.dump(update_user_data,data)
         await member.send("You have been added to our bot database!")
     else:
         return
 #testing some cogs stuff
-'''@bot.command()
+@bot.command()
+@commands.has_any_role("admin","Bot Dev")
 async def load(ctx, extension):
     bot.load_extension(f"cogs.{extension}")
+    await ctx.message.channel.send(f"loaded {extension}")
 
 @bot.command()
+@commands.has_any_role("admin","Bot Dev")
 async def unload(ctx, extension):
-    bot.unload_extension(f"cogs.{extension}")'''
-#ctx stands for context
-
-#tryna test a function that matches member list and brings user data from economy json
-def ReturnUserDict(inputName:discord.Member):           #function returns correct user dictionary from economy-data.json, AND the username (together in a tuple, unpack to use!)
-    with open("economy-data.json","r") as data:
-        user_data_list = json.load(data)
-    for i in user_data_list:
-        if i['user'] == str(inputName):
-            return i, str(inputName)
+    bot.unload_extension(f"cogs.{extension}")
+    await ctx.message.channel.send(f"unloaded {extension}")
 
 @bot.command(name='popi')
 async def popi(ctx):
@@ -141,406 +126,8 @@ async def help(ctx):
                 embed.add_field(name="$change-stock <item> <number>", value ="Used to change stock remaining of an item in shop.")
                 await message.edit(content = None, embed = embed)
             break
-     
-#ECONOMY CODE; ADD SPACE ABOVE THIS FOR OTHER UNRELATED FUNCTIONS PLEASE :linus_gun:
-@bot.command(name = "withdraw", aliases = ["with"])
-async def withdraw(ctx,amount):
-    try:
-        amount = int(amount)
-        with open("economy-data.json","r") as data:
-            with_data = json.load(data)
-            for i in with_data:
-                if i["user"] == str(ctx.message.author):
-                    if i["bank"] >= amount:
-                        i["bank"] -= amount
-                        i["cash"] += amount
-                        with open("economy-data.json","w") as data:
-                            json.dump(with_data,data)
-                        response = discord.Embed(title = str(ctx.message.author), description = f"Withdrew {amount}", colour = discord.Color.green())
-                        await ctx.message.channel.send(content = None, embed = response)
-                    else:
-                        await ctx.message.channel.send("You do not have that much balance")
-    except ValueError:
-        if amount.lower() == "all":
-            with open("economy-data.json","r") as data:
-                with_data = json.load(data)
-            for i in with_data:
-                if i["user"] == str(ctx.message.author):
-                    i["cash"] += i["bank"]
-                    response = discord.Embed(title = str(ctx.message.author), description = f"""Withdrew {i["bank"]}""", colour = discord.Color.green())
-                    i["bank"] = 0
-                    with open("economy-data.json","w") as data:
-                        json.dump(with_data,data)
-                    await ctx.message.channel.send(content = None, embed = response)
-
-@bot.command(name = "deposit", aliases = ["dep"])
-async def deposit(ctx,amount):
-        try:
-            amount = int(amount)
-            with open("economy-data.json","r") as data:
-                dep_data = json.load(data)
-                for i in dep_data:
-                    if i["user"] == str(ctx.message.author):
-                        if i["cash"] >= amount:
-                            i["bank"] += amount
-                            i["cash"] -= amount
-                            with open("economy-data.json","w") as data:
-                                json.dump(dep_data,data)
-                            response = discord.Embed(title = str(ctx.message.author), description = f"Deposited {amount}", colour = discord.Color.green())
-                            await ctx.message.channel.send(content = None, embed = response)
-                        else:
-                            await ctx.message.channel.send("Not that much moni to deposit")
-        except ValueError:
-            if amount.lower() == "all":
-                with open("economy-data.json","r") as data:
-                    dep_data = json.load(data)
-                for i in dep_data:
-                    if i["user"] == str(ctx.message.author):
-                        i["bank"] += i["cash"]
-                        response = discord.Embed(title = str(ctx.message.author), description = f"""Deposited {i["cash"]}""", colour = discord.Color.green())
-                        i["cash"] = 0
-                        with open("economy-data.json","w") as data:
-                            json.dump(dep_data,data)
-                        await ctx.message.channel.send(content = None, embed = response)
-@bot.command(name='bal')
-async def balance(ctx,user:discord.Member):
-    user_dict, username = ReturnUserDict(user)
-
-    networth = (user_dict["cash"] + user_dict["bank"]) - user_dict["debt"]
-    
-    response = discord.Embed(title=username, description="Balance is:")
-    response.add_field(name="Cash Balance : ",value=f"{user_dict['cash']}", inline = False)
-    response.add_field(name="Bank balance : ",value=f"{user_dict['bank']}", inline = False)
-    response.add_field(name="Debt : ",value=f"{user_dict['debt'] * (-1)}", inline = False)
-    response.add_field(name="Net Worth : ",value=networth, inline = False)
-                       #all this is for 1) in Bank, 2) Debt, 3) Total bal
-
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
-
-@balance.error
-async def bal_error(ctx,error):
-    if isinstance(error , commands.errors.MissingRequiredArgument):
-        with open("economy-data.json","r") as data:
-            data_bal = json.load(data)
-        
-        for x in data_bal:
-            if x["user"] == str(ctx.message.author):
-                user_dict = x
-
-        networth = (user_dict["cash"] + user_dict["bank"]) - user_dict["debt"]
-
-        response = discord.Embed(title=str(ctx.message.author), description="Your balance is:")
-        response.add_field(name="Cash balance : ",value=f"{user_dict['cash']}", inline = False)
-        response.add_field(name="Bank balance : ",value=f"{user_dict['bank']}", inline = False)
-        response.add_field(name="Debt : ",value=f"{user_dict['debt'] * (-1)}", inline = False)
-        response.add_field(name="Net Worth : ",value=networth, inline = False)
-
-        if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
-
-@bot.command(name='work')
-@commands.cooldown(1, 3600, commands.BucketType.user)            #remember to increase the cooldown to at least an hour!
-async def work(ctx):
-        with open("economy-data.json","r") as data:
-            data_bal = json.load(data)
-        for i in data_bal:
-            if i["user"] == str(ctx.message.author):
-                user_index = data_bal.index(i)
-        
-
-        rand_val = random.randint(35,150)
-        data_bal[user_index]["cash"] += rand_val
-        with open("economy-data.json", "w") as data:
-            json.dump(data_bal,data)    #changing value in main json file as well
-
-        response = discord.Embed(title=str(ctx.message.author),description=f"You earned {rand_val}",colour=discord.Colour.green())
-
-    
-        if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
-
-@bot.command(name='slut')
-@commands.cooldown(1, 3600, commands.BucketType.user)            #remember to increase the cooldown to at least an hour!
-async def slut(ctx):
-    with open("economy-data.json","r") as data:
-        data_bal = json.load(data)
-    for i in data_bal:
-        if i["user"] == str(ctx.message.author):
-            user_index = data_bal.index(i)
-
-    winning_odds=[1,2,3,4,5,6]
-    if random.randint(1,10) in winning_odds:
-        rand_val = random.randint(60,200)
-        data_bal[user_index]["cash"] += rand_val
-        response = discord.Embed(title=str(ctx.message.author),description=f"You whored out and earned {rand_val}!",colour=discord.Colour.green())
-    
-    else:
-        rand_val = random.randint(60,200)
-        data_bal[user_index]["cash"] -= rand_val
-        response = discord.Embed(title=str(ctx.message.author),description=f"You hooked up with a psychopath lost {rand_val}!",colour=discord.Colour.red())
-
-    with open("economy-data.json","w") as data:
-        json.dump(data_bal,data)
-
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
-
-@bot.command(name="crime")
-@commands.cooldown(1, 3600, commands.BucketType.user)            #remember to increase the cooldown to at least an hour!
-async def crime(ctx):
-    with open("economy-data.json","r") as data:
-        data_bal = json.load(data)
-    for i in data_bal:
-        if i["user"] == str(ctx.message.author):
-            user_index = data_bal.index(i)
-
-    winning_odds=[1,2,3,4]
-    if random.randint(1,10) in winning_odds:
-        rand_val = random.randint(150,400)
-        data_bal[user_index]["cash"] += rand_val
-        response = discord.Embed(title=str(ctx.message.author),description=f"You successfuly commited crime and earned {rand_val}!",colour=discord.Colour.green())
-    
-    else:
-        rand_val = random.randint(150,300)
-        data_bal[user_index]["cash"] -= rand_val
-        response = discord.Embed(title=str(ctx.message.author),description=f"You got caught and were fined {rand_val}!",colour=discord.Colour.red())
-
-    with open("economy-data.json","w") as data:
-        json.dump(data_bal,data)
-
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
-
-@work.error
-async def work_error(ctx,error):             #only says "CommandOnCooldown", not the time remaining
-    if isinstance(error, commands.CommandOnCooldown):
-        await ctx.message.channel.send(commands.CommandOnCooldown.__name__)
-                           
-@slut.error
-async def slut_error(ctx,error):             #only says "CommandOnCooldown", not the time remaining
-    if isinstance(error, commands.CommandOnCooldown):
-        await ctx.message.channel.send(commands.CommandOnCooldown.__name__)
-
-@crime.error
-async def crime_error(ctx,error):             #only says "CommandOnCooldown", not the time remaining
-    if isinstance(error, commands.CommandOnCooldown):
-        await ctx.message.channel.send(commands.CommandOnCooldown.__name__)
-
-@bot.command(name = "leaderboard", aliases = ["top","lb"])
-async def leaderboard(ctx):
-    with open("economy-data.json","r") as data:
-        leaderboard_data = json.load(data)
-
-    for i in range(0,len(leaderboard_data)):
-        for j in range(0,len(leaderboard_data) - 1 - i):
-            if leaderboard_data[j]["bank"] + leaderboard_data[j]["cash"] > leaderboard_data[j + 1]["bank"] + leaderboard_data[j + 1]["cash"]:
-                leaderboard_data[j],leaderboard_data[j+1] = leaderboard_data[j+1],leaderboard_data[j]
-
-    leaderboard_data.reverse()
-
-    response = discord.Embed(title = "Crajy Leaderboard", description = "")
-    for i in leaderboard_data:
-        response.add_field(name = f"{leaderboard_data.index(i)}. {i['user']}", value = f"Balance {i['bank'] + i['cash']}", inline = False)
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
-
-@bot.command(name="get-loan", aliases = ["gl"])    #repayment made; finetuning required
-async def loan(ctx,loan_val:int):
-    
-    with open("economy-data.json","r") as data:
-        loan_data = json.load(data)
-    for i in loan_data:
-        if i["user"] == str(ctx.message.author):
-            user_index = loan_data.index(i)
-    if loan_val < loan_data[user_index]["bank"] * 2 and loan_data[user_index]["debt"] == 0:
-        response = discord.Embed(title=str(ctx.message.author),description=f"You took a loan of {loan_val}!",colour=discord.Colour.red()) # red bc u did a dum dum
-
-        loan_data[user_index]["debt"] = loan_data[user_index]["debt"] + (loan_val + int(loan_val * 0.05))
-        loan_data[user_index]["bank"] += loan_val
-        
-        with open("economy-data.json","w") as data:
-            json.dump(loan_data,data)
-        if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
-
-        await asyncio.sleep(64800)                                  #checks if debt has been repaid, if not sends reminder
-        with open("economy-data.json","r") as data:
-            loan_data = json.load(data)
-        if loan_data[user_index]["debt"] != 0:                      
-            await ctx.message.author.send("You're about to default on your loan")
-        else:
-            return
-        
-        await asyncio.sleep(21600)
-        with open("economy-data.json","r") as data:
-            loan_data = json.load(data)
-        if loan_data[user_index]["debt"] != 0:
-            loan_data[user_index]["debt"] = 0
-            loan_data[user_index]["cash"] -= (loan_val + int(loan_val * 0.1))
-            with open("economy-data.json","w") as data:
-                json.dump(loan_data,data)
-            await ctx.message.author.send(f"poopi you messed up big time")
-    else:
-        await ctx.message.channel.send("You cannot take a loan greater than twice your current balance / you have an unpaid loan, repay it and try again.")
-
-@bot.command(name = "repay-loan", aliases = ["rl"])
-async def repay_loan(ctx):
-    with open("economy-data.json","r") as data:
-        repay_data = json.load(data)
-    for i in repay_data:
-        if i["user"] == str(ctx.message.author):
-            user_data = i
-    if user_data["debt"] > 0:
-        if user_data["cash"] >= user_data["debt"]:
-            user_data["cash"] -= user_data["debt"]
-            user_data["debt"] = 0
-            with open("economy-data.json","w") as data:
-                json.dump(repay_data,data)
-            response = discord.Embed(title = str(ctx.message.author), description = f"You've paid off your debt!", colour = discord.Color.green())
-            if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
-        else:
-            if ctx.message.channel.name in channels_available: await ctx.message.channel.send(f"You do not have enough balance to repay your debt.")
-
-    else:
-        if ctx.message.channel.name in channels_available: await ctx.message.channel.send(f"You do not have any debt")
-
-@bot.command(name = "inventory", aliases = ["inv"])
-async def inventory(ctx, user:discord.Member):
-    data_inv,username = ReturnUserDict(user)
-
-    response = discord.Embed(title = username, description = "Inventory")
-    for k in data_inv["inv"]:
-        response.add_field(name = list(k.keys())[0], value = list(k.values())[0], inline = False)
-    
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
-
-@inventory.error
-async def inventory_error(ctx,error):
-    if isinstance(error , commands.errors.MissingRequiredArgument):
-        with open("economy-data.json","r") as data:
-            data_inv = json.load(data)
-    
-    for x in data_inv:
-            if x["user"] == str(ctx.message.author):
-                user_dict = x
-
-    response = discord.Embed(title = f"{str(ctx.message.author)}", description = "Inventory")
-    for i in user_dict["inv"]:
-        response.add_field(name = list(i.keys())[0],value = list(i.values())[0], inline = False)
-    
-
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
-
-@bot.command(name = "shop")
-async def shop(ctx):
-    with open("store-data.json","r") as data:
-        shop_data = json.load(data)
-    
-    response = discord.Embed(title = f"Shop", description = f"All available items")
-
-    for i in shop_data:
-        response.add_field(name = f"""{i["name"]}""", value = f"""Price : {i["price"]} | Remaining Stock : {i["stock"]}""", inline = False )
-
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
-
-@bot.command(name = "buy")                        #IMPORTANT!! - For items that should have unlimited stock, use stock value as None in store-data.json
-async def buy(ctx, number:int, item:str):         #pls dont ask me how this code works even i'm not sure anymore...........
-    with open("store-data.json","r") as data:
-        buy_data_store = json.load(data)
-    
-    for i in buy_data_store:
-        if i["name"].lower() == item.lower():
-            item_index = buy_data_store.index(i)
-    price_per_item = buy_data_store[item_index]["price"]
-
-    with open("economy-data.json","r") as data:
-        buy_data_user = json.load(data)
-
-    for j in buy_data_user:
-        if j["user"] == str(ctx.message.author):
-            user_index = buy_data_user.index(j)
-    
-    for k in buy_data_user[user_index]["inv"]:
-        if item.lower() in k.keys():
-            user_item_details = k
-    if buy_data_user[user_index]["cash"] >= (number * price_per_item):
-        if buy_data_store[item_index]["stock"] is not None:
-            if buy_data_store[item_index]["stock"] >= number:
-                buy_data_user[user_index]["cash"] -= (number * price_per_item)
-                buy_data_store[item_index]["stock"] -= number
-                with open("store-data.json","w") as data:     #updates stock rmeaining in store-data.json
-                    json.dump(buy_data_store, data)
-                user_item_details[item.lower()] = user_item_details[item.lower()] + number
-
-                with open("economy-data.json","w") as data:
-                    json.dump(buy_data_user,data)
-
-                response = discord.Embed(title = str(ctx.message.author), description = f"You bought {number} {item}s!", colour = discord.Color.green())
-            
-                if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
-            else:
-                if ctx.message.channel.name in channels_available: await ctx.message.channel.send(f"Bruh not enough stock of this item is left.")
-        else:
-            buy_data_user[user_index]["cash"] -= (number * price_per_item)
-            with open("store-data.json","w") as data:     #updates stock rmeaining in store-data.json
-                json.dump(buy_data_store, data)
-            user_item_details[item.lower()] = user_item_details[item.lower()] + number
-
-            with open("economy-data.json","w") as data:
-                json.dump(buy_data_user,data)
-
-            response = discord.Embed(title = str(ctx.message.author), description = f"You bought {number} {item}s!", colour = discord.Color.green())
-            if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
-    else:
-        if ctx.message.channel.name in channels_available: await ctx.message.channel.send(f"poopi you don't have enough moni {bot.get_emoji(703648812669075456)} ")
-    
-@bot.command(name = "sell")
-async def sell(ctx, n:int, item:str):
-
-    with open("store-data.json","r") as data:
-        store = json.load(data)
-
-    for j in store:
-        if j["name"].lower() == item.lower():
-            price = j["price"]
-
-    with open("economy-data.json","r") as data:
-        sell_data = json.load(data)
-
-    for i in sell_data:
-        if i["user"] == str(ctx.message.author):
-            sell_data_user = i
-
-    for i in sell_data_user["inv"]:
-        if item in i.keys():
-            item_dict_in_inv = i
-    
-    item_dict_in_inv[item] = item_dict_in_inv[item] - n
-
-    sell_data_user["cash"] += (price * n)
-
-    with open("economy-data.json","w") as data:
-        json.dump(sell_data, data)
-
-    response = discord.Embed(title = f"{str(ctx.message.author)}", description = f"You sold {n} {item}s for {price * n}")
-
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
-
-@bot.command(name='givemoney')
-async def givemoney(ctx,person:discord.Member,amount:int):
-    with open("economy-data.json","r") as data:
-        econ_data = json.load(data)
-    
-    for i in econ_data:
-        if i['user'] == str(ctx.message.author):
-            if i['cash'] >= amount:
-                i['cash'] -= amount
-            else:
-                return await ctx.message.channel.send(f"{ctx.message.author.mention} doesn't have enough moni popi barin")
-        elif i['user'] == str(person):
-            i['cash'] += amount
-
-    with open('economy-data.json','w') as data:
-        json.dump(econ_data,data)
-    
-    response = discord.Embed(title='Money Transfer: ', description=f"{ctx.author.mention} transferred {amount} to {person.mention}")
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(embed=response)
-
-#betting games
+"""
+#BETTING GAMES
 @bot.command(name = "roulette")
 async def roulette(ctx,amount:int,bet:str):
     with open("economy-data.json","r") as data:
@@ -737,41 +324,6 @@ async def cockfight(ctx,amount:int):
         json.dump(cf_data,data)
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
 
-@bot.command(name = "rob")
-async def rob(ctx, person:discord.Member):
-    with open("economy-data.json", "r") as data:
-        rob_data = json.load(data)
-    
-    for i in rob_data:
-        if i["user"] == str(ctx.message.author):
-            robber_dict = i
-        elif i["user"] == str(person):
-            person_dict = i
-    print(f"person - {person_dict} \n robber - {robber_dict}")
-    if robber_dict["inv"][2]["heist tools"] > 0 and person_dict["cash"] > 10:
-        robber_dict["inv"][2]["heist tools"] -= 1
-        
-        win_chance = random.choice([True,True,True,False])
-        win_percent = random.randint(50,80)
-        
-        if win_chance is True:
-            win_amount = int(person_dict["cash"] * (win_percent/100))
-            person_dict["cash"] -= win_amount
-            robber_dict["cash"] += win_amount
-            print("person-",person_dict, "robber-", robber_dict)
-            response = discord.Embed(title = str(ctx.message.author), description = f"You robbed {win_amount} from {str(person)}", colour = discord.Color.green())
-            with open("economy-data.json","w") as data:
-                json.dump(rob_data,data)
-            if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
-        else:
-            fine_amount = random.randint(75, 200)
-            robber_dict["cash"] -= fine_amount
-            with open("economy-data.json","w") as data:
-                json.dump(rob_data,data)
-            response = discord.Embed(title = str(ctx.message.author), description = f"You were caught robbing, and fined {fine_amount}", colour = discord.Color.red())
-            if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
-    else:
-        await ctx.message.channel.send("You do not have enough Heist tools items/ person doesn't have enough cash balance.")
     
 #ECONOMY COMMANDS FOR ADMINS AND MODS (REMOVE BOT_DEV ONCE BOT IS DONE)
 
@@ -1179,11 +731,12 @@ async def stock_price_before():
     await bot.wait_until_ready()
     message_channel = bot.get_channel(704911379341115433)
 
-
-'''#loading cogs
-for filename in os.listdir('./cogs'):
+"""
+#loading cogs
+'''for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         bot.load_extension(f'cogs.{filename[:-3]}')
 '''
-stock_price.start()
+bot.load_extension(f'cogs.economy')        #in actual version, remove this line and run loop above this.
+#stock_price.start()
 bot.run(token)

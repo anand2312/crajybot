@@ -14,7 +14,7 @@ store_collection = db["store_data"]
 
 channels_available = ["bot-test","botspam-v2","botspam"]
 
-class Battle(commands.Cog):
+class Moderator(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -27,4 +27,4 @@ should become ``self.bot``."""
 
 
 def setup(bot):
-    bot.add_cog(Battle(bot))
+    bot.add_cog(Moderator(bot))
