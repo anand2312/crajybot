@@ -40,7 +40,7 @@ async def on_ready(): #sends this message when bot starts working in #bot-tests
 async def on_message(ctx):
     #chat money
     economy_collection.find_one_and_update({"user":str(ctx.author)}, {"$inc":{"cash":10}})
-    await bot.process_commands(message)
+    await bot.process_commands(ctx)
 
 @bot.event
 async def on_member_join(member):
@@ -73,7 +73,14 @@ async def on_member_join(member):
         await member.send("You have been added to our bot database!")
     else:
         return
+#testing some cogs stuff
+'''@bot.command()
+async def load(ctx, extension):
+    bot.load_extension(f"cogs.{extension}")
 
+@bot.command()
+async def unload(ctx, extension):
+    bot.unload_extension(f"cogs.{extension}")'''
 #ctx stands for context
 
 #tryna test a function that matches member list and brings user data from economy json
@@ -1173,5 +1180,10 @@ async def stock_price_before():
     message_channel = bot.get_channel(704911379341115433)
 
 
+'''#loading cogs
+for filename in os.listdir('./cogs'):
+    if filename.endswith('.py'):
+        bot.load_extension(f'cogs.{filename[:-3]}')
+'''
 stock_price.start()
 bot.run(token)
