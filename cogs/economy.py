@@ -8,7 +8,6 @@ client = MongoClient("mongodb://localhost:27017/")
 db = client["bot-data"]
 
 economy_collection = db["econ_data"]
-rpg_collection = db["rpg_data"]
 store_collection = db["store_data"]
 
 channels_available = ["bot-test","botspam-v2","botspam"]
