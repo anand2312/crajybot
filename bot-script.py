@@ -34,21 +34,20 @@ bot.remove_command('help')
 @bot.event
 async def on_ready(): #sends this message when bot starts working in #bot-tests
     await bot.get_channel(703141348131471440).send("its popi time!!")
-    await bot.change_presence(activity = discord.Game(name = "with thug_sgt"))
+    await bot.change_presence(activity = discord.Activity(type=discord.ActivityType.watching, name="thug_sgt"))
 
-@bot.event
+'''@bot.event    #remember to uncomment later
 async def on_message(ctx):
     #chat money
     if ctx.channel in chat_money_channels:
         economy_collection.find_one_and_update({"user":str(ctx.author)}, {"$inc":{"cash":10}})
-    await bot.process_commands(ctx)
+    await bot.process_commands(ctx)'''
 
 @bot.event    #to be tested!
 async def on_member_join(member):
-    check = economy_collection.find({'user':str(member)})
-
+    check = economy_collection.find_one({'user':str(member)})
     if check is None:
-        economy_collection.insert({
+        economy_collection.insert_one({
                 "user" : str(member),
                 "cash" : 0,
                 "bank" : 2500,
@@ -68,13 +67,15 @@ async def on_member_join(member):
 @commands.has_any_role("admin","Bot Dev")
 async def load(ctx, extension):
     bot.load_extension(f"cogs.{extension}")
-    await ctx.message.channel.send(f"loaded {extension}")
+    response = discord.Embed(title="Cog Loaded", description=str(extension), colour=discord.Color.green())
+    await ctx.message.channel.send(content=None, embed=response)
 
 @bot.command()
 @commands.has_any_role("admin","Bot Dev")
 async def unload(ctx, extension):
     bot.unload_extension(f"cogs.{extension}")
-    await ctx.message.channel.send(f"unloaded {extension}")
+    response = discord.Embed(title="Cog Unloaded", description=str(extension), colour=discord.Color.red())
+    await ctx.message.channel.send(content=None, embed=response)
 
 @bot.command(name='popi')
 async def popi(ctx):
@@ -322,111 +323,6 @@ async def cockfight(ctx,amount:int):
                 await ctx.message.channel.send("Invalid bet.")
     with open("economy-data.json","w") as data:
         json.dump(cf_data,data)
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
-
-    
-#ECONOMY COMMANDS FOR ADMINS AND MODS (REMOVE BOT_DEV ONCE BOT IS DONE)
-
-@bot.command(name="change-money",aliases=["c-money","cm"])                  #gives admins, mods the permission to change money to their own bank (for now)
-@commands.has_any_role("Bot Dev","Moderators","admin")                      #this allows multiple roles to have access to one command
-async def change_money(ctx,action:str,baltype:str,user:str,amt:int):
-    guild = bot.get_guild(298871492924669954)
-    members = guild.members
-    for i in members:
-        if user == i.nick or user == i.name:
-            username = str(i)
-
-    with open("economy-data.json","r") as data:
-        change_money_data = json.load(data)             
-    for i in change_money_data:
-        if i["user"] == username:
-            user_index = change_money_data.index(i)
-
-    if amt >= 0:
-        if action == "add":
-            change_money_data[user_index][baltype] = change_money_data[user_index][baltype] + amt
-            response = discord.Embed(title = str(ctx.message.author.name), description = f"Added {amt} to {user}\'s {baltype}!" ,colour=discord.Colour.green())
-                
-        elif action == "remove":
-            change_money_data[user_index][baltype] = change_money_data[user_index][baltype] - amt
-            response = discord.Embed(title = str(ctx.message.author.name), description = f"Removed {amt} from {user}\'s {baltype}!" ,colour=discord.Colour.red())
-
-        elif action == "set":
-            change_money_data[user_index][baltype] = amt
-            response = discord.Embed(title = str(ctx.message.author.name), description = f"Set {amt} to {user}\'s {baltype}!" ,colour=discord.Colour.orange()) 
-
-        with open("economy-data.json","w") as data:
-            json.dump(change_money_data,data)
-        if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
-
-@bot.command(name = "change-stock")
-@commands.has_any_role("Moderators","admin","Bot Dev")
-async def change_stock(ctx, item:str, n:int):
-    with open("store-data.json","r") as data:
-        store_data = json.load(data)
-    print(store_data)
-    
-    for i in store_data:
-        if i["name"].lower() == item.lower():
-            i["stock"] = n
-
-    with open("store-data.json","w") as data:
-        json.dump(store_data,data)
-
-    response = discord.Embed(title = str(ctx.message.author.name), description = f"Updated stock of {item}")
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
-@bot.command(name = "remove-user")
-@commands.has_any_role("Moderators","admin","Bot Dev")
-async def remove_user(member):
-    with open("economy-data.json","r") as data:
-        remove_user_data = json.load(data)
-    for i in remove_user_data:
-        if i["user"] == str(member):
-            remove_user_data.remove(i)
-            break
-
-    with open("economy-data.json","w") as data:
-        json.dump(remove_user_data, data)
-    await member.send(f"haha popi you got deleted from the bot database")
-    
-@bot.command(name = "change-inventory",aliases=["c-inv"])
-@commands.has_any_role("Moderators","admin","Bot Dev")
-async def change_inventory(ctx,action:str,amt:int,item:str,user:str):
-    guild = bot.get_guild(298871492924669954)
-    members = guild.members
-    for i in members:
-        if user == i.nick or user == i.name:
-            username = str(i)
-
-    with open("economy-data.json","r") as data:
-        data_inv = json.load(data)
-
-    for i in data_inv:
-        if i["user"] == username:
-            user_index = data_inv.index(i)
-    
-    if action == "add":
-        for i in data_inv[user_index]["inv"]:
-            if item in i.keys():
-                i[item] = i[item] + amt
-                response = discord.Embed(title = str(ctx.message.author.name), description = f"Added {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.green())
-             
-    elif action == "remove":
-        for i in data_inv[user_index]["inv"]:
-            if item in i.keys():
-                i[item] = i[item] - amt
-                response = discord.Embed(title = str(ctx.message.author.name), description = f"Removed {amt} {item}(s) from {user}\'s inventory!",colour=discord.Colour.red())
-
-    elif action == "set":
-        for i in data_inv[user_index]["inv"]:
-            if item in i.keys():
-                i[item] = amt
-                response = discord.Embed(title = str(ctx.message.author.name), description = f"Set {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.orange())
-        
-
-    with open("economy-data.json","w") as data:
-        json.dump(data_inv,data)
-    
     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
 
 #--------------------RPG / HORO FUNCTIONS----------------------
@@ -738,5 +634,6 @@ async def stock_price_before():
         bot.load_extension(f'cogs.{filename[:-3]}')
 '''
 bot.load_extension(f'cogs.economy')        #in actual version, remove this line and run loop above this.
+bot.load_extension(f'cogs.moderator')
 #stock_price.start()
 bot.run(token)
