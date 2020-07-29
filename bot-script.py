@@ -37,11 +37,11 @@ async def on_ready(): #sends this message when bot starts working in #bot-tests
     await bot.change_presence(activity = discord.Activity(type=discord.ActivityType.watching, name="thug_sgt"))
 
 @bot.event   
-async def on_message(ctx):
+async def on_message(message):
     #chat money
-    if ctx.channel in chat_money_channels:
-        economy_collection.find_one_and_update({"user":str(ctx.author)}, {"$inc":{"cash":10}})
-    await bot.process_commands(ctx)
+    if str(message.channel) in chat_money_channels:
+        economy_collection.find_one_and_update({"user":str(message.author)}, {"$inc":{"cash":10}})
+    await bot.process_commands(message)
 
 @bot.event    #to be tested!
 async def on_member_join(member):
@@ -89,11 +89,13 @@ async def help(ctx):
     response.add_field(name = "Economy Commands", value = "Click on the 🤑 emoji.", inline = False)
     response.add_field(name = "Battle Commands", value = "Click on the ⚔️ emoji", inline = False)
     response.add_field(name = "Moderator Commands", value = "Click on the 🔨 emoji", inline = False)
+    response.add_field(name = "Stupid Commands", value = "Click on the 🤪 emoji", inline = False)
     message = await ctx.message.channel.send(content = None, embed = response)
 
     await message.add_reaction('🤑')
     await message.add_reaction('⚔️')
     await message.add_reaction('🔨')
+    await message.add_reaction('🤪')
     await asyncio.sleep(10)
 
     message = await ctx.message.channel.fetch_message(message.id)
@@ -432,9 +434,10 @@ async def stock_price_before():
     message_channel = bot.get_channel(704911379341115433)
 
 #loading cogs
-for filename in os.listdir('./cogs'):
+'''for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
-        bot.load_extension(f'cogs.{filename[:-3]}')
-bot.unload_extension('cogs.battle')
-stock_price.start()
+        bot.load_extension(f'cogs.{filename[:-3]}')'''
+
+bot.load_extension('cogs.stupid')
+#stock_price.start()
 bot.run(token)
