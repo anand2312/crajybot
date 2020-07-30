@@ -10,11 +10,7 @@ from discord.ext import commands,tasks
 import asyncio
 from pymongo import MongoClient
 from random import choice
-
-#bot token stuff; not to be messed with :linus_gun:
-token_ = "NzA5NDA3MjY4NDg3MDM3MDE5.XxnIEg.qK4JaMLJU-ytUM_SRSCgRN-IoiMx"
-token = token_[:len(token_)-1]
-
+from TOKEN import TOKEN
 #local mongodb database stuff
 client = MongoClient("mongodb://localhost:27017/")
 db = client["bot-data"]
@@ -444,4 +440,4 @@ for filename in os.listdir('./cogs'):
 
 bot.unload_extension('cogs.battle')
 stock_price.start()
-bot.run(token)
+bot.run(TOKEN)

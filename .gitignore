@@ -1,3 +1,5 @@
 cogs/__pycache__/
 *.json
 
+TOKEN.py
+__pycache__/
