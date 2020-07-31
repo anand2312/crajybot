@@ -1,9 +1,8 @@
 import discord
 from discord.ext import commands
-import requests
 from pymongo import MongoClient
-from itertools import count
-#from KEY import KEY
+from aiohttp import ClientSession
+from KEY import KEY
 
 fancy_url = "https://ajith-fancy-text-v1.p.rapidapi.com/text"
 
@@ -21,8 +20,9 @@ love_headers = {
 
 client = MongoClient("mongodb://localhost:27017/")
 db = client["bot-data"]
-
 stupid_collection = db["stupid"]
+
+session = ClientSession()
 
 class stupid(commands.Cog):
     def __init__(self, bot):
@@ -31,9 +31,10 @@ class stupid(commands.Cog):
     @commands.command(name="fancy", aliases=["f"])
     async def fancy(self, ctx, *, message):
         querystring = {"text":message}
-        response = requests.request("GET", fancy_url, headers=fancy_headers, params=querystring)
-        await ctx.message.channel.send(response.json()["fancytext"].split(",")[0])
-
+        async with session.get(fancy_url, headers=fancy_headers, params=querystring) as response:
+            return_text = await response.json()
+            return_text = return_text["fancytext"].split(",")[0]
+            await ctx.send(return_text)
     @commands.command(name="love-calc", aliases=["lc","love","lovecalc"])
     async def love_calc(self, ctx, sname:str, fname=None):
         if fname is None:
@@ -41,9 +42,11 @@ class stupid(commands.Cog):
             querystring = {"fname":str(ctx.message.author),"sname":sname}
         else:
             querystring = {"fname":fname,"sname":sname}
-        response = requests.request("GET", love_url, headers=love_headers, params=querystring)
-        percent = response.json()["percentage"]
-        result = response.json()["result"]
+        async with session.get(love_url, headers = love_headers, params=querystring) as response:
+            percent = await response.json()
+            percent = percent["percentage"]
+            result = await response.json()
+            result = result["result"]
         if int(percent) >= 50:
             embed=discord.Embed(title="Love Calculator", colour=discord.Color.green())
             embed.set_author(name=fname)
@@ -97,6 +100,7 @@ class stupid(commands.Cog):
     async def use(self, ctx, key):
         try:
             await ctx.send(stupid_collection.find_one({"key":key})["output"])
+            #await ctx.message.delete()
         except:
             await ctx.send(f"{key} doesn't exist")
 
@@ -106,7 +110,12 @@ class stupid(commands.Cog):
         for i in stupid_collection.find():
             out += i["key"] + "\n"
         await ctx.send(out)
-    
+
+    @wat.command(name="react")
+    async def react(self, ctx, id_:discord.Message, *emojis):
+        for i in emojis:
+            await id_.add_reaction(i)
+        #await ctx.message.delete()
 
 def setup(bot):
     bot.add_cog(stupid(bot))

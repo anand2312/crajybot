@@ -95,6 +95,12 @@ class Moderator(commands.Cog):
                 economy_collection.update_one({'user':str(user)},{"$set":user_data})
                 response = discord.Embed(title = str(ctx.message.author.name), description = f"Set {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.orange())
                 await ctx.message.channel.send(content=None, embed=response)
+
+    @commands.command(name="change-price")
+    @commands.has_any_role("Moderators","admin","Bot Dev")
+    async def change_price(self, ctx, item:str, price:int):
+        store_collection.update_one({'name':item.lower().capitalize()}, {"$set":{"price":price}})
+        await ctx.send("Price changed")
     
 def setup(bot):
     bot.add_cog(Moderator(bot))

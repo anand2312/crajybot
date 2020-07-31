@@ -2,4 +2,4 @@ cogs/__pycache__/
 *.json
 TOKEN.py
 __pycache__/
-cogs/KEY.py
+KEY.py
