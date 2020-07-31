@@ -128,6 +128,7 @@ async def help(ctx):
                 embed = discord.Embed(title="Stupid Commands", description = "List of all stupid commands")
                 embed.add_field(name=".fancy <text>", value = "Prints fancy version of your text (command can also be .f)")
                 embed.add_field(name=".love-calc <person1> <person2>", value = "Don't put person1 if you want to use yourself as person1 😳 (command can also be .lc)") 
+                embed.add_field(name=".weird", description="MaKeS tHe texT lIkE tHis (.w)")
             break
 """
 #--------------------RPG / HORO FUNCTIONS----------------------
@@ -438,6 +439,6 @@ for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         bot.load_extension(f'cogs.{filename[:-3]}')
 
-bot.unload_extension('cogs.battle')
+#bot.load_extension('cogs.stupid')
 stock_price.start()
 bot.run(TOKEN)

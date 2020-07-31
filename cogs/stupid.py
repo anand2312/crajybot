@@ -1,40 +1,32 @@
 import discord
 from discord.ext import commands
 import requests
+from pymongo import MongoClient
+from itertools import count
+#from KEY import KEY
 
 fancy_url = "https://ajith-fancy-text-v1.p.rapidapi.com/text"
 
 fancy_headers = {
     'x-rapidapi-host': "ajith-Fancy-text-v1.p.rapidapi.com",
-    'x-rapidapi-key': "b93010ab3bmsh7c9b21f8a1e6182p17c090jsn3ff13f0b6d1d"
+    'x-rapidapi-key': KEY
 }
 
 love_url = "https://love-calculator.p.rapidapi.com/getPercentage"
 
 love_headers = {
     'x-rapidapi-host': "love-calculator.p.rapidapi.com",
-    'x-rapidapi-key': "b93010ab3bmsh7c9b21f8a1e6182p17c090jsn3ff13f0b6d1d"
+    'x-rapidapi-key': KEY
     }
 
-rart = {
-    "ayaz": "Sadia Ayaz from waste management"
-}
+client = MongoClient("mongodb://localhost:27017/")
+db = client["bot-data"]
+
+stupid_collection = db["stupid"]
+
 class stupid(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    @commands.Cog.listener() 
-    async def on_message(self, message):
-        if message.content.lower() == "damn":
-            await message.add_reaction("🇩")
-            await message.add_reaction("🅰️")
-            await message.add_reaction("🇲")
-            await message.add_reaction("🇳")
-        elif message.content.lower() == "bruh":
-            await message.add_reaction("🅱️")
-            await message.add_reaction("🇷")
-            await message.add_reaction("🇺")
-            await message.add_reaction("🇭") 
 
     @commands.command(name="fancy", aliases=["f"])
     async def fancy(self, ctx, *, message):
@@ -89,30 +81,31 @@ class stupid(commands.Cog):
 
     @wat.command(name="add")
     async def add_to_wat(self, ctx, key, *, output):
-        rart[key] = output
+        stupid_collection.insert_one({"key":key, "output":output})
         await ctx.send("Added")
 
     @wat.command(name="remove")
-    @commands.has_any_role(['Bot Dev'])
+    @commands.has_any_role('admin','Bot Dev')
     async def remove_from_wat(self, ctx, key):
         try:
-            rart.pop(key)
+            stupid_collection.delete_one({"key":key})
             await ctx.send(f"Removed {key}")
-        except KeyError:
+        except:
             await ctx.send(f"{key} doesn't exist")
 
     @wat.command(name="use")
     async def use(self, ctx, key):
         try:
-            await ctx.send(rart[key])
-        except KeyError:
+            await ctx.send(stupid_collection.find_one({"key":key})["output"])
+        except:
             await ctx.send(f"{key} doesn't exist")
 
     @wat.command(name="list")
     async def list_(self, ctx):
-        for i in rart.keys():
-            await ctx.send(i)
-
+        out = ""
+        for i in stupid_collection.find():
+            out += i["key"] + "\n"
+        await ctx.send(out)
     
 
 def setup(bot):
