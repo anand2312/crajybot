@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord.ext.commands.core import command
 from pymongo import MongoClient
 from aiohttp import ClientSession
 from KEY import KEY
@@ -96,6 +97,22 @@ class stupid(commands.Cog):
         except:
             await ctx.send(f"{key} doesn't exist")
 
+    @wat.command(name="edit-output", aliases=["edit-out"])
+    async def edit_wat(self, ctx, key, *, output):
+        try:
+            stupid_collection.update_one({'key':key},{"$set":{"output":output}})
+            await ctx.send("Updated.")
+        except:
+            await ctx.send("Key doesn't exist")
+
+    @wat.command(name="edit-key", aliases=["edit-name"])
+    async def edit_wat(self, ctx, key, new_key):
+        try:
+            stupid_collection.update_one({'key':key},{"$set":{"key":new_key}})
+            await ctx.send("Updated.")
+        except:
+            await ctx.send("Key doesn't exist")    
+
     @wat.command(name="use")
     async def use(self, ctx, key):
         try:
@@ -111,11 +128,20 @@ class stupid(commands.Cog):
             out += i["key"] + "\n"
         await ctx.send(out)
 
-    @wat.command(name="react")
+    '''@wat.command(name="react")
     async def react(self, ctx, id_:discord.Message, *emojis):
         for i in emojis:
             await id_.add_reaction(i)
-        #await ctx.message.delete()
+        #await ctx.message.delete()'''
+
+    @commands.command(name="owo", aliases=["uwu"])
+    async def owo(self, ctx, *, text):
+        out = ""
+        for i in text:
+            if i.lower() in ["l","r"]: out+="w"
+            else: out+=i
+
+        await ctx.send(out)
 
 def setup(bot):
     bot.add_cog(stupid(bot))
