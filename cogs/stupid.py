@@ -1,9 +1,10 @@
 import discord
+from discord import webhook
 from discord.ext import commands
 from discord.ext.commands.core import command
 from pymongo import MongoClient
 from aiohttp import ClientSession
-from KEY import KEY
+from KEY import *
 
 fancy_url = "https://ajith-fancy-text-v1.p.rapidapi.com/text"
 
@@ -22,8 +23,12 @@ love_headers = {
 client = MongoClient("mongodb://localhost:27017/")
 db = client["bot-data"]
 stupid_collection = db["stupid"]
+notes_collection = db["notes"]
 
 session = ClientSession()
+anotherchat_webhook = discord.Webhook.partial(740080790385459292, "8E-xPQqRcIJlVIp-_phep34DGW9T95Us9bgY1XQpFCMQRAO7-1NIj9La6HFSXMzQwNoy", adapter=discord.AsyncWebhookAdapter(session))
+botspam_webhook = discord.Webhook.partial(740086899925975051, "URRNUuEI9NWxq_PYot0LAPfpw4jgvmBaffx5s26CL_ajNT7sJ075rjAuww2F90rRHcqt", adapter=discord.AsyncWebhookAdapter(session))
+
 
 class stupid(commands.Cog):
     def __init__(self, bot):
@@ -115,11 +120,19 @@ class stupid(commands.Cog):
 
     @wat.command(name="use")
     async def use(self, ctx, key):
-        try:
+        '''try:
             await ctx.send(stupid_collection.find_one({"key":key})["output"])
             #await ctx.message.delete()
         except:
-            await ctx.send(f"{key} doesn't exist")
+            await ctx.send(f"{key} doesn't exist")'''
+        data = stupid_collection.find_one({"key":key})["output"]
+
+        if ctx.message.channel.name == "another-chat":
+            await anotherchat_webhook.send(data, username=ctx.message.author.nick, avatar_url=ctx.message.author.avatar_url)
+        elif ctx.message.channel.name == "botspam":
+            await botspam_webhook.send(data, username=ctx.message.author.nick, avatar_url=ctx.message.author.avatar_url)
+        else:
+            await ctx.send(data)
 
     @wat.command(name="list")
     async def list_(self, ctx):
@@ -143,5 +156,30 @@ class stupid(commands.Cog):
 
         await ctx.send(out)
 
+    @commands.group(pass_context=True)
+    async def notes(self, ctx):
+        if ctx.invoked_subcommand is None:
+            await ctx.send("bruh that isn't a thing.")
+
+    @notes.command(name="create", aliases=["-c"])
+    async def notes_create(self, ctx, *, content):
+        current = notes_collection.find_one({"user":str(ctx.message.author)})
+        if current is None: current = "\n"
+        else: current = current["notes"]
+        notes_collection.update_one({"user":str(ctx.message.author)},{"$set":{"notes":current + content + "\n"}}, upsert=True)
+        await ctx.send("Added to notes. Do ``.notes return`` to get everything stored.")
+
+    @notes.command(name="return", aliases=["-r"])
+    async def notes_return(self, ctx):
+        try:
+            await ctx.message.author.send(notes_collection.find_one({"user":str(ctx.message.author)})["notes"])
+            await ctx.message.author.send("Use ``.notes pop`` to delete existing notes")
+        except TypeError:
+            await ctx.send("No notes.")
+
+    @notes.command(name="pop", aliases=["-p"])
+    async def notes_pop(self, ctx):
+        notes_collection.delete_one({"user":str(ctx.message.author)})
+        await ctx.send("Notes cleared.")
 def setup(bot):
     bot.add_cog(stupid(bot))
