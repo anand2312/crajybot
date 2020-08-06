@@ -47,11 +47,8 @@ async def on_member_join(member):
                 "user" : str(member),
                 "cash" : 0,
                 "bank" : 2500,
-                "inv" : [
-                    {"stock" : 0},
-                    {"chicken" : 0},
-                    {"heist tools" : 0}
-                ],
+                "inv" : 
+                    {"stock" : 0, "chicken" : 0, "heist tools" : 0},
                 "debt" : 0,
                 "zodiac_sign" : ""
             })
@@ -440,5 +437,5 @@ for filename in os.listdir('./cogs'):
         bot.load_extension(f'cogs.{filename[:-3]}')
 
 #bot.load_extension('cogs.stupid')
-stock_price.start()
+#stock_price.start()
 bot.run(TOKEN)

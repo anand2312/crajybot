@@ -4,6 +4,7 @@ from discord.ext import commands
 from discord.ext.commands.core import command
 from pymongo import MongoClient
 from aiohttp import ClientSession
+import random
 from KEY import *
 
 fancy_url = "https://ajith-fancy-text-v1.p.rapidapi.com/text"
@@ -19,6 +20,55 @@ love_headers = {
     'x-rapidapi-host': "love-calculator.p.rapidapi.com",
     'x-rapidapi-key': KEY
     }
+
+commit_die = [
+    "Go commit not alive",
+"Go commit aliven't",
+"Go commit uninstall life",
+"Go commit discontinue life",
+"Go commit short-circuit life",
+"Go commit not feeling so good",
+"Go commit blood not flow",
+"Go commit death-pacito",
+"Go commit sewer side",
+"Go commit oxygen not reach lungs",
+"Go commit heart not pumping blood",
+"Go commit cease the means of carbon dioxide production",
+"Go commit neck rope",
+"Go commit wrist knife",
+"Go commit jugular scissor",
+"Go commit plug fork",
+"Go commit swallow lit firework",
+"Go commit celebrity's career after saying n-word",
+"Go commit train track picnic",
+"Go commit exhaust pipe succ",
+"Go commit shove head in oven",
+"Go commit skydive no parachute",
+"Go commit 3 shots of cyanide",
+"Go commit approach lion during safari",
+"Go commit cliff jump",
+"Go commit skinny dip in flood",
+"Go commit gay in Iran",
+"Go commit break into gun owner's home",
+"Go commit XXXTentacion leave motorbike store, Go commit 30 days no eat",
+"Go commit hold breath underwater for 10 minutes",
+"Go commit bite dust",
+"Go commit Logan Paul's reputation after suicide forest vlog",
+"Go commit jump overboard on ferry",
+'Go commit choir in "This is America" music video',
+"Go commit motorway chicken",
+"Go commit bully weird kid in American school Go commit dog in Sputnik rocket",
+"Go commit bucket kick",
+"Go commit fetus in liberal's womb",
+"Go commit neck dislocate",
+"Go commit Niagara Falls jump",
+"Go commit Robbie Rotten cannonball hit",
+"Go commit stare at enderman",
+"Go commit swim in lava",
+"Go commit oof IRL",
+"Go commit Ukraine's population in 1930s",
+"Go commit liver after 10 shots of vodka"
+]
 
 client = MongoClient("mongodb://localhost:27017/")
 db = client["bot-data"]
@@ -98,25 +148,25 @@ class stupid(commands.Cog):
     async def remove_from_wat(self, ctx, key):
         try:
             stupid_collection.delete_one({"key":key})
-            await ctx.send(f"Removed {key}")
+            await ctx.message.channel.send(f"Removed {key}")
         except:
-            await ctx.send(f"{key} doesn't exist")
+            await ctx.message.channel.send(f"{key} doesn't exist")
 
     @wat.command(name="edit-output", aliases=["edit-out"])
     async def edit_wat(self, ctx, key, *, output):
         try:
             stupid_collection.update_one({'key':key},{"$set":{"output":output}})
-            await ctx.send("Updated.")
+            await ctx.message.channel.send("Updated.")
         except:
-            await ctx.send("Key doesn't exist")
+            await ctx.message.channel.send("Key doesn't exist")
 
     @wat.command(name="edit-key", aliases=["edit-name"])
     async def edit_wat(self, ctx, key, new_key):
         try:
             stupid_collection.update_one({'key':key},{"$set":{"key":new_key}})
-            await ctx.send("Updated.")
+            await ctx.message.channel.send("Updated.")
         except:
-            await ctx.send("Key doesn't exist")    
+            await ctx.message.channel.send("Key doesn't exist")    
 
     @wat.command(name="use")
     async def use(self, ctx, key):
@@ -181,5 +231,9 @@ class stupid(commands.Cog):
     async def notes_pop(self, ctx):
         notes_collection.delete_one({"user":str(ctx.message.author)})
         await ctx.send("Notes cleared.")
+
+    @commands.command(name="commit")
+    async def commit(self, ctx):
+        await ctx.send(random.choice(commit_die))
 def setup(bot):
     bot.add_cog(stupid(bot))

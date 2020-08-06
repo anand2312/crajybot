@@ -129,7 +129,7 @@ class Betting(commands.Cog):
                 response2 = discord.Embed(title = f"Roulette Results {str(ctx.message.author)}", description = f"You lost {amount} {self.bot.get_emoji(703648812669075456)}", colour = discord.Color.red())
                 if ctx.message.channel.name in channels_available: 
                     await ctx.message.channel.send(f"The ball fell on {win_number}")
-                    await ctx.message.channel.send(content = None, embed = response2)
+                    await ctx.message.channel.send(content=None, embed=response2)
         else:
             await ctx.message.channel.send(f"nigga what you trying? you don't have that much moni")
 
@@ -137,7 +137,7 @@ class Betting(commands.Cog):
     @commands.command(name = "reverse-russian-roulette", aliases = ["rrr"])
     async def russian_roulette(self, ctx, amount:int):
         response = discord.Embed(title = "Russian Roulette", description = f"{str(ctx.message.author)} started a round of russian roulette for {amount}. Click on the reaction below in the next 15 seconds to join.")
-        if ctx.message.channel.name in channels_available: rr_message_init = await ctx.message.channel.send(content = None, embed = response)
+        if ctx.message.channel.name in channels_available: rr_message_init = await ctx.message.channel.send(content=None, embed=response)
         await rr_message_init.add_reaction(self.bot.get_emoji(703648812669075456))
         await asyncio.sleep(15)
         rr_message = await ctx.message.channel.fetch_message(rr_message_init.id)
@@ -176,8 +176,8 @@ class Betting(commands.Cog):
         user_data = economy_collection.find_one({'user':str(ctx.message.author)})
         win = random.choice([True,False,False,False])
         if amount > 0 and amount <= user_data["cash"]:
-            if user_data["inv"][1]["chicken"] > 0:
-                user_data["inv"][1]["chicken"] -= 1
+            if user_data["inv"]["chicken"] > 0:
+                user_data["inv"]["chicken"] -= 1
                 if win is True:
                     user_data["cash"] += amount
                     response = discord.Embed(title = str(ctx.message.author), description = f"Your little cock one the fight, making you {amount} richer!", colour = discord.Color.green())

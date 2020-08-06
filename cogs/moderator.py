@@ -67,34 +67,28 @@ class Moderator(commands.Cog):
     async def add_inv(self, ctx, item:str, user:discord.Member, amt:int):
         user_data = economy_collection.find_one({'user':str(user)})
         item = item.lower()
-        for i in user_data["inv"]:
-            if item in i.keys():
-                i[item] += amt
-                economy_collection.update_one({'user':str(user)},{"$set":user_data})
-                response = discord.Embed(title = str(ctx.message.author.name), description = f"Added {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.green())
-                await ctx.message.channel.send(content=None, embed=response)
+        user_data["inv"][item] += amt
+        economy_collection.update_one({'user':str(user)},{"$set":user_data})
+        response = discord.Embed(title = str(ctx.message.author.name), description = f"Added {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.green())
+        await ctx.message.channel.send(content=None, embed=response)
 
     @change_inventory.command(name="remove")
     async def remove_inv(self, ctx, item:str, user:discord.Member, amt:int):
         user_data = economy_collection.find_one({'user':str(user)})
         item = item.lower()
-        for i in user_data["inv"]:
-            if item in i.keys():
-                i[item] -= amt
-                economy_collection.update_one({'user':str(user)},{"$set":user_data})
-                response = discord.Embed(title = str(ctx.message.author.name), description = f"Removed {amt} {item}(s) from {user}\'s inventory!",colour=discord.Colour.red())
-                await ctx.message.channel.send(content=None, embed=response)
+        user_data["inv"][item] -= amt
+        economy_collection.update_one({'user':str(user)},{"$set":user_data})
+        response = discord.Embed(title = str(ctx.message.author.name), description = f"Removed {amt} {item}(s) from {user}\'s inventory!",colour=discord.Colour.red())
+        await ctx.message.channel.send(content=None, embed=response)
 
     @change_inventory.command(name="set")
     async def set_inv(self, ctx, item:str, user:discord.Member, amt:int):
         user_data = economy_collection.find_one({'user':str(user)})
         item = item.lower()
-        for i in user_data["inv"]:
-            if item in i.keys():
-                i[item] = amt
-                economy_collection.update_one({'user':str(user)},{"$set":user_data})
-                response = discord.Embed(title = str(ctx.message.author.name), description = f"Set {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.orange())
-                await ctx.message.channel.send(content=None, embed=response)
+        user_data["inv"][item] = amt
+        economy_collection.update_one({'user':str(user)},{"$set":user_data})
+        response = discord.Embed(title = str(ctx.message.author.name), description = f"Set {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.orange())
+        await ctx.message.channel.send(content=None, embed=response)
 
     @commands.command(name="change-price")
     @commands.has_any_role("Moderators","admin","Bot Dev")

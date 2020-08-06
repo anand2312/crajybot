@@ -52,32 +52,18 @@ class Economy(commands.Cog):
                     await ctx.message.channel.send(content = None, embed = response)
                     
     @commands.command(name='bal')
-    async def balance(self,ctx,user:discord.Member):
-        user_dict = economy_collection.find_one({'user':str(user)})
-
+    async def balance(self,ctx,user:discord.Member=None):
+        if user is not None: user_dict = economy_collection.find_one({'user':str(user)})
+        else: user_dict = economy_collection.find_one({'user':str(ctx.message.author)})
         networth = (user_dict['cash'] + user_dict['bank']) - user_dict['debt']
         
-        response = discord.Embed(title=str(user), description="Balance is:")
+        response = discord.Embed(title=user_dict["user"], description="Balance is:")
         response.add_field(name="Cash Balance : ",value=f"{user_dict['cash']}", inline = False)
         response.add_field(name="Bank balance : ",value=f"{user_dict['bank']}", inline = False)
         response.add_field(name="Debt : ",value=f"{-user_dict['debt']}", inline = False)
         response.add_field(name="Net Worth : ",value=networth, inline = False)
                         #all this is for 1) in Bank, 2) Debt, 3) Total bal
         if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
-
-    @balance.error
-    async def bal_error(self,ctx,error):
-        if isinstance(error , commands.errors.MissingRequiredArgument):
-            user_dict = economy_collection.find_one({'user':str(ctx.message.author)})
-            networth = (user_dict['cash'] + user_dict['bank']) - user_dict['debt']
-
-            response = discord.Embed(title=str(ctx.message.author), description="Your balance is:")
-            response.add_field(name="Cash balance : ",value=f"{user_dict['cash']}", inline = False)
-            response.add_field(name="Bank balance : ",value=f"{user_dict['bank']}", inline = False)
-            response.add_field(name="Debt : ",value=f"{user_dict['debt'] * (-1)}", inline = False)
-            response.add_field(name="Net Worth : ",value=networth, inline = False)
-
-            if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
     @commands.command(name='work')
     @commands.cooldown(1, 3600, commands.BucketType.user)            #remember to increase the cooldown to at least an hour!
@@ -193,20 +179,12 @@ class Economy(commands.Cog):
             if ctx.message.channel.name in channels_available: await ctx.message.channel.send(f"You do not have any debt")
 
     @commands.command(name = "inventory", aliases = ["inv"])
-    async def inventory(self, ctx, user:discord.Member):
-        user_data = economy_collection.find_one({'user':str(user)})
+    async def inventory(self, ctx, user:discord.Member=None):
+        if user is not None: user_data = economy_collection.find_one({'user':str(user)})
+        else: user_data = economy_collection.find_one({'user':str(ctx.message.author)})
         response = discord.Embed(title = str(user), description = "Inventory")
         for k in user_data['inv']:
-            response.add_field(name = list(k.keys())[0], value = list(k.values())[0], inline = False)
-        if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
-
-    @inventory.error
-    async def inventory_error(self,ctx,error):
-        if isinstance(error, commands.errors.MissingRequiredArgument):
-            user_data = economy_collection.find_one({'user':str(ctx.message.author)})
-        response = discord.Embed(title = f"{str(ctx.message.author)}", description = "Inventory")
-        for i in user_data["inv"]:
-            response.add_field(name = list(i.keys())[0],value = list(i.values())[0], inline = False)
+            response.add_field(name = k, value = user_data['inv'][k], inline = False)
         if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
     @commands.command(name='shop')
@@ -219,14 +197,10 @@ class Economy(commands.Cog):
 
         if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
 
-    @commands.command(name = "buy")                        #IMPORTANT!! - For items that should have unlimited stock, use stock value as None in store-data.json
-    async def buy(self, ctx, number:int, item:str):         #pls dont ask me how this code works even i'm not sure anymore...........
+    @commands.command(name = "buy")                        #IMPORTANT!! - For items that should have unlimited stock, use stock value as None in store_data collection.
+    async def buy(self, ctx, number:int, *, item:str):         
         store_data = store_collection.find_one({'name':item.lower().capitalize()})
         user_data = economy_collection.find_one({'user':str(ctx.message.author)})
-
-        for i in user_data['inv']:
-            if item.lower() in i.keys():
-                user_remaining_stock = i
 
         if user_data['cash'] >= (number * store_data['price']):
             if store_data['stock'] is not None:
@@ -234,7 +208,7 @@ class Economy(commands.Cog):
                     user_data['cash'] -= (number * store_data['price'])
                     store_data['stock'] -= number
                     store_collection.update_one({'name':item.lower().capitalize()},{"$set":store_data})
-                    user_remaining_stock[item.lower()] += number
+                    user_data["inv"][item.lower()] += number
                     economy_collection.update_one({'user':str(ctx.message.author)},{"$set":user_data})
                     response = discord.Embed(title = str(ctx.message.author), description = f"You bought {number} {item}s!", colour = discord.Color.green())      
                     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
@@ -242,7 +216,7 @@ class Economy(commands.Cog):
                     if ctx.message.channel.name in channels_available: await ctx.message.channel.send(f"Bruh not enough stock of this item is left.")
             else:
                 user_data['cash'] -= (number * store_data['price'])
-                user_remaining_stock[item.lower()] += number
+                user_data["inv"][item.lower()] += number
                 economy_collection.update_one({'user':str(ctx.message.author)},{"$set":user_data})
                 response = discord.Embed(title = str(ctx.message.author), description = f"You bought {number} {item}s!", colour = discord.Color.green())
                 if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
@@ -253,12 +227,8 @@ class Economy(commands.Cog):
     async def sell(self, ctx, n:int, item:str):
         store = store_collection.find_one({'name':item.lower().capitalize()})
         sell_data = economy_collection.find_one({'user':str(ctx.message.author)})
-
-        for i in sell_data['inv']:
-            if item.lower() in i.keys():
-                user_remaining_stock = i
         
-        user_remaining_stock[item.lower()] -= n
+        sell_data["inv"][item.lower()] -= n
         sell_data['cash'] += (store['price'] * n)
         economy_collection.update_one({'user':str(ctx.message.author)},{"$set":sell_data})
 
@@ -281,8 +251,8 @@ class Economy(commands.Cog):
     @commands.command(name = "rob")
     async def rob(self, ctx, person:discord.Member):
         robber, victim = economy_collection.find_one({'user':str(ctx.message.author)}), economy_collection.find_one({'user':str(person)})
-        if robber['inv'][2]['heist tools'] > 0 and victim['cash'] > 10:
-            robber["inv"][2]["heist tools"] -= 1
+        if robber['inv']['heist tools'] > 0 and victim['cash'] > 10:
+            robber["inv"]["heist tools"] -= 1
             win_chance = random.choice([True,True,True,False])
             win_percent = random.randint(50,80)
             
