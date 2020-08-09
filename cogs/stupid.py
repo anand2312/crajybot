@@ -153,18 +153,18 @@ class stupid(commands.Cog):
             await ctx.message.channel.send(f"{key} doesn't exist")
 
     @wat.command(name="edit-output", aliases=["edit-out"])
-    async def edit_wat(self, ctx, key, *, output):
+    async def edit_wat_output(self, ctx, key, *, output):
         try:
             stupid_collection.update_one({'key':key},{"$set":{"output":output}})
-            await ctx.message.channel.send("Updated.")
+            await ctx.message.channel.send("Updated output.")
         except:
             await ctx.message.channel.send("Key doesn't exist")
 
     @wat.command(name="edit-key", aliases=["edit-name"])
-    async def edit_wat(self, ctx, key, new_key):
+    async def edit_wat_key(self, ctx, key, new_key):
         try:
             stupid_collection.update_one({'key':key},{"$set":{"key":new_key}})
-            await ctx.message.channel.send("Updated.")
+            await ctx.message.channel.send("Updated name.")
         except:
             await ctx.message.channel.send("Key doesn't exist")    
 

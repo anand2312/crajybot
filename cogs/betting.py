@@ -145,32 +145,36 @@ class Betting(commands.Cog):
         users_list = await rr_message.reactions[0].users().flatten()
         users_list.pop(0)
 
-        rrr_cursor = economy_collection.find({'user':{"$in":users_list}})
+        rrr_cursor = economy_collection.find({'user':{"$in":[f"{i.name}#{i.discriminator}" for i in users_list]}})
         rrr_data_full = []
         for i in rrr_cursor: rrr_data_full.append(i)
+        rrr_matching_key = list(rrr_data_full)    #this will be used in the final update_money statement to match who all has to be updated
 
         for user_dict in rrr_data_full:
             if user_dict["cash"] >= amount:
                 user_dict["cash"] -= amount
             elif user_dict["cash"] < amount:
-                users_list.remove(user_dict['user'])   #UNSURE IF THIS WORKS, CHECK IF IT BREAKS
+                rrr_data_full.remove(user_dict)   #UNSURE IF THIS WORKS, CHECK IF IT BREAKS
                 await ctx.message.channel.send(f"{user_dict['user']} does not have enough balance")
 
-        winner = random.choice(users_list)
+        rrr_matching_key = [i['user'] for i in rrr_data_full]   #this will be used in the final update_money statement to match who all has to be updated
+        winner = random.choice(rrr_data_full)
         
-        for i in users_list:
+        for i in rrr_data_full:
             if i != winner:
-                response = discord.Embed(title = str(i), description = f"Got shot.", colour = discord.Color.red())
+                response = discord.Embed(title = i["user"], description = f"Got shot.", colour = discord.Color.red())
                 await ctx.message.channel.send(content = None, embed = response)
                 await asyncio.sleep(2)
             else:
-                response = discord.Embed(title = str(i), description = "Survived!!", colour = discord.Color.green())
+                response = discord.Embed(title = i["user"], description = "Survived!!", colour = discord.Color.green())
                 await ctx.message.channel.send(content = None, embed = response)
                 for user_dict in rrr_data_full:
-                    if user_dict["user"] == str(winner):
+                    if user_dict["user"] == winner["user"]:
                         user_dict["cash"] += (len(users_list) * amount)
-        economy_collection.update_many({'user':{"$in":users_list}},{"$set":rrr_data_full})
-
+        num = 0
+        for i in economy_collection.find({'user':{"$in":rrr_matching_key}}):
+            economy_collection.update_one(i, {"$set":rrr_data_full[num]})
+            num += 1
     @commands.command(name = "cock-fight", aliases = ["cf","cockfight"])
     async def cockfight(self,ctx,amount:int):
         user_data = economy_collection.find_one({'user':str(ctx.message.author)})
