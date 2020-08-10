@@ -437,5 +437,5 @@ for filename in os.listdir('./cogs'):
         bot.load_extension(f'cogs.{filename[:-3]}')
 
 #bot.load_extension('cogs.stupid')
-#stock_price.start()
+stock_price.start()
 bot.run(TOKEN)
