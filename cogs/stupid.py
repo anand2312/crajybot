@@ -5,8 +5,10 @@ from discord.ext.commands.core import command
 from pymongo import MongoClient
 from aiohttp import ClientSession
 import random
-from KEY import *
+from KEY import *       #rapidapi key
 
+
+#API requests headers and URLs
 fancy_url = "https://ajith-fancy-text-v1.p.rapidapi.com/text"
 
 fancy_headers = {
@@ -21,6 +23,14 @@ love_headers = {
     'x-rapidapi-key': KEY
     }
 
+ddg_url = "https://duckduckgo-duckduckgo-zero-click-info.p.rapidapi.com/"
+
+ddg_headers =  {
+    'x-rapidapi-host': "duckduckgo-duckduckgo-zero-click-info.p.rapidapi.com",
+    'x-rapidapi-key': KEY
+    }
+
+#list of responses for .commit
 commit_die = [
     "Go commit not alive",
 "Go commit aliven't",
@@ -70,12 +80,15 @@ commit_die = [
 "Go commit liver after 10 shots of vodka"
 ]
 
+#MongoDB initialization
 client = MongoClient("mongodb://localhost:27017/")
 db = client["bot-data"]
 stupid_collection = db["stupid"]
 notes_collection = db["notes"]
 
+#aiohttp initialization for API requests
 session = ClientSession()
+#webhook initialization for sending .wat in #another-chat, #botspam
 anotherchat_webhook = discord.Webhook.partial(740080790385459292, "8E-xPQqRcIJlVIp-_phep34DGW9T95Us9bgY1XQpFCMQRAO7-1NIj9La6HFSXMzQwNoy", adapter=discord.AsyncWebhookAdapter(session))
 botspam_webhook = discord.Webhook.partial(740086899925975051, "URRNUuEI9NWxq_PYot0LAPfpw4jgvmBaffx5s26CL_ajNT7sJ075rjAuww2F90rRHcqt", adapter=discord.AsyncWebhookAdapter(session))
 
@@ -138,12 +151,12 @@ class stupid(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send("bruh that isn't a thing.")
 
-    @wat.command(name="add")
+    @wat.command(name="add", aliases=["-a"])
     async def add_to_wat(self, ctx, key, *, output):
         stupid_collection.insert_one({"key":key, "output":output})
         await ctx.send("Added")
 
-    @wat.command(name="remove")
+    @wat.command(name="remove", aliases=["-r"])
     @commands.has_any_role('admin','Bot Dev')
     async def remove_from_wat(self, ctx, key):
         try:
@@ -168,28 +181,37 @@ class stupid(commands.Cog):
         except:
             await ctx.message.channel.send("Key doesn't exist")    
 
-    @wat.command(name="use")
+    @wat.command(name="use", aliases=["-u"])
     async def use(self, ctx, key):
-        '''try:
-            await ctx.send(stupid_collection.find_one({"key":key})["output"])
-            #await ctx.message.delete()
-        except:
-            await ctx.send(f"{key} doesn't exist")'''
         data = stupid_collection.find_one({"key":key})["output"]
-
-        if ctx.message.channel.name == "another-chat":
-            await anotherchat_webhook.send(data, username=ctx.message.author.nick, avatar_url=ctx.message.author.avatar_url)
-        elif ctx.message.channel.name == "botspam":
-            await botspam_webhook.send(data, username=ctx.message.author.nick, avatar_url=ctx.message.author.avatar_url)
+        if data is not None:
+            if ctx.message.channel.name == "another-chat":
+                await anotherchat_webhook.send(data, username=ctx.message.author.nick, avatar_url=ctx.message.author.avatar_url)
+            elif ctx.message.channel.name == "botspam":
+                await botspam_webhook.send(data, username=ctx.message.author.nick, avatar_url=ctx.message.author.avatar_url)
+            else:
+                await ctx.send(data)
         else:
-            await ctx.send(data)
+            ctx.send("Not found.")
 
-    @wat.command(name="list")
+    @wat.command(name="list", aliases=["-l"])
     async def list_(self, ctx):
         out = ""
         for i in stupid_collection.find():
             out += i["key"] + "\n"
         await ctx.send(out)
+
+    @wat.command(name="search", aliases=["-s"])
+    async def wat_search(self, ctx, key):
+        check = 0
+        embed = discord.Embed(title="Search Results", color=discord.Color.blurple())
+        for i in stupid_collection.find():
+            if key.lower() in i["key"].lower():
+                embed.add_field(name=i['key'], value=i['output'], inline=False)
+                check += 1
+        if check == 0:
+            embed.add_field(name="No search results found", value=" ")
+        await ctx.send(embed=embed)
 
     '''@wat.command(name="react")
     async def react(self, ctx, id_:discord.Message, *emojis):
@@ -235,5 +257,16 @@ class stupid(commands.Cog):
     @commands.command(name="commit")
     async def commit(self, ctx):
         await ctx.send(random.choice(commit_die))
+
+    @commands.command(name="search")
+    async def ddg_search(self, ctx, *, query):
+        querystring = {"no_redirect":"1","no_html":"1","callback":"process_duckduckgo","skip_disambig":"1","q":query,"format":"xml"}
+        async with session.get(ddg_url, headers=ddg_headers, params=querystring) as response:
+            return_text = await response.text()
+            print(return_text)
+        '''embed = discord.Embed(name="Search Results", color=discord.Color.dark_blue(), url=return_text["AbstractURL"])
+        embed.add_field(name=return_text["Heading"], description=return_text["AbstractText"])
+        embed.set_footer(text="Results from DuckDuckGo", icon_url=return_text["image"])
+        await ctx.send(embed=embed)'''
 def setup(bot):
     bot.add_cog(stupid(bot))

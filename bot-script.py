@@ -5,7 +5,8 @@ insert further documentation here, insert documentation near new functions or va
 """
 import os
 import random
-import discord 
+import discord
+from discord import activity 
 from discord.ext import commands,tasks
 import asyncio
 from pymongo import MongoClient
@@ -437,5 +438,5 @@ for filename in os.listdir('./cogs'):
         bot.load_extension(f'cogs.{filename[:-3]}')
 
 #bot.load_extension('cogs.stupid')
-#stock_price.start()
+stock_price.start()
 bot.run(TOKEN)
