@@ -100,9 +100,10 @@ class stupid(commands.Cog):
     @commands.command(name="fancy", aliases=["f"])
     async def fancy(self, ctx, *, message):
         querystring = {"text":message}
-        async with session.get(fancy_url, headers=fancy_headers, params=querystring) as response:
-            return_text = await response.json()
-            return_text = return_text["fancytext"].split(",")[0]
+        async with ctx.channel.typing():
+            async with session.get(fancy_url, headers=fancy_headers, params=querystring) as response:
+                return_text = await response.json()
+                return_text = return_text["fancytext"].split(",")[0]
             await ctx.send(return_text)
     @commands.command(name="love-calc", aliases=["lc","love","lovecalc"])
     async def love_calc(self, ctx, sname:str, fname=None):
@@ -111,26 +112,27 @@ class stupid(commands.Cog):
             querystring = {"fname":str(ctx.message.author),"sname":sname}
         else:
             querystring = {"fname":fname,"sname":sname}
-        async with session.get(love_url, headers = love_headers, params=querystring) as response:
-            percent = await response.json()
-            percent = percent["percentage"]
-            result = await response.json()
-            result = result["result"]
-        if int(percent) >= 50:
-            embed=discord.Embed(title="Love Calculator", colour=discord.Color.green())
-            embed.set_author(name=fname)
-            embed.add_field(name="That poor person", value=sname, inline=False)
-            embed.add_field(name="Percent", value=percent, inline=True)
-            embed.add_field(name="Result", value=result, inline=False)
-        else:
-            embed=discord.Embed(title="Love Calculator", colour=discord.Color.red())
-            embed.set_author(name=fname)
-            embed.add_field(name="That poor person", value=sname, inline=False)
-            embed.add_field(name="Percent", value=percent, inline=True)
-            embed.add_field(name="Result", value=result, inline=False)          
-        sent_message = await ctx.message.channel.send(content=None, embed=embed)
-        await sent_message.add_reaction("✅")
-        await sent_message.add_reaction("❌")
+        async with ctx.channel.typing():
+            async with session.get(love_url, headers = love_headers, params=querystring) as response:
+                percent = await response.json()
+                percent = percent["percentage"]
+                result = await response.json()
+                result = result["result"]
+            if int(percent) >= 50:
+                embed=discord.Embed(title="Love Calculator", colour=discord.Color.green())
+                embed.set_author(name=fname)
+                embed.add_field(name="That poor person", value=sname, inline=False)
+                embed.add_field(name="Percent", value=percent, inline=True)
+                embed.add_field(name="Result", value=result, inline=False)
+            else:
+                embed=discord.Embed(title="Love Calculator", colour=discord.Color.red())
+                embed.set_author(name=fname)
+                embed.add_field(name="That poor person", value=sname, inline=False)
+                embed.add_field(name="Percent", value=percent, inline=True)
+                embed.add_field(name="Result", value=result, inline=False)          
+            sent_message = await ctx.message.channel.send(content=None, embed=embed)
+            await sent_message.add_reaction("✅")
+            await sent_message.add_reaction("❌")
 
     @commands.command(name="weird", aliases=["w"])
     async def weird(self, ctx, *, message):

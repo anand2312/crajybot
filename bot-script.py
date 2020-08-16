@@ -6,7 +6,8 @@ insert further documentation here, insert documentation near new functions or va
 import os
 import random
 import discord
-from discord import activity 
+from discord import activity
+from discord import guild 
 from discord.ext import commands,tasks
 import asyncio
 from pymongo import MongoClient
@@ -114,7 +115,7 @@ async def help(ctx):
                 embed.add_field(name=".cf <amount>", value="Cock fight.", inline=False)
                 await message.edit(content = None, embed = embed)
             elif i.emoji == '⚔️':   
-                embed = discord.Embed(title="Battle!", description="under development")
+                embed = discord.Embed(title="Battle!", description="NOT FUNCTIONAL ANYMORE")
                 await message.edit(content = None, embed = embed)
             elif i.emoji == '🔨':
                 embed = discord.Embed(title="Moderator Commands", description = "List of moderator commands")
@@ -126,7 +127,9 @@ async def help(ctx):
                 embed = discord.Embed(title="Stupid Commands", description = "List of all stupid commands")
                 embed.add_field(name=".fancy <text>", value = "Prints fancy version of your text (command can also be .f)")
                 embed.add_field(name=".love-calc <person1> <person2>", value = "Don't put person1 if you want to use yourself as person1 😳 (command can also be .lc)") 
-                embed.add_field(name=".weird", description="MaKeS tHe texT lIkE tHis (.w)")
+                embed.add_field(name=".weird", value="MaKeS tHe texT lIkE tHis (.w)")
+                embed.add_field(name=".wat commands", value=".use (-u) \n .add (-a) \n .search (-s)")
+                await message.edit(content=None, embed=embed)
             break
 """
 #--------------------RPG / HORO FUNCTIONS----------------------
@@ -432,11 +435,25 @@ async def stock_price_before():
     await bot.wait_until_ready()
     message_channel = bot.get_channel(704911379341115433)
 
+@tasks.loop(seconds=600)
+async def color_loop():
+    role = guild.get_role(740456742684459041)
+    colors = [discord.Color.green(), discord.Color.red(), discord.Color.blurple(), discord.Color.blue(), discord.Color.teal(), discord.Colour.magenta()]
+    await role.edit(colour=random.choice(colors))
+
+@color_loop.before_loop
+async def colorloop_before():
+    global guild
+    await bot.wait_until_ready()
+    guild = bot.get_guild(298871492924669954)
+
+
+
 #loading cogs
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         bot.load_extension(f'cogs.{filename[:-3]}')
 
-#bot.load_extension('cogs.stupid')
+color_loop.start()
 stock_price.start()
 bot.run(TOKEN)
