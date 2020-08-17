@@ -8,7 +8,7 @@ import random
 import discord
 from discord import activity
 from discord import guild 
-from discord.ext import commands,tasks
+from discord.ext import commands,tasks, menus
 import asyncio
 from pymongo import MongoClient
 from random import choice
@@ -22,17 +22,62 @@ rpg_collection = db["rpg_data"]
 store_collection = db["store_data"]
 
 #bot which controls everything; subclass of Client
-bot = commands.Bot(command_prefix='.')
+bot = commands.Bot(command_prefix='.', activity=discord.Activity(type=discord.ActivityType.watching, name="thug_sgt"))
 
 channels_available = ["bot-test","botspam-v2","botspam"] #Channels where the bot works
 chat_money_channels = ['another-chat']
 bot.remove_command('help') 
 #Lets us implement our own help command instead of the built in one
 
+class HelpMenu(menus.Menu):
+    async def send_initial_message(self, ctx, channel):
+        response = discord.Embed(title = "Help", description = "Click on the appropriate emoji.")
+        response.add_field(name = "Economy Commands", value = "Click on the 🤑 emoji.", inline = False)
+        response.add_field(name = "Battle Commands", value = "Click on the ⚔️ emoji", inline = False)
+        response.add_field(name = "Moderator Commands", value = "Click on the 🔨 emoji", inline = False)
+        response.add_field(name = "Stupid Commands", value = "Click on the 🤪 emoji", inline = False)
+        return await ctx.send(embed=response)
+
+    @menus.button('🤑')
+    async def economy_help(self, payload):
+        embed = discord.Embed(title="Economy Commands", description="List of Economy commands")
+        embed.add_field(name="Income commands", value="work, slut, crime", inline=False)
+        embed.add_field(name=".shop", value="Displays available items in shop.", inline=False)
+        embed.add_field(name=".inv <user>", value="Displays selected user's inv, if not specified displays your inv", inline=False)
+        embed.add_field(name=".buy <number> <item>", value="Buys item from shop.", inline=False)
+        embed.add_field(name=".sell <number> <item>", value="Sells item back to shop.", inline=False)
+        embed.add_field(name=".bal <user>", value="Displays your balance. Works similar to inv", inline=False)
+        embed.add_field(name=".with <amount>", value="Withdraw amount from your bank", inline=False)
+        embed.add_field(name=".dep <amount>", value="Deposit amount to bank", inline=False)
+        embed.add_field(name=".givemoney <user> <amount>", value="Donate money to others.", inline=False)
+        embed.add_field(name=".get-loan <amount>", value="Get a loan of specified amount", inline=False)
+        embed.add_field(name=".repay-loan", value="Repay your loan (completely, not bit by bit)", inline=False)
+        embed.add_field(name=".roulette <amount> <bet>", value="Roulette", inline=False)
+        embed.add_field(name=".rrr <amount>", value="Starts a session of Reverse Russian Roulette", inline=False)
+        embed.add_field(name=".cf <amount>", value="Cock fight.", inline=False)
+        await self.message.edit(embed=embed)
+
+    @menus.button('🔨')
+    async def moderator_help(self, payload):
+        embed = discord.Embed(title="Moderator Commands", description = "List of moderator commands")
+        embed.add_field(name=".change-money <action> <cash/bank> <user> <amount>", value = "Action can be remove/add/set.")
+        embed.add_field(name=".c-inv <action> <amount> <item> <user>", value = "Same actions as $cm, but for inventory.")
+        embed.add_field(name=".change-stock <item> <number>", value ="Used to change stock remaining of an item in shop.")
+        embed.add_field(name="there are more but i'm lazy", value="pensive", inline=False)
+        await self.message.edit(embed=embed)
+
+    @menus.button('🤪')
+    async def stupid_help(self, payload):
+        embed = discord.Embed(title="Stupid Commands", description = "List of all stupid commands")
+        embed.add_field(name=".fancy <text>", value = "Prints fancy version of your text (command can also be .f)", inline=False)
+        embed.add_field(name=".love-calc <person1> <person2>", value = "Don't put person1 if you want to use yourself as person1 😳 (command can also be .lc)", inline=False) 
+        embed.add_field(name=".weird", value="MaKeS tHe texT lIkE tHis (.w)", inline=False)
+        embed.add_field(name=".wat commands", value=".use (-u) \n .add (-a) \n .search (-s)", inline=False)
+        embed.add_field(name=".owo", value="makes youw text owoified", inline=False)
+        await self.message.edit(embed=embed)
 @bot.event
 async def on_ready(): #sends this message when bot starts working in #bot-tests
     await bot.get_channel(703141348131471440).send("its popi time!!")
-    await bot.change_presence(activity = discord.Activity(type=discord.ActivityType.watching, name="thug_sgt"))
 
 @bot.event   
 async def on_message(message):
@@ -80,57 +125,8 @@ async def popi(ctx):
 
 @bot.command(name='help')
 async def help(ctx):
-    response = discord.Embed(title = "Help", description = "Click on the appropriate emoji within 10 seconds")
-    response.add_field(name = "Economy Commands", value = "Click on the 🤑 emoji.", inline = False)
-    response.add_field(name = "Battle Commands", value = "Click on the ⚔️ emoji", inline = False)
-    response.add_field(name = "Moderator Commands", value = "Click on the 🔨 emoji", inline = False)
-    response.add_field(name = "Stupid Commands", value = "Click on the 🤪 emoji", inline = False)
-    message = await ctx.message.channel.send(content = None, embed = response)
-
-    await message.add_reaction('🤑')
-    await message.add_reaction('⚔️')
-    await message.add_reaction('🔨')
-    await message.add_reaction('🤪')
-    await asyncio.sleep(10)
-
-    message = await ctx.message.channel.fetch_message(message.id)
-    rxns = message.reactions
-    for i in rxns:
-        if i.count > 1:
-            if i.emoji == '🤑':
-                embed=discord.Embed(title="Economy Commands", description="List of Economy commands")
-                embed.add_field(name="Income commands", value="work, slut, crime", inline=False)
-                embed.add_field(name=".shop", value="Displays available items in shop.", inline=False)
-                embed.add_field(name=".inv <user>", value="Displays selected user's inv, if not specified displays your inv", inline=False)
-                embed.add_field(name=".buy <number> <item>", value="Buys item from shop.", inline=False)
-                embed.add_field(name=".sell <number> <item>", value="Sells item back to shop.", inline=False)
-                embed.add_field(name=".bal <user>", value="Displays your balance. Works similar to inv", inline=False)
-                embed.add_field(name=".with <amount>", value="Withdraw amount from your bank", inline=False)
-                embed.add_field(name=".dep <amount>", value="Deposit amount to bank", inline=False)
-                embed.add_field(name=".givemoney <user> <amount>", value="Donate money to others.", inline=False)
-                embed.add_field(name=".get-loan <amount>", value="Get a loan of specified amount", inline=False)
-                embed.add_field(name=".repay-loan", value="Repay your loan (completely, not bit by bit)", inline=False)
-                embed.add_field(name=".roulette <amount> <bet>", value="Roulette", inline=False)
-                embed.add_field(name=".rrr <amount>", value="Starts a session of Reverse Russian Roulette", inline=False)
-                embed.add_field(name=".cf <amount>", value="Cock fight.", inline=False)
-                await message.edit(content = None, embed = embed)
-            elif i.emoji == '⚔️':   
-                embed = discord.Embed(title="Battle!", description="NOT FUNCTIONAL ANYMORE")
-                await message.edit(content = None, embed = embed)
-            elif i.emoji == '🔨':
-                embed = discord.Embed(title="Moderator Commands", description = "List of moderator commands")
-                embed.add_field(name=".change-money <action> <cash/bank> <user> <amount>", value = "Action can be remove/add/set.")
-                embed.add_field(name=".c-inv <action> <amount> <item> <user>", value = "Same actions as $cm, but for inventory.")
-                embed.add_field(name=".change-stock <item> <number>", value ="Used to change stock remaining of an item in shop.")
-                await message.edit(content = None, embed = embed)
-            elif i.emoji == '🤪':
-                embed = discord.Embed(title="Stupid Commands", description = "List of all stupid commands")
-                embed.add_field(name=".fancy <text>", value = "Prints fancy version of your text (command can also be .f)")
-                embed.add_field(name=".love-calc <person1> <person2>", value = "Don't put person1 if you want to use yourself as person1 😳 (command can also be .lc)") 
-                embed.add_field(name=".weird", value="MaKeS tHe texT lIkE tHis (.w)")
-                embed.add_field(name=".wat commands", value=".use (-u) \n .add (-a) \n .search (-s)")
-                await message.edit(content=None, embed=embed)
-            break
+    menu = HelpMenu(clear_reactions_after=300)
+    await menu.start(ctx)
 """
 #--------------------RPG / HORO FUNCTIONS----------------------
 #global variables
@@ -454,6 +450,6 @@ for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         bot.load_extension(f'cogs.{filename[:-3]}')
 
-color_loop.start()
-stock_price.start()
+#color_loop.start()
+#stock_price.start()
 bot.run(TOKEN)
