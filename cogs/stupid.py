@@ -260,7 +260,7 @@ class stupid(commands.Cog):
     async def commit(self, ctx):
         await ctx.send(random.choice(commit_die))
 
-    @commands.command(name="search")
+    @commands.command(name="search") #under work
     async def ddg_search(self, ctx, *, query):
         querystring = {"no_redirect":"1","no_html":"1","callback":"process_duckduckgo","skip_disambig":"1","q":query,"format":"xml"}
         async with session.get(ddg_url, headers=ddg_headers, params=querystring) as response:
@@ -270,5 +270,6 @@ class stupid(commands.Cog):
         embed.add_field(name=return_text["Heading"], description=return_text["AbstractText"])
         embed.set_footer(text="Results from DuckDuckGo", icon_url=return_text["image"])
         await ctx.send(embed=embed)'''
+        
 def setup(bot):
     bot.add_cog(stupid(bot))
