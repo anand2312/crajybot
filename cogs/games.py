@@ -17,15 +17,8 @@ class Games(commands.Cog):
 
     @commands.command(name="tictactoe", aliases=["ttt"])
     async def ttt(self, ctx, opponent: discord.Member=None, bet: int=None):
-        '''out = """
-+------------+
-|      |       |      |  
-+------------+ 
-|      |       |      |  
-+------------+ 
-|      |       |      |  
-+------------+ 
-        """'''
+        if opponent == ctx.message.author:
+            return await ctx.send("you fucking moron, trying to play with yourself.")
         out = ""
         board = tictactoe.initial_state()
         start = random.choice([tictactoe.X, tictactoe.O])
@@ -87,7 +80,7 @@ class Games(commands.Cog):
 
         def answer_check(m):
             nonlocal answer
-            if m.content.lower() == answer_val.lower():
+            if m.author != ctx.message.author and m.content.lower() == answer_val.lower():
                 return True
         try:
             reply = await self.bot.wait_for('message', check=answer_check, timeout=60)
