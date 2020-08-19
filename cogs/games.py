@@ -6,10 +6,16 @@ import tictactoe
 import random
 from KEY import *
 import asyncio
+from random_word import RandomWords
+from PyDictionary import PyDictionary
+import json
 
 client = MongoClient("mongodb://localhost:27017/")
 db = client["bot-data"]
 games_leaderboard = db["games"]
+
+d = PyDictionary()
+r = RandomWords()
 
 class Games(commands.Cog):
     def __init__(self, bot):
@@ -61,15 +67,44 @@ class Games(commands.Cog):
     @commands.command(name="guess")
     async def guess(self, ctx):
         await ctx.send(f"{ctx.author.mention}, check your DMs!")
+        #wait_for checks
         def reply_check(m):
             if m.author == ctx.message.author and m.guild is None:
                 return True
 
-        await ctx.author.send("Send the word that everyone has to guess!")
+        def answer_check(m):
+            nonlocal answer
+            if m.author != ctx.message.author and m.content.lower() == answer_val.lower():
+                return True
+
+        await ctx.author.send("Send the word that everyone has to guess! Send 'plshelp' if you don't have a word.")
         try:
             answer = await self.bot.wait_for('message', check=reply_check, timeout=30)
-            await ctx.author.send("Send a clue for your word!")
-            clue = await self.bot.wait_for('message', check=reply_check, timeout=30)
+            if answer.content == 'plshelp':
+                await ctx.author.send("Note: the auto word picking thing may not always work (no word might be sent to the channel, incorrect meaning) etc so, dont blame me too much :(")
+                try:
+                    async with ctx.author.dm_channel.typing():
+                        answer_val = r.get_random_word(hasDictionaryDef="true", maxLength=6)
+                        answer_val = answer_val.lower()
+                        clue_dict = d.meaning(answer_val)
+                    clue_val = list(clue_dict.values())
+                    await ctx.author.dm_channel.send(f"Chosen a word! The word is **{answer_val}**")
+                except:
+                    await ctx.author.send("whoops something fucked up. Starting the command again 😔....")
+                    return await self.guess(ctx)
+                await ctx.send(f"{ctx.author.mention} has chosen a word! Everyone has 1 minute to guess it.")
+                await ctx.send(f"Clue - **{clue_val}**")
+                try:
+                    reply = await self.bot.wait_for('message', check=answer_check, timeout=60)
+                except asyncio.TimeoutError:
+                    return await ctx.send(f"Time up! No one guessed the word. The word was **{answer_val}**")
+        
+                games_leaderboard.update_one({"user":str(reply.author)}, {"$inc":{"wins":1}}, upsert=True)
+                return await ctx.send(f"{reply.author.mention} got it right! The word was **{reply.content}**")
+
+            else:
+                await ctx.author.send("Send a clue for your word!")
+                clue = await self.bot.wait_for('message', check=reply_check, timeout=30)
         except asyncio.TimeoutError:
             return await ctx.author.send("Time up!")
         
@@ -78,10 +113,6 @@ class Games(commands.Cog):
         clue_val = clue.content
         await ctx.send(f"Clue - **{clue_val}**")
 
-        def answer_check(m):
-            nonlocal answer
-            if m.author != ctx.message.author and m.content.lower() == answer_val.lower():
-                return True
         try:
             reply = await self.bot.wait_for('message', check=answer_check, timeout=60)
         except asyncio.TimeoutError:
