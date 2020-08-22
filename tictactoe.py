@@ -4,6 +4,7 @@ Tic Tac Toe Player
 
 import math
 import random
+
 X = "X"
 O = "O"
 EMPTY = None
@@ -58,14 +59,17 @@ def actions(board):
     """
     Returns set of all possible actions (i, j) available on the board.
     """
-    action = set()
-    for i in board:
-        for j in i:
-            if j == EMPTY:
-                val = board.index(i),i.index(j)
-                action.add(val)
+
+    action = list()
+    for row, i in enumerate(board):
+        for position,j in enumerate(i):
+            if j is None:
+                val = row, position
+                action.append(val)
     return action
 
+def valid_action(move: tuple, board: list) -> bool:
+    return move in actions(board)
 
 def result(board, action):
     """
