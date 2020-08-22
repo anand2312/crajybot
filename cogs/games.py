@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord.ext.commands.core import command
 from pymongo import MongoClient
 import tictactoe
 import random
@@ -8,7 +7,7 @@ from KEY import *
 import asyncio
 from random_word import RandomWords
 from PyDictionary import PyDictionary
-import json
+
 
 client = MongoClient("mongodb://localhost:27017/")
 db = client["bot-data"]
@@ -28,7 +27,6 @@ class Games(commands.Cog):
         out = ""
         board = tictactoe.initial_state()
         start = random.choice([tictactoe.X, tictactoe.O])
-        users = {tictactoe.X: str(ctx.author), tictactoe.O: str(opponent)}
         original_message = await ctx.send(content=f"**New Game of Tictactoe** \n {ctx.author.mention} X vs {opponent.mention} O \n {out} \n {start} starts! (make a move for the board to appear)")
 
         def player1_check(m):
@@ -43,6 +41,8 @@ class Games(commands.Cog):
             if tictactoe.player(board, start) == tictactoe.X:
                 try:
                     reply = await self.bot.wait_for('message', check=player1_check)
+                    if not tictactoe.valid_action(tuple([int(i) for i in reply.content.split()]), board):
+                        raise IndexError
                     coords = [int(i) for i in reply.content.split()]
                     board[coords[0]][coords[1]] = tictactoe.X
                 except IndexError:
@@ -53,6 +53,8 @@ class Games(commands.Cog):
             elif tictactoe.player(board, start) == tictactoe.O:
                 try:
                     reply = await self.bot.wait_for('message', check=player2_check)
+                    if not tictactoe.valid_action(tuple([int(i) for i in reply.content.split()]), board):
+                        raise IndexError
                     coords = [int(i) for i in reply.content.split()]
                     board[coords[0]][coords[1]] = tictactoe.O
                 except IndexError:
@@ -60,8 +62,9 @@ class Games(commands.Cog):
                 out = tictactoe.board_converter(board)
                 await original_message.edit(content=out)
         else:
-            win_person = users[tictactoe.winner(board)]
-            games_leaderboard.update_one({"user":win_person}, {"$inc":{"wins":1}}, upsert=True)
+            win_person = tictactoe.winner(board)
+            if win_person is not None:
+                games_leaderboard.update_one({"user":win_person}, {"$inc":{"wins":1}}, upsert=True)
             await ctx.send(f"game over, winner is {tictactoe.winner(board)}")
 
     @commands.command(name="guess")
@@ -85,8 +88,8 @@ class Games(commands.Cog):
                 try:
                     async with ctx.author.dm_channel.typing():
                         answer_val = r.get_random_word(hasDictionaryDef="true", maxLength=6)
-                        answer_val = answer_val.lower()
                         clue_dict = d.meaning(answer_val)
+                        answer_val = answer_val.lower()
                     clue_val = list(clue_dict.values())
                     await ctx.author.dm_channel.send(f"Chosen a word! The word is **{answer_val}**")
                 except:
@@ -120,7 +123,6 @@ class Games(commands.Cog):
         
         games_leaderboard.update_one({"user":str(reply.author)}, {"$inc":{"wins":1}}, upsert=True)
         return await ctx.send(f"{reply.author.mention} got it right! The word was **{reply.content}**")
-        
 
     @commands.command(name="games-leaderboard", aliases=["g-lb", "glb", "g-top", "gtop", "games-top"])
     async def games_top(self, ctx):
