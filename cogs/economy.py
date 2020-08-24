@@ -29,7 +29,7 @@ class Economy(commands.Cog):
         except ValueError:
             if amount.lower() == "all":
                 user_data = economy_collection.find_one({'user':str(ctx.message.author)})
-                economy_collection.find_one_and_update({'user':str(ctx.message.author)},{"$set":{'bank':0, 'cash':user_data['cash']+user_data['bal']}})
+                economy_collection.find_one_and_update({'user':str(ctx.message.author)},{"$set":{'bank':0, 'cash':user_data['cash']+user_data['bank']}})
                 response = discord.Embed(title = str(ctx.message.author), description = f"Withdrew {user_data['bank']}", colour = discord.Color.green())
                 await ctx.message.channel.send(content = None, embed = response)
 

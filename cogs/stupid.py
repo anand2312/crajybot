@@ -1,10 +1,12 @@
 import discord
-from discord import webhook
-from discord.ext import commands
+from discord import guild
+from discord.ext import commands, tasks
 from discord.ext.commands.core import command
 from pymongo import MongoClient
 from aiohttp import ClientSession
+from typing import Optional
 import random
+import datetime
 from KEY import *       #rapidapi key
 
 
@@ -85,6 +87,7 @@ client = MongoClient("mongodb://localhost:27017/")
 db = client["bot-data"]
 stupid_collection = db["stupid"]
 notes_collection = db["notes"]
+bday_collection = db["bday"]
 
 #aiohttp initialization for API requests
 session = ClientSession()
@@ -96,7 +99,7 @@ botspam_webhook = discord.Webhook.partial(740086899925975051, "URRNUuEI9NWxq_PYo
 class stupid(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
+        self.birthday_loop.start()
     @commands.command(name="fancy", aliases=["f"])
     async def fancy(self, ctx, *, message):
         querystring = {"text":message}
@@ -256,10 +259,15 @@ class stupid(commands.Cog):
         notes_collection.delete_one({"user":str(ctx.message.author)})
         await ctx.send("Notes cleared.")
 
-    @commands.command(name="commit")
+    @commands.group(name="commit", invoked_without_command=True)
     async def commit(self, ctx):
         await ctx.send(random.choice(commit_die))
 
+    @commit.command(name="add", aliases=["-a"])
+    async def commit_add(self, ctx, *,output):
+        commit_die.append(output)
+        await ctx.send("Added.")
+    
     @commands.command(name="search") #under work
     async def ddg_search(self, ctx, *, query):
         querystring = {"no_redirect":"1","no_html":"1","callback":"process_duckduckgo","skip_disambig":"1","q":query,"format":"xml"}
@@ -270,6 +278,54 @@ class stupid(commands.Cog):
         embed.add_field(name=return_text["Heading"], description=return_text["AbstractText"])
         embed.set_footer(text="Results from DuckDuckGo", icon_url=return_text["image"])
         await ctx.send(embed=embed)'''
+
+    @commands.group(name="bday", aliases=["birthday"], invoke_without_command=True)
+    async def bday(self, ctx, person: discord.Member=None):
+        if person is None:
+            person = ctx.message.author
+        date = bday_collection.find_one({"user":str(person)})
+        await ctx.send(embed=discord.Embed(title=f"{person.nick}'s birthday", description=f"{date['date'].strftime('%d %B %Y')}", color=discord.Color.blurple()))
         
+
+    @bday.command(name="add", aliases=["-a"])
+    async def bday_add(self, ctx, person: discord.Member=None):
+        if person is None:
+            person = ctx.message.author
+        
+        await ctx.send(f"Send {person.nick}'s birthday, in DD-MM-YYYY format")
+        def check(m):
+            return m.author == ctx.message.author and len(m.content.split("-")) == 3 and m.guild is not None
+
+        reply = await self.bot.wait_for('message', check=check, timeout=30)
+        date_vals = list(map(int, reply.content.split("-")))
+
+        bday_collection.update_one({'user':str(person)}, {'$set':{'date':datetime.datetime(date_vals[2], date_vals[1], date_vals[0])}}, upsert=True)
+
+        await ctx.send(f"Added {person.nick}'s birthday to the database. He shall be wished 😔")
+
+    @bday.command(name="all")
+    async def bday_all(self, ctx):
+        response = discord.Embed(title="Everyone's birthdays", color=discord.Color.blurple())
+        for person in bday_collection.find():
+            person_obj = discord.utils.get(ctx.guild.members, name=person['user'].split('#')[0])
+            response.add_field(name=person_obj.nick, value=person['date'].strftime('%d %B %Y'), inline=False)
+        await ctx.send(embed=response)
+    
+    @tasks.loop(hours=24)
+    async def birthday_loop(self):
+        data = bday_collection.find()
+        for person in data:
+            if person['date'].strftime("%d-%B") == datetime.datetime.now().strftime('%d-%B'):
+                person_obj = discord.utils.get(guild.members, name=person['user'].split("#")[0])
+                await wishchannel.send(f"It's {person_obj.mention}'s birthday today! @everyone")
+    
+    @birthday_loop.before_loop
+    async def birthdayloop_before(self):
+        global guild
+        global wishchannel
+        await self.bot.wait_until_ready()
+        guild = self.bot.get_guild(298871492924669954)
+        wishchannel = guild.get_channel(392576275761332226)
+
 def setup(bot):
     bot.add_cog(stupid(bot))
