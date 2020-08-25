@@ -238,8 +238,9 @@ class Economy(commands.Cog):
     @commands.command(name='givemoney')
     async def givemoney(self,ctx,person:discord.Member,amount:int):
         sender, reciever = economy_collection.find_one({'user':str(ctx.message.author)}), economy_collection.find_one({'user':str(person)})
-        if amount < 0:
+        if amount < 0:  
             response = discord.Embed(title='Money Transfer: ', description=f"You can't send negative money, popi.")
+            if ctx.message.channel.name in channels_available: await ctx.message.channel.send(embed=response)
         else:
             if sender['cash'] >= amount:
                 sender['cash'] -= amount
@@ -287,7 +288,7 @@ class Economy(commands.Cog):
         economy_collection.update_one({'user':str(ctx.message.author)},{"$set":user_data})
         member = ctx.message.author
         if role_get != None:
-            role = discord.utils.get(member.guild.roles, name = f"{role_get}")
+            role = discord.utils.get(member.guild.roles, name = role_get)
             await member.add_roles(role)
             await ctx.send("Role added!")
         else: await ctx.send("This item does not give a role")
