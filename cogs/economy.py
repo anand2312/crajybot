@@ -238,16 +238,19 @@ class Economy(commands.Cog):
     @commands.command(name='givemoney')
     async def givemoney(self,ctx,person:discord.Member,amount:int):
         sender, reciever = economy_collection.find_one({'user':str(ctx.message.author)}), economy_collection.find_one({'user':str(person)})
-        if sender['cash'] >= amount:
-            sender['cash'] -= amount
-            reciever['cash'] += amount
-            economy_collection.update_one({'user':str(ctx.message.author)},{"$set":sender})
-            economy_collection.update_one({'user':str(person)},{"$set":reciever})
-            response = discord.Embed(title='Money Transfer: ', description=f"{ctx.author.mention} transferred {amount} to {person.mention}")
+        if amount < 0:
+            response = discord.Embed(title='Money Transfer: ', description=f"You can't send negative money, popi.")
         else:
-            response = discord.Embed(title='Money Transfer: ', description=f"You don't have enough money on hand.")
+            if sender['cash'] >= amount:
+                sender['cash'] -= amount
+                reciever['cash'] += amount
+                economy_collection.update_one({'user':str(ctx.message.author)},{"$set":sender})
+                economy_collection.update_one({'user':str(person)},{"$set":reciever})
+                response = discord.Embed(title='Money Transfer: ', description=f"{ctx.author.mention} transferred {amount} to {person.mention}")
+            else:
+                response = discord.Embed(title='Money Transfer: ', description=f"You don't have enough money on hand.")
         if ctx.message.channel.name in channels_available: await ctx.message.channel.send(embed=response)
-    
+                                 
     @commands.command(name = "rob")
     async def rob(self, ctx, person:discord.Member):
         robber, victim = economy_collection.find_one({'user':str(ctx.message.author)}), economy_collection.find_one({'user':str(person)})
@@ -272,7 +275,22 @@ class Economy(commands.Cog):
                 if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
         else:
             await ctx.message.channel.send("You do not have enough Heist tools items/ person doesn't have enough cash balance.")
-
+    
+    @commands.command(name = "use-item")
+    async def use_item(self, ctx, item):
+        user_data = economy_collection.find_one({'user':str(ctx.message.author)})
+        store_data = store_collection.find_one({'name':item})
+        role_get = store_data['role']
+        for i in user_data["inv"]:
+            if item.lower() in i.keys():
+                i[item.lower()] -= 1
+        economy_collection.update_one({'user':str(ctx.message.author)},{"$set":user_data})
+        member = ctx.message.author
+        if role_get != None:
+            role = discord.utils.get(member.guild.roles, name = f"{role_get}")
+            await member.add_roles(role)
+            await ctx.send("Role added!")
+        else: await ctx.send("This item does not give a role")
     
 def setup(bot):
     bot.add_cog(Economy(bot))
