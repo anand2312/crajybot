@@ -240,7 +240,7 @@ class Economy(commands.Cog):
         sender, reciever = economy_collection.find_one({'user':str(ctx.message.author)}), economy_collection.find_one({'user':str(person)})
         if amount < 0:  
             response = discord.Embed(title='Money Transfer: ', description=f"You can't send negative money, popi.")
-            if ctx.message.channel.name in channels_available: await ctx.message.channel.send(embed=response)
+            return await ctx.send(embed=response)
         else:
             if sender['cash'] >= amount:
                 sender['cash'] -= amount
