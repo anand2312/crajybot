@@ -218,11 +218,21 @@ class stupid(commands.Cog):
             embed.add_field(name="No search results found", value=" ")
         await ctx.send(embed=embed)
 
-    '''@wat.command(name="react")
+    @commands.command(name="emojify", aliases=['e'])
+    async def emojify(self, ctx, *, message):
+        emojis = {'a':'🇦', 'b': '🇧', 'c':'🇨', 'd':'🇩', 'e':'🇪', 'f': '🇫', 'g': '🇬', 'h':'🇭', 'i': '🇮', 'j':'🇯', 'k':'🇰', 'l':'🇱', 'm':'🇲', 'n':'🇳', 'o':'🇴', 'p':'🇵', 'q':'🇶', 'r':'🇷', 's':'🇸', 't':'🇹', 'u':'🇺', 'v':'🇻', 'w':'🇼', 'x':'🇽', 'y':'🇾', 'z':'🇿'}
+        out = ""
+        for letter in message.lower():
+            if letter.isalpha():
+                out += f"{emojis[letter]} "
+            else:
+                out += letter
+        await ctx.send(out)
+    @wat.command(name="react")
     async def react(self, ctx, id_:discord.Message, *emojis):
         for i in emojis:
             await id_.add_reaction(i)
-        #await ctx.message.delete()'''
+        await ctx.message.delete()
 
     @commands.command(name="owo", aliases=["uwu"])
     async def owo(self, ctx, *, text):
