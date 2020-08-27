@@ -27,14 +27,23 @@ class Games(commands.Cog):
         out = ""
         board = tictactoe.initial_state()
         start = random.choice([tictactoe.X, tictactoe.O])
+        players = {tictactoe.X: ctx.author, tictactoe.O: opponent}
+
         original_message = await ctx.send(content=f"**New Game of Tictactoe** \n {ctx.author.mention} X vs {opponent.mention} O \n {out} \n {start} starts! (make a move for the board to appear)")
 
         def player1_check(m):
             if m.author == ctx.message.author and len(m.content.split()) == 2:
+                try:
+                    [int(i) for i in m.content.split]
+                except ValueError:     
+                    return False       
                 return True
-            
         def player2_check(m):
             if m.author == opponent and len(m.content.split()) == 2:
+                try:
+                    [int(i) for i in m.content.split]
+                except ValueError:     
+                    return False       
                 return True
 
         while not tictactoe.terminal(board):
@@ -62,9 +71,9 @@ class Games(commands.Cog):
                 out = tictactoe.board_converter(board)
                 await original_message.edit(content=out)
         else:
-            win_person = tictactoe.winner(board)
+            win_person = players[tictactoe.winner(board)]
             if win_person is not None:
-                games_leaderboard.update_one({"user":win_person}, {"$inc":{"wins":1}}, upsert=True)
+                games_leaderboard.update_one({"user":str(win_person)}, {"$inc":{"wins":1}}, upsert=True)
             await ctx.send(f"game over, winner is {tictactoe.winner(board)}")
 
     @commands.command(name="guess")

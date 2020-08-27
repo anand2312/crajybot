@@ -10,6 +10,10 @@ db = client["bot-data"]
 
 economy_collection = db["econ_data"]
 store_collection = db["store_data"]
+games_leaderboard = db["games"]
+stupid_collection = db["stupid"]
+notes_collection = db["notes"]
+bday_collection = db["bday"]
 
 channels_available = ["bot-test","botspam-v2","botspam"]
 
@@ -95,6 +99,11 @@ class Moderator(commands.Cog):
     async def change_price(self, ctx, item:str, price:int):
         store_collection.update_one({'name':item.lower().capitalize()}, {"$set":{"price":price}})
         await ctx.send("Price changed")
+
+    @commands.command(name="query")
+    @commands.has_any_role("admin")
+    async def mongo_query(self, ctx, database, action, filter=None, update=None):
+        pass
     
 def setup(bot):
     bot.add_cog(Moderator(bot))

@@ -238,7 +238,8 @@ class stupid(commands.Cog):
     async def owo(self, ctx, *, text):
         out = ""
         for i in text:
-            if i.lower() in ["l","r"]: out+="w"
+            case = "upper" if i.isupper() else "lower"
+            if i.lower() in ["l","r"]: out += "w" if case=="lower" else "W"
             else: out+=i
 
         await ctx.send(out)
