@@ -7,6 +7,7 @@ from KEY import *
 import asyncio
 from random_word import RandomWords
 from PyDictionary import PyDictionary
+from akinator.async_aki import Akinator
 
 
 client = MongoClient("mongodb://localhost:27017/")
@@ -34,14 +35,14 @@ class Games(commands.Cog):
         def player1_check(m):
             if m.author == ctx.message.author and len(m.content.split()) == 2:
                 try:
-                    [int(i) for i in m.content.split]
+                    [int(i) for i in m.content.split()]
                 except ValueError:     
                     return False       
                 return True
         def player2_check(m):
             if m.author == opponent and len(m.content.split()) == 2:
                 try:
-                    [int(i) for i in m.content.split]
+                    [int(i) for i in m.content.split()]
                 except ValueError:     
                     return False       
                 return True
@@ -132,6 +133,75 @@ class Games(commands.Cog):
         
         games_leaderboard.update_one({"user":str(reply.author)}, {"$inc":{"wins":1}}, upsert=True)
         return await ctx.send(f"{reply.author.mention} got it right! The word was **{reply.content}**")
+
+
+    @commands.command(name="akinator", aliases=["aki"])
+    async def akinator_game(self, ctx):
+        """Game of Akinator - 
+        Current plan is to use Embeds with MenuPages style reactions for each answer, and the embed gets edited
+        """
+        
+        aki = Akinator()
+        first = await ctx.send("Processing... \n**This command is in beta, don't complain.**")
+        q = await aki.start_game()
+
+        game_embed = discord.Embed(title=f"{str(ctx.author.nick)}'s game of Akinator", description=q, url=r"https://en.akinator.com/", color=discord.Color.blurple())
+        game_embed.set_footer(text=f"You have 10 seconds to add a reaction")
+
+        option_map = {'✅': 'y', '❌':'n', '🤷‍♂️':'p', '😕':'pn', '⁉️': 'i'}
+        count = 0
+
+        def option_check(reaction, user):
+                return user==ctx.author and reaction.emoji in ['◀️', '✅', '❌', '🤷‍♂️', '😕', '⁉️', '😔']
+
+        while aki.progression <= 80:
+            if count == 0:
+                await first.delete()
+                game_message = await ctx.send(embed=game_embed)
+                count += 1
+            else:
+                await game_message.delete()
+                game_message = await ctx.send(content=None, embed=game_embed)
+
+            for emoji in ['◀️', '✅', '❌', '🤷‍♂️', '😕', '⁉️', '😔']:
+                await game_message.add_reaction(emoji)
+
+            option, _ = await self.bot.wait_for('reaction_add', check=option_check) 
+            if option.emoji == '😔':
+                return await ctx.send("Game ended.")
+            async with ctx.channel.typing():
+                if option.emoji == '◀️':   #to go back to previous question
+                    try:
+                        q = await aki.back()
+                    except:   #excepting trying to go beyond 1 first question
+                        pass
+                    #editing embed for next question
+                    game_embed = discord.Embed(title=f"{str(ctx.author.nick)}'s game of Akinator", description=q, url=r"https://en.akinator.com/", color=discord.Color.blurple())
+                    continue
+                else:
+                    q = await aki.answer(option_map[option.emoji])
+                    #editing embed for next question
+                    game_embed = discord.Embed(title=f"{str(ctx.author.nick)}'s game of Akinator", description=q, url=r"https://en.akinator.com/", color=discord.Color.blurple())
+                    continue
+        
+        await aki.win()
+
+        result_embed = discord.Embed(title="My guess....", colour=discord.Color.dark_blue())
+        result_embed.add_field(name=f"My first guess is **{aki.first_guess['name']}**", value=aki.first_guess['description'], inline=False)
+        result_embed.set_footer(text="Was I right? Add the reaction accordingly.")
+        result_embed.set_image(url=aki.first_guess['absolute_picture_path'])
+        result_message = await ctx.send(embed=result_embed)
+        for emoji in ['✅', '❌']:
+            await result_message.add_reaction(emoji)
+
+        option, _ = await self.bot.wait_for('reaction_add', check=option_check, timeout=10)
+        if option.emoji ==  '✅':
+            final_embed = discord.Embed(title="I'm a fuckin genius", color=discord.Color.green())
+        elif option.emoji == '❌':
+            final_embed = discord.Embed(title="Oof", description="Maybe try again?", color=discord.Color.red())
+        
+        return await ctx.send(content=None, embed=final_embed)
+
 
     @commands.command(name="games-leaderboard", aliases=["g-lb", "glb", "g-top", "gtop", "games-top"])
     async def games_top(self, ctx):
