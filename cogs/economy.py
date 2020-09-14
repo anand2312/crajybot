@@ -281,7 +281,7 @@ class Economy(commands.Cog):
     @rob.error
     async def rob_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
-            await ctx.message.channel.send(f"Time remaining = {int(error.retry_after//60)} mins and {int(error.retry_after)-int(error.retry_after//60)} seconds")
+            await ctx.message.channel.send(f"Time remaining = {int(error.retry_after//60)} mins and {int(error.retry_after)-(int(error.retry_after//60))*60} seconds")
     
     @commands.command(name = "use-item")
     async def use_item(self, ctx, item):
