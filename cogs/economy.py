@@ -277,6 +277,7 @@ class Economy(commands.Cog):
                 if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
         else:
             await ctx.message.channel.send("You do not have enough Heist tools items/ person doesn't have enough cash balance.")
+            ctx.command.reset_cooldown(ctx)
                                  
     @rob.error
     async def rob_error(self, ctx, error):
