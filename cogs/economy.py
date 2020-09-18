@@ -253,6 +253,7 @@ class Economy(commands.Cog):
         if ctx.message.channel.name in channels_available: await ctx.message.channel.send(embed=response)
                                  
     @commands.command(name = "rob")
+    @commands.cooldown(1, 3600, commands.BucketType.user)
     async def rob(self, ctx, person:discord.Member):
         robber, victim = economy_collection.find_one({'user':str(ctx.message.author)}), economy_collection.find_one({'user':str(person)})
         if robber['inv']['heist tools'] > 0 and victim['cash'] > 10:
@@ -276,6 +277,12 @@ class Economy(commands.Cog):
                 if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
         else:
             await ctx.message.channel.send("You do not have enough Heist tools items/ person doesn't have enough cash balance.")
+            ctx.command.reset_cooldown(ctx)
+                                 
+    @rob.error
+    async def rob_error(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.message.channel.send(f"Time remaining = {int(error.retry_after//60)} mins and {int(error.retry_after)-(int(error.retry_after//60))*60} seconds")
     
     @commands.command(name = "use-item")
     async def use_item(self, ctx, item):
