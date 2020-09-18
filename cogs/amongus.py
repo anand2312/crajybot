@@ -12,11 +12,11 @@ class AmongUs(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         if self.status is False or message.author==self.bot.user:
-            await self.bot.process_commands(message)
             return
         if "code" in message.content.lower() or "server" in message.content.lower():
             await message.channel.send(embed=self.embed)
-        await self.bot.process_commands(message)
+            await self.bot.process_commands(message)
+
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -29,7 +29,7 @@ class AmongUs(commands.Cog):
 
     @commands.group(name="among_us",
                     aliases=["amongus", "play", "among-us"],
-                    invoked_without_subcommand=True)
+                    invoke_without_command=True)
     async def among_us(self, ctx):
         if self.status is True:
             return await ctx.send(f"{ctx.author.mention}, {self.data['user'].name} has already started a game.\nCode: ``{self.data['code']}``\nServer: ``{self.data['server']}``")
