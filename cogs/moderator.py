@@ -14,6 +14,7 @@ games_leaderboard = db["games"]
 stupid_collection = db["stupid"]
 notes_collection = db["notes"]
 bday_collection = db["bday"]
+pins_collection = db["pins"]
 
 channels_available = ["bot-test","botspam-v2","botspam"]
 
@@ -104,6 +105,11 @@ class Moderator(commands.Cog):
     @commands.has_any_role("admin")
     async def mongo_query(self, ctx, database, action, filter=None, update=None):
         pass
-    
+
+    @commands.command(name="clear-pins")
+    @commands.has_any_role('admin')
+    async def clear_pins(self, ctx):
+        pins_collection.delete_many({})
+        await ctx.send("Cleared pins")
 def setup(bot):
     bot.add_cog(Moderator(bot))

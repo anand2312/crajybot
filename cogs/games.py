@@ -137,9 +137,6 @@ class Games(commands.Cog):
 
     @commands.command(name="akinator", aliases=["aki"])
     async def akinator_game(self, ctx):
-        """Game of Akinator - 
-        Current plan is to use Embeds with MenuPages style reactions for each answer, and the embed gets edited
-        """
         
         aki = Akinator()
         first = await ctx.send("Processing... \n**This command is in beta, don't complain.**")

@@ -1,12 +1,14 @@
 import discord
-from discord import guild
 from discord.ext import commands, tasks
-from discord.ext.commands.core import command
+import disputils
+
 from pymongo import MongoClient
 from aiohttp import ClientSession
-from typing import Optional
+
+from typing import Optional, Union
 import random
 import datetime
+
 from KEY import *       #rapidapi key
 
 
@@ -88,6 +90,7 @@ db = client["bot-data"]
 stupid_collection = db["stupid"]
 notes_collection = db["notes"]
 bday_collection = db["bday"]
+pins_collection = db["pins"]
 
 #aiohttp initialization for API requests
 session = ClientSession()
@@ -114,7 +117,7 @@ class stupid(commands.Cog):
             fname = str(ctx.message.author)
             querystring = {"fname":str(ctx.message.author),"sname":sname}
         else:
-            querystring = {"fname":fname,"sname":sname}
+            querystring = {"fname":str(fname),"sname":str(sname)}
         async with ctx.channel.typing():
             async with session.get(love_url, headers = love_headers, params=querystring) as response:
                 percent = await response.json()
@@ -321,7 +324,51 @@ class stupid(commands.Cog):
             person_obj = discord.utils.get(ctx.guild.members, name=person['user'].split('#')[0])
             response.add_field(name=person_obj.nick, value=person['date'].strftime('%d %B %Y'), inline=False)
         await ctx.send(embed=response)
-    
+
+    @commands.has_any_role("Moderators", "admin")
+    @commands.command(name="pin")
+    async def pin(self, ctx, id: discord.Message, name_: str=None):
+        document = dict(message_synopsis = id.content[:30] + "...",
+            message_jump_url = id.jump_url,
+            message_author = id.author.name,
+            date = datetime.date.today().strftime('%B %d, %Y'),
+            name = None if name_ is None else name_)
+        pins_collection.insert_one(document)
+        await id.add_reaction("📌")
+        reply_embed = discord.Embed(title=f"Pinned!", description=f"_{document['message_synopsis'][:10]+'...'}_", color=discord.Color.green())
+        reply_embed.set_thumbnail(url= r"https://media.discordapp.net/attachments/612638234782072882/758190572526764052/emoji.png?width=58&height=58")
+        reply_embed.set_footer(text=f"Pinned by {ctx.author.name}", icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=reply_embed)
+        
+    @commands.command(name="pins")
+    async def pins(self, ctx): #install disputils on VM
+        data = pins_collection.find()
+        embeds = []
+
+        counter = 0
+
+        embed = discord.Embed(title=f"{ctx.guild.name} Pins!", color=discord.Color.dark_gold())
+        embed.set_thumbnail(url=ctx.guild.icon_url)
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+
+        for pin in data:
+            if counter % 5 != 0 or counter == 0:
+                embed.add_field(name=f"{pin['message_synopsis']}",
+                                value=f"[_~{pin['message_author']}_, on {pin['date']}]({pin['message_jump_url']})", 
+                                inline=False)
+                counter += 1
+            else:
+                embeds.append(embed)
+                counter += 1
+                embed = discord.Embed(title=f"{ctx.guild.name} Pins!", color=discord.Color.dark_gold())
+                embed.set_thumbnail(url=ctx.guild.icon_url)
+                embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+        else:
+            embeds.append(embed)
+
+        paginator = disputils.BotEmbedPaginator(ctx, embeds)
+        await paginator.run()
+
     @tasks.loop(hours=24)
     async def birthday_loop(self):
         data = bday_collection.find()
