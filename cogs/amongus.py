@@ -37,7 +37,7 @@ class AmongUs(commands.Cog):
         def code_check(m):
             return m.author==ctx.author and len(m.content)==6 and all([i.isalpha() for i in m.content])
         def server_check(m):
-            return m.author==ctx.author and m.content.lower() in ["asia", "europe", "north america"]
+            return m.author==ctx.author and m.content.lower() in ["asia", "europe", "north america", "na"]
 
         await ctx.send("Enter the room code")
         code = await self.bot.wait_for('message', check=code_check, timeout=25)
