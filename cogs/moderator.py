@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import random
 import asyncio
+import typing
 from pymongo import MongoClient
 #do whatever imports you need; I've just done a few which I could think of
 
@@ -106,10 +107,26 @@ class Moderator(commands.Cog):
     async def mongo_query(self, ctx, database, action, filter=None, update=None):
         pass
 
-    @commands.command(name="clear-pins")
-    @commands.has_any_role('admin')
-    async def clear_pins(self, ctx):
-        pins_collection.delete_many({})
-        await ctx.send("Cleared pins")
+    @commands.command(name="clear-pin", aliases=["clearpins", "clear-pins"])
+    @commands.has_any_role("admin", "Moderators")
+    async def remove_pins(self, ctx, id_: typing.Union[int, str]):
+        if isinstance(id_, int):
+            x = pins_collection.delete_one({"_id":id_})
+            if x.deleted_count > 0:
+                return await ctx.send(f"Deleted tag with ID {id_}")
+            else:
+                return await ctx.send("No tag with that ID could be found")
+
+        else:
+            if id_.lower() == "all":
+                def check(m):
+                    return m.author==ctx.author and m.content.lower() in ['yes','y','no','n']
+                await ctx.send("Are you sure you want to clear all pins?")
+                reply = await self.bot.wait_for('message', check=check, timeout=10)
+                if reply.content.lower() in ["yes", "y"]:
+                    pins_collection.delete_many({})
+                    return await ctx.send("Cleared all pins")
+                else:
+                    return await ctx.send("Terminated.")
 def setup(bot):
     bot.add_cog(Moderator(bot))

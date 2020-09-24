@@ -8,6 +8,7 @@ from aiohttp import ClientSession
 from typing import Optional, Union
 import random
 import datetime
+import itertools
 
 from KEY import *       #rapidapi key
 
@@ -91,6 +92,7 @@ stupid_collection = db["stupid"]
 notes_collection = db["notes"]
 bday_collection = db["bday"]
 pins_collection = db["pins"]
+cache_collection = db["cache"]
 
 #aiohttp initialization for API requests
 session = ClientSession()
@@ -103,6 +105,7 @@ class stupid(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.birthday_loop.start()
+          
     @commands.command(name="fancy", aliases=["f"])
     async def fancy(self, ctx, *, message):
         querystring = {"text":message}
@@ -111,6 +114,7 @@ class stupid(commands.Cog):
                 return_text = await response.json()
                 return_text = return_text["fancytext"].split(",")[0]
             await ctx.send(return_text)
+
     @commands.command(name="love-calc", aliases=["lc","love","lovecalc"])
     async def love_calc(self, ctx, sname:str, fname=None):
         if fname is None:
@@ -327,15 +331,23 @@ class stupid(commands.Cog):
 
     @commands.has_any_role("Moderators", "admin")
     @commands.command(name="pin")
-    async def pin(self, ctx, id: discord.Message, name_: str=None):
-        document = dict(message_synopsis = id.content[:30] + "...",
-            message_jump_url = id.jump_url,
-            message_author = id.author.name,
+    async def pin(self, ctx, id_: discord.Message, name_: str=None):
+        old_data = pins_collection.find().sort("_id", -1).limit(1)
+        try:
+            last_pin = old_data[0]['_id']
+        except IndexError:
+            last_pin = 0
+        document = dict(_id= last_pin+1,
+            message_synopsis = id_.content[:30] + "...",
+            message_jump_url = id_.jump_url,
+            message_author = id_.author.name,
             date = datetime.date.today().strftime('%B %d, %Y'),
             name = None if name_ is None else name_)
+
         pins_collection.insert_one(document)
-        await id.add_reaction("📌")
-        reply_embed = discord.Embed(title=f"Pinned!", description=f"_{document['message_synopsis'][:10]+'...'}_", color=discord.Color.green())
+
+        await id_.add_reaction("📌")
+        reply_embed = discord.Embed(title=f"Pinned!", description=f"_{document['message_synopsis'][:10]+'...'}_\n with ID {last_pin+1}", color=discord.Color.green())
         reply_embed.set_thumbnail(url= r"https://media.discordapp.net/attachments/612638234782072882/758190572526764052/emoji.png?width=58&height=58")
         reply_embed.set_footer(text=f"Pinned by {ctx.author.name}", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=reply_embed)
@@ -345,19 +357,22 @@ class stupid(commands.Cog):
         data = pins_collection.find()
         embeds = []
 
-        counter = 0
+        counter = 1
 
         embed = discord.Embed(title=f"{ctx.guild.name} Pins!", color=discord.Color.dark_gold())
         embed.set_thumbnail(url=ctx.guild.icon_url)
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
 
         for pin in data:
-            if counter % 5 != 0 or counter == 0:
+            if counter % 5 != 0:
                 embed.add_field(name=f"{pin['message_synopsis']}",
-                                value=f"[_~{pin['message_author']}_, on {pin['date']}]({pin['message_jump_url']})", 
+                                value=f"[_~{pin['message_author']}_, on {pin['date']}]({pin['message_jump_url']})\nPin ID:{pin['_id']}", 
                                 inline=False)
                 counter += 1
             else:
+                embed.add_field(name=f"{pin['message_synopsis']}",
+                                value=f"[_~{pin['message_author']}_, on {pin['date']}]({pin['message_jump_url']})\nPin ID:{pin['_id']}", 
+                                inline=False)
                 embeds.append(embed)
                 counter += 1
                 embed = discord.Embed(title=f"{ctx.guild.name} Pins!", color=discord.Color.dark_gold())
@@ -371,6 +386,7 @@ class stupid(commands.Cog):
 
     @tasks.loop(hours=24)
     async def birthday_loop(self):
+        print("Running birthday loop")
         data = bday_collection.find()
         for person in data:
             if person['date'].strftime("%d-%B") == datetime.datetime.now().strftime('%d-%B'):
@@ -379,11 +395,13 @@ class stupid(commands.Cog):
     
     @birthday_loop.before_loop
     async def birthdayloop_before(self):
+        
         global guild
         global wishchannel
         await self.bot.wait_until_ready()
         guild = self.bot.get_guild(298871492924669954)
         wishchannel = guild.get_channel(392576275761332226)
+
 
 def setup(bot):
     bot.add_cog(stupid(bot))
