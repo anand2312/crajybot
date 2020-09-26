@@ -128,5 +128,24 @@ class Moderator(commands.Cog):
                     return await ctx.send("Cleared all pins")
                 else:
                     return await ctx.send("Terminated.")
+
+    @commands.command(name="bruh-id")
+    @commands.has_any_role('admin')
+    async def idConvertion(self, ctx):    #for single use lmao
+        everyone = economy_collection.find()
+        count = 0
+        for person in everyone:
+            name, discrim = person['user'].split("#")
+            person_object = discord.utils.get(ctx.guild.members, name=name)
+            if person_object is None:
+                person_object = discord.utils.get(ctx.guild.members, discriminator=discrim)
+            if person_object is None:
+                await ctx.send(f"{name} user object not found.")
+                continue
+            economy_collection.update_one({'user': person['user']}, {"$set":{'user':person_object.id}})
+            await ctx.send(f"Edited {person['user']}")
+            count += 1
+
+        await ctx.send(f"Modified records for {count} members out of {len(ctx.guild.members)} members.")
 def setup(bot):
     bot.add_cog(Moderator(bot))
