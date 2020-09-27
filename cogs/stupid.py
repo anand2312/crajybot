@@ -92,7 +92,7 @@ stupid_collection = db["stupid"]
 notes_collection = db["notes"]
 bday_collection = db["bday"]
 pins_collection = db["pins"]
-cache_collection = db["cache"]
+role_names_collection = db["role"]
 
 #aiohttp initialization for API requests
 session = ClientSession()
@@ -383,6 +383,24 @@ class stupid(commands.Cog):
 
         paginator = disputils.BotEmbedPaginator(ctx, embeds)
         await paginator.run()
+
+    @commands.command(name="role-name")
+    async def role_name(self, ctx, *, name: str):
+        if len(name) > 15:
+            return await ctx.send("bro too long bro")
+
+        role_names_collection.insert_one({'name': name, 'by': ctx.author.name})
+
+        embed = discord.Embed(title="Added!", description=f"`{name}` was added to the database. It will be picked randomly.", color=discord.Color.green(), url=r"https://www.youtube.com/watch?v=DLzxrzFCyOs")
+        return await ctx.send(embed=embed)
+
+    @tasks.loop(hours=12)
+    async def role_name_loop(self):
+        guild = bot.get_guild(298871492924669954)
+        role = guild.get_role(420169837524942848)
+        data = [obj for obj in role_names_collection.find()]
+        new_name_data = random.choice(data)
+        await role.edit(name=new_name_data['name'])
 
     @tasks.loop(hours=24)
     async def birthday_loop(self):

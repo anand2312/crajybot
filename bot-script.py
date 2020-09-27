@@ -28,7 +28,6 @@ channels_available = ["bot-test","botspam-v2","botspam"] #Channels where the bot
 chat_money_channels = ['another-chat']
 bot.remove_command('help') 
 #Lets us implement our own help command instead of the built in one
-
 class HelpMenu(menus.Menu):
     async def send_initial_message(self, ctx, channel):
         response = discord.Embed(title = "Help", description = "Click on the appropriate emoji.")
@@ -82,13 +81,14 @@ async def on_ready(): #sends this message when bot starts working in #bot-tests
 @bot.event   
 async def on_message(message):
     #chat money
+    if message.author.bot: return
     if str(message.channel) in chat_money_channels:
-        economy_collection.find_one_and_update({"user":str(message.author)}, {"$inc":{"cash":10}})
+        economy_collection.update_one({"user":message.author.id}, {"$inc": {"cash": 10}})
     await bot.process_commands(message)
 
 @bot.event    #to be tested!
 async def on_member_join(member):
-    check = economy_collection.find_one({'user':str(member)})
+    check = economy_collection.find_one({'user': member.id})
     if check is None:
         economy_collection.insert_one({
                 "user" : str(member),
@@ -163,6 +163,4 @@ for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         bot.load_extension(f'cogs.{filename[:-3]}')
 
-color_loop.start()
-stock_price.start()
 bot.run(TOKEN)

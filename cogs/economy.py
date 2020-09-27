@@ -24,8 +24,13 @@ class Economy(commands.Cog):
             if isinstance(user, discord.Member): 
                 user_dict = economy_collection.find_one({'user': user.id})
             elif isinstance(user, str):
-                user = [member for member in ctx.guild.members if member.name.lower()==user.lower() or member.nick.lower()==user.lower()]  #this is a list, use user[0]!
-                user_dict = economy_collection.find_one({'user': user[0].id})
+                for member in ctx.guild.members:
+                    if member.name.lower() == user.lower():
+                        user = member
+                    elif member.nick is not None:
+                        if member.nick.lower() == user.lower():
+                            user = member
+                user_dict = economy_collection.find_one({'user': user.id})
         else: 
             user_dict = economy_collection.find_one({'user': ctx.author.id})
         return user_dict
