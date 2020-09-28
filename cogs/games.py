@@ -28,8 +28,8 @@ class Games(commands.Cog):
                       usage="<person>")
     @commands.cooldown(1, 30, type=commands.BucketType.channel)
     async def ttt(self, ctx, opponent: discord.Member = None):
-        #if opponent == ctx.message.author:
-            #return await ctx.send("you moron, trying to play with yourself.")
+        if opponent == ctx.message.author:
+            return await ctx.send("you moron, trying to play with yourself.")
 
         board = tictactoe.initial_state()
         player = random.choice([tictactoe.X, tictactoe.O])
