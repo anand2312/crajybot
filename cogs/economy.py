@@ -18,14 +18,19 @@ class Economy(commands.Cog):
     async def cog_check(self, ctx):
         return ctx.channel.name in ["bot-test","botspam-v2","botspam"]
 
-    def get_user_dict(self, ctx: discord.Context, user: typing.Union[discord.Member, str]) -> dict:
+    def get_user_dict(self, ctx: discord.ext.commands.Context, user: typing.Union[discord.Member, str]) -> dict:
         """Helper function to get user data from database"""
         if user is not None:
             if isinstance(user, discord.Member): 
                 user_dict = economy_collection.find_one({'user': user.id})
             elif isinstance(user, str):
-                user = [member for member in ctx.guild.members if member.name.lower()==user.lower() or member.nick.lower()==user.lower()]  #this is a list, use user[0]!
-                user_dict = economy_collection.find_one({'user': user[0].id})
+                for member in ctx.guild.members:
+                    if member.name.lower() == user.lower():
+                        user = member
+                    elif member.nick is not None:
+                        if member.nick.lower() == user.lower():
+                            user = member
+                user_dict = economy_collection.find_one({'user': user.id})
         else: 
             user_dict = economy_collection.find_one({'user': ctx.author.id})
         return user_dict
@@ -42,7 +47,7 @@ class Economy(commands.Cog):
                 await ctx.message.channel.send("You do not have that much balance")
         except ValueError:
             if amount.lower() == "all":
-                user_data = economy_collection.find_one({'user': ctx.author.id)
+                user_data = economy_collection.find_one({'user': ctx.author.id})
                 economy_collection.find_one_and_update({'user': ctx.author.id}, {"$set":{'bank': 0, 'cash': user_data['cash']+user_data['bank']}})
                 response = discord.Embed(title = str(ctx.message.author), description = f"Withdrew {user_data['bank']}", colour = discord.Color.green())
                 await ctx.message.channel.send(embed=response)
@@ -70,13 +75,13 @@ class Economy(commands.Cog):
         user_dict = self.get_user_dict(ctx, user)
 
         networth = (user_dict['cash'] + user_dict['bank']) - user_dict['debt']
-        response = discord.Embed(title=user_dict["user"], description="Balance is:")
+        response = discord.Embed(title=str(user), description="Balance is:")
         response.add_field(name="Cash Balance : ",value=f"{user_dict['cash']}", inline = False)
         response.add_field(name="Bank balance : ",value=f"{user_dict['bank']}", inline = False)
         response.add_field(name="Debt : ",value=f"{-user_dict['debt']}", inline = False)
         response.add_field(name="Net Worth : ",value=networth, inline = False)
 
-        return await ctx.message.channel.send(embed=response)
+        return await ctx.send(embed=response)
 
     @commands.command(name='work')
     @commands.cooldown(1, 3600, commands.BucketType.user)  
@@ -112,7 +117,8 @@ class Economy(commands.Cog):
             await ctx.message.channel.send(f"Time remaining = {int(error.retry_after/60)} mins")
 
     @commands.command(name="crime")
-    @commands.cooldown(1, 3600, commands.BucketType.user)            
+    @commands.cooldown(1, 3600, commands.BucketType.user)
+    async def crime(self, ctx):            
         winning_odds=[1,2,3,4]
         if random.randint(1,10) in winning_odds:
             rand_val = random.randint(150,400)
