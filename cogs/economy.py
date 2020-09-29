@@ -232,7 +232,10 @@ class Economy(commands.Cog):
                     user_data['cash'] -= (number * store_data['price'])
                     store_data['stock'] -= number
                     store_collection.update_one({'name': item.lower().capitalize()}, {"$set": store_data})
-                    user_data["inv"][item.lower()] += number
+                    try:
+                        user_data["inv"][item.lower()] += number
+                    except KeyError:
+                        user_data["inv"][item.lower()] = number
                     economy_collection.update_one({'user': ctx.author.id}, {"$set": user_data})
                     response = discord.Embed(title=str(ctx.author), description=f"You bought {number} {item}s!", colour=discord.Color.green())      
                     return await ctx.send(embed=response)
@@ -240,7 +243,10 @@ class Economy(commands.Cog):
                     return await ctx.message.channel.send(f"Bruh not enough stock of this item is left.")
             else:
                 user_data['cash'] -= (number * store_data['price'])
-                user_data["inv"][item.lower()] += number
+                try:
+                    user_data["inv"][item.lower()] += number
+                except KeyError:
+                    user_data["inv"][item.lower()] = number
                 economy_collection.update_one({'user': ctx.author.id}, {"$set": user_data})
                 response = discord.Embed(title=str(ctx.author), description=f"You bought {number} {item}s!", colour=discord.Color.green())
                 return await ctx.send(embed=response)
