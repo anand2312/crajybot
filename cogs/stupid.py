@@ -88,6 +88,7 @@ commit_die = [
 #MongoDB initialization
 client = MongoClient("mongodb://localhost:27017/")
 db = client["bot-data"]
+economy_collection = db["econ_data"]
 stupid_collection = db["stupid"]
 notes_collection = db["notes"]
 bday_collection = db["bday"]
@@ -385,16 +386,35 @@ class stupid(commands.Cog):
         await paginator.run()
 
     @commands.command(name="role-name")
-    @commands.has_any_role('admin', 'Moderators')
     async def role_name(self, ctx, *, name: str):
         if len(name) > 15:
             return await ctx.send("bro too long bro")
+
+        if ctx.author.guild_permissions['administrator']:
+            pass
+        else:
+            data = economy_collection.find_one({'user': ctx.author.id})
+            if data['inv']['role name'] >= 1:
+                data['inv']['role name'] -= 1
+                economy_collection.update_one({'user': ctx.author.id}, {"$set": data})
+            else:
+                return await ctx.send("Buy the `role name` item!")
 
         role_names_collection.insert_one({'name': name, 'by': ctx.author.name})
 
         embed = discord.Embed(title="Added!", description=f"`{name}` was added to the database. It will be picked randomly.", color=discord.Color.green(), url=r"https://www.youtube.com/watch?v=DLzxrzFCyOs")
         return await ctx.send(embed=embed)
 
+    @commands.command(name="role-name-list", aliases=['rolenamelist'])
+    async def role_name_list(self, ctx):
+        data = role_names_collection.find()
+        embed = discord.Embed(title="Role names", color=discord.Color.green())
+        val = ""
+        for i in data:
+            val += i['name'] + "\n"
+        embed.description = val
+        return await ctx.send(embed=embed)
+        
     @tasks.loop(hours=12)
     async def role_name_loop(self):
         guild = self.bot.get_guild(298871492924669954)
@@ -404,6 +424,10 @@ class stupid(commands.Cog):
         print("running name loop")
         await role.edit(name=new_name_data['name'])
         print("edited")
+
+    @role_name_loop.before_loop
+    async def rolename_before(self):
+        await self.bot.wait_until_ready()
 
     @tasks.loop(hours=24)
     async def birthday_loop(self):
