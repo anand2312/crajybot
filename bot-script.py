@@ -95,7 +95,7 @@ async def on_member_join(member):
                 "cash" : 0,
                 "bank" : 2500,
                 "inv" : 
-                    {"stock" : 0, "chicken" : 0, "heist tools" : 0},
+                    {"stock": 0, "chicken": 0, "heist tools": 0, "role name": 0},
                 "debt" : 0,
                 "zodiac_sign" : ""
             })
