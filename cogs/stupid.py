@@ -106,7 +106,7 @@ class stupid(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.birthday_loop.start()
-          
+        self.role_name_loop.start()          
     @commands.command(name="fancy", aliases=["f"])
     async def fancy(self, ctx, *, message):
         querystring = {"text":message}
@@ -386,6 +386,7 @@ class stupid(commands.Cog):
         await paginator.run()
 
     @commands.command(name="role-name")
+    @commands.has_any_role('admin', 'Moderators')
     async def role_name(self, ctx, *, name: str):
         if len(name) > 15:
             return await ctx.send("bro too long bro")
@@ -417,11 +418,13 @@ class stupid(commands.Cog):
         
     @tasks.loop(hours=12)
     async def role_name_loop(self):
-        guild = bot.get_guild(298871492924669954)
+        guild = self.bot.get_guild(298871492924669954)
         role = guild.get_role(420169837524942848)
         data = [obj for obj in role_names_collection.find()]
         new_name_data = random.choice(data)
+        print("running name loop")
         await role.edit(name=new_name_data['name'])
+        print("edited")
 
     @tasks.loop(hours=24)
     async def birthday_loop(self):

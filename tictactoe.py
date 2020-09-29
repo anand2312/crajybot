@@ -2,144 +2,117 @@
 Tic Tac Toe Player
 """
 
-import math
 import random
 
-X = "X"
-O = "O"
-EMPTY = None
+X = ('<:x1:757950268875735041>', '<:x2:757950318045560902>', '<:x3:757950402661449819>', '<:x4:757950360336728086>')
+O = ('<:o1:757945971123683418>', '<:o2:757945990090326068>', '<:o3:757946006322282507>', '<:o4:757946024064057395>')
+EMPTY = ("<:empty:755333349043863623>", "<:empty:755333349043863623>", "<:empty:755333349043863623>", "<:empty:755333349043863623>")
+board = {"↖": EMPTY, "⬆": EMPTY, "↗": EMPTY,
+         "⬅": EMPTY, "⏺": EMPTY, "➡": EMPTY,
+         "↙": EMPTY, "⬇": EMPTY, "↘": EMPTY}
 
 
 def initial_state():
     """
     Returns starting state of the board.
     """
-    return [[EMPTY, EMPTY, EMPTY],
-            [EMPTY, EMPTY, EMPTY],
-            [EMPTY, EMPTY, EMPTY]]
+    return [board[i] for i in board]
 
 
-def player(board, start):
-    """
-    Returns player who has the next turn on a board.
-    """
-    no_of_x, no_of_o = 0, 0
-    for row in board:
-        for position in row:
-            if position == X: no_of_x += 1
-            elif position == O: no_of_o += 1
-    if start == X:
-        if no_of_x > no_of_o:
-            return O
-        else: 
-            return X
-    elif start == O:
-        if no_of_x < no_of_o:
-            return X
-        else: 
-            return O
-
-def board_converter(board: list) -> str:
-    out = ""
-    for row in board:
-        for item in row:
-            if item is not None:
-                if item == X:
-                    out += '❌ '
-                else:
-                    out += '⭕ '
-            else:
-                out += '⬜ '
-        else:
-            out += '\n'
-    return out
+def update_board(main_embed, reaction, player):
+    board[reaction] = player
+    main_embed.description = update_board_embed()
+    return main_embed
 
 
-def actions(board):
+def update_board_embed():
+    board_result = ""
+    for i in range(3):
+        line1 = ""
+        line2 = ""
+        for j in ["↖", "⬆", "↗", "⬅", "⏺", "➡", "↙", "⬇", "↘"][i * 3:(i + 1) * 3]:
+            line1 += ''.join(board[j][0:2])
+            line2 += ''.join(board[j][2:4])
+        board_result += line1 + "\n" + line2 + "\n"
+    return board_result
+
+
+def reset_board():
+    global board
+    board = {"↖": EMPTY, "⬆": EMPTY, "↗": EMPTY,
+             "⬅": EMPTY, "⏺": EMPTY, "➡": EMPTY,
+             "↙": EMPTY, "⬇": EMPTY, "↘": EMPTY}
+
+
+def actions(board):               #NOT USED YET
     """
     Returns set of all possible actions (i, j) available on the board.
     """
 
     action = list()
     for row, i in enumerate(board):
-        for position,j in enumerate(i):
+        for position, j in enumerate(i):
             if j is None:
                 val = row, position
                 action.append(val)
     return action
 
-def valid_action(move: tuple, board: list) -> bool:
-    return move in actions(board)
 
-def result(board, action):
-    """
-    Returns the board that results from making move (i, j) on the board.
-    """
-    new_board = list(board)
-    try:
-        if new_board[action[0]][action[1]] is None:
-            new_board[action[0]][action[1]] = player(board)
-        else:
-            raise ValueError("Already filled position.")
-    except:
-        raise ValueError("Position out of board.")
-    return new_board
+def valid_action(move: tuple, board: list) -> bool:        #NOT USED YET
+    return move in actions(board)
 
 
 def winner(board):
     """
     Returns the winner of the game, if there is one.
     """
-    #if board is None:
-
-    for row in board:
-        if row[0]==row[1]==row[2] and row[0] != EMPTY:
-            return row[0]
-    
+    # if board is None:
+    current_board = initial_state()
     for i in range(3):
-        if board[0][i]==board[1][i]==board[2][i] and board[0][i] != EMPTY:
-            return board[0][i]
-    
-    if board[0][0]==board[1][1]==board[2][2]:
-        if board[0][0] != EMPTY:
-            return board[0][0]
-    elif board[0][2]==board[1][1]==board[2][0]:
-        if board[2][0] != EMPTY:
-            return board[2][0]
+        if current_board[i*3] == current_board[i*3+1] == current_board[i*3+2] != EMPTY:
+            return True
+    for i in range(3):
+        if current_board[i] == current_board[i+3] == current_board[i+6] != EMPTY:
+            return True
+    if current_board[0] == current_board[4] == current_board[8] != EMPTY:
+        return True
+    if current_board[2] == current_board[4] == current_board[6] != EMPTY:
+        return True
+    return False
 
-    
+
 def terminal(board):
     """
     Returns True if game is over, False otherwise.
     """
-    if winner(board) is not None:
+    if winner(board) is True:
+        reset_board()
         return True
     else:
-        empty_check = []
-        for row in board:
-            empty_check.append(any([i is None for i in row]))
-        if not any(empty_check):
-            return True
-        else:
-            return False
+        for i in board:
+            if i == EMPTY:
+                return False
+
 
 def utility(board):
     """
     Returns 1 if X has won the game, -1 if O has won, 0 otherwise.
     """
-    if winner(board) == X: return 1
-    elif winner(board) == O: return -1
-    else: return 0
+    if winner(board) == X:
+        return 1
+    elif winner(board) == O:
+        return -1
+    else:
+        return 0
 
 
-def minimax(board):
+def minimax(board):           #MIGHT DEVELOP LATER
     """
     Returns the optimal action for the current player on the board.
     """
     if terminal(board):
         return None
-    
+
     turn = player(board)
 
     return random.choice([action for action in actions(board)])
-    
