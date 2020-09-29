@@ -412,7 +412,7 @@ class stupid(commands.Cog):
         embed = discord.Embed(title="Role names", color=discord.Color.green())
         val = ""
         for i in data:
-            val += i['name']
+            val += i['name'] + "\n"
         embed.description = val
         return await ctx.send(embed=embed)
         
@@ -425,6 +425,10 @@ class stupid(commands.Cog):
         print("running name loop")
         await role.edit(name=new_name_data['name'])
         print("edited")
+
+    @role_name_loop.before_loop
+    async def rolename_before(self):
+        await self.bot.wait_until_ready()
 
     @tasks.loop(hours=24)
     async def birthday_loop(self):

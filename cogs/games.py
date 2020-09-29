@@ -5,6 +5,7 @@ import tictactoe
 import random
 from KEY import *
 import asyncio
+import datetime
 from random_word import RandomWords
 from PyDictionary import PyDictionary
 from akinator.async_aki import Akinator
