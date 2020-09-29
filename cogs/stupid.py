@@ -386,7 +386,6 @@ class stupid(commands.Cog):
         await paginator.run()
 
     @commands.command(name="role-name")
-    @commands.has_any_role('admin', 'Moderators')
     async def role_name(self, ctx, *, name: str):
         if len(name) > 15:
             return await ctx.send("bro too long bro")
