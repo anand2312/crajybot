@@ -30,6 +30,7 @@ class Games(commands.Cog):
     @commands.cooldown(1, 30, type=commands.BucketType.channel)
     async def ttt(self, ctx, opponent: discord.Member = None):
         if opponent == ctx.message.author:
+            ctx.command.reset_cooldown(ctx)
             return await ctx.send("you moron, trying to play with yourself.")
 
         board = tictactoe.initial_state()
