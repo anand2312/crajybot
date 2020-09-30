@@ -86,7 +86,6 @@ def terminal(board):
     Returns True if game is over, False otherwise.
     """
     if winner(board) is True:
-        reset_board()
         return True
     else:
         for i in board:
