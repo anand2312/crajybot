@@ -81,6 +81,7 @@ class Games(commands.Cog):
         main_message_embed.description = f"{players[next_player]} destroyed {players[player]}!\n Good Game!"
         main_message_embed.color = discord.Color.green()
         await main_message.edit(embed=main_message_embed)
+        tictactoe.reset_board()
 
     @ttt.error
     async def ttt_error(self, ctx, error):
@@ -103,6 +104,7 @@ class Games(commands.Cog):
             message_embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
             message_embed.color = discord.Color.red()
             ctx.command.reset_cooldown(ctx)
+            tictactoe.reset_board()
             return await ctx.send(embed=message_embed)
 
     @commands.command(name="guess")
