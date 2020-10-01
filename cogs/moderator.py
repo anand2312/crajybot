@@ -156,11 +156,11 @@ class Moderator(commands.Cog):
     @commands.command(name="server-update", aliases=["git-pull", "gitpull", "serverupdate"])
     async def server_update(self, ctx):
         try:
-            git.cmd.Git().pull(r"https://github.com/AbsoluteMadlad12/CrajyBot-private", "master")
+            out = git.cmd.Git().pull(r"https://github.com/AbsoluteMadlad12/CrajyBot-private", "master")
         except Exception as e:
             return await ctx.send(embed=discord.Embed(title="Unexpected error", description=e, color=discord.Color.red()))
 
         requests.post(GIT_UPDATE_WEBHOOK,
-                    json={"content": f"Server update: Complete", "username": "Crajy Helper"})
+                    json={"content": f"Server update: Complete\n {out}", "username": "Crajy Helper"})
 def setup(bot):
     bot.add_cog(Moderator(bot))
