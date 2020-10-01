@@ -15,8 +15,6 @@ class AmongUs(commands.Cog):
             return
         if "code" in message.content.lower() or "server" in message.content.lower():
             await message.channel.send(embed=self.embed)
-            await self.bot.process_commands(message)
-
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
