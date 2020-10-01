@@ -1,9 +1,13 @@
 import discord 
 from discord.ext import commands
+import requests
 import random
 import asyncio
 import typing
+import git
 from pymongo import MongoClient
+
+from KEY import GIT_UPDATE_WEBHOOK
 #do whatever imports you need; I've just done a few which I could think of
 
 client = MongoClient("mongodb://localhost:27017/")
@@ -147,5 +151,16 @@ class Moderator(commands.Cog):
             count += 1
 
         await ctx.send(f"Modified records for {count} members out of {len(ctx.guild.members)} members.")
+
+    @commands.is_owner()
+    @commands.command(name="server-update", aliases=["git-pull", "gitpull", "serverupdate"])
+    async def server_update(self, ctx):
+        try:
+            git.cmd.Git().pull(r"https://github.com/AbsoluteMadlad12/CrajyBot-private", "master")
+        except Exception as e:
+            return await ctx.send(embed=discord.Embed(title="Unexpected error", description=e, color=discord.Color.red()))
+
+        requests.post(GIT_UPDATE_WEBHOOK,
+                    json={"content": f"Server update: Complete", "username": "Crajy Helper"})
 def setup(bot):
     bot.add_cog(Moderator(bot))

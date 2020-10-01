@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands, tasks
 import disputils
 
-from pymongo import MongoClient
+from pymongo import MongoClient, ASCENDING
 from aiohttp import ClientSession
 
 from typing import Optional, Union
@@ -325,7 +325,7 @@ class stupid(commands.Cog):
     @bday.command(name="all")
     async def bday_all(self, ctx):
         response = discord.Embed(title="Everyone's birthdays", color=discord.Color.blurple())
-        for person in bday_collection.find().sort('date', pymongo.ASCENDING):
+        for person in bday_collection.find().sort('date', ASCENDING):
             person_obj = discord.utils.get(ctx.guild.members, name=person['user'].split('#')[0])
             response.add_field(name=person_obj.nick, value=person['date'].strftime('%d %B %Y'), inline=False)
         await ctx.send(embed=response)
@@ -390,7 +390,7 @@ class stupid(commands.Cog):
         if len(name) > 15:
             return await ctx.send("bro too long bro")
 
-        if ctx.author.guild_permissions['administrator']:
+        if ctx.author.guild_permissions.administrator:
             pass
         else:
             data = economy_collection.find_one({'user': ctx.author.id})
