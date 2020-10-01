@@ -7,7 +7,7 @@ import typing
 import git
 from pymongo import MongoClient
 
-from KEY import GIT_UPDATE_WEBHOOK
+from TOKEN import GIT_HELPER
 #do whatever imports you need; I've just done a few which I could think of
 
 client = MongoClient("mongodb://localhost:27017/")
@@ -26,7 +26,7 @@ channels_available = ["bot-test","botspam-v2","botspam"]
 class Moderator(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
+        self.git_helper_webhook = discord.Webhook.partial(GIT_HELPER['id'], GIT_HELPER['token'], discord.AsyncWebhookAdapter(self.bot.session))
     @commands.group(name="change-money",aliases=["c-money","cm"])                  #gives admins, mods the permission to change money to their own bank (for now)
     @commands.has_any_role("Bot Dev","Moderators","admin")                    
     async def change_money(self, ctx):
@@ -158,9 +158,18 @@ class Moderator(commands.Cog):
         try:
             out = git.cmd.Git().pull(r"https://github.com/AbsoluteMadlad12/CrajyBot-private", "master")
         except Exception as e:
+            await ctx.message.add_reaction("❌")
             return await ctx.send(embed=discord.Embed(title="Unexpected error", description=e, color=discord.Color.red()))
 
-        requests.post(GIT_UPDATE_WEBHOOK,
-                    json={"content": f"Server update: Complete\n {out}", "username": "Crajy Helper"})
+        await ctx.message.add_reaction("✅")
+        if out != "Already up to date.":
+            embed = discord.Embed(title="Server Update: **Complete**", color=discord.Color.green())
+            embed.description = f"```fix\n{out}\n```"
+            embed.set_footer(text=f"Requested by {ctx.author.name}")
+        else:
+            embed = discord.Embed(title="Server Update: _Already up to date_", color=discord.Color.orange())
+            embed.set_footer(text=f"Requested by {ctx.author.name}")
+
+        await self.git_helper_webhook.send(username="Crajy Helper", embed=embed)
 def setup(bot):
     bot.add_cog(Moderator(bot))

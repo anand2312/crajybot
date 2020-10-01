@@ -11,7 +11,7 @@ import datetime
 import itertools
 
 from KEY import *       #rapidapi key
-
+from TOKEN import BOTSPAM_HOOK, ANOTHERCHAT_HOOK
 
 #API requests headers and URLs
 fancy_url = "https://ajith-fancy-text-v1.p.rapidapi.com/text"
@@ -95,23 +95,23 @@ bday_collection = db["bday"]
 pins_collection = db["pins"]
 role_names_collection = db["role"]
 
-#aiohttp initialization for API requests
-session = ClientSession()
-#webhook initialization for sending .wat in #another-chat, #botspam
-anotherchat_webhook = discord.Webhook.partial(740080790385459292, "8E-xPQqRcIJlVIp-_phep34DGW9T95Us9bgY1XQpFCMQRAO7-1NIj9La6HFSXMzQwNoy", adapter=discord.AsyncWebhookAdapter(session))
-botspam_webhook = discord.Webhook.partial(740086899925975051, "URRNUuEI9NWxq_PYot0LAPfpw4jgvmBaffx5s26CL_ajNT7sJ075rjAuww2F90rRHcqt", adapter=discord.AsyncWebhookAdapter(session))
 
 
 class stupid(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
         self.birthday_loop.start()
-        self.role_name_loop.start()          
+        self.role_name_loop.start()   
+
+        self.anotherchat_webhook = discord.Webhook.partial(ANOTHERCHAT_HOOK['id'], ANOTHERCHAT_HOOK['token'], adapter=discord.AsyncWebhookAdapter(self.bot.session))
+        self.botspam_webhook = discord.Webhook.partial(BOTSPAM_HOOK['id'], BOTSPAM_HOOK['token'], adapter=discord.AsyncWebhookAdapter(self.bot.session))
+       
     @commands.command(name="fancy", aliases=["f"])
     async def fancy(self, ctx, *, message):
         querystring = {"text":message}
         async with ctx.channel.typing():
-            async with session.get(fancy_url, headers=fancy_headers, params=querystring) as response:
+            async with self.bot.session.get(fancy_url, headers=fancy_headers, params=querystring) as response:
                 return_text = await response.json()
                 return_text = return_text["fancytext"].split(",")[0]
             await ctx.send(return_text)
@@ -124,7 +124,7 @@ class stupid(commands.Cog):
         else:
             querystring = {"fname":str(fname),"sname":str(sname)}
         async with ctx.channel.typing():
-            async with session.get(love_url, headers = love_headers, params=querystring) as response:
+            async with self.bot.session.get(love_url, headers = love_headers, params=querystring) as response:
                 percent = await response.json()
                 percent = percent["percentage"]
                 result = await response.json()
@@ -159,7 +159,7 @@ class stupid(commands.Cog):
         #await ctx.message.delete()
         await ctx.message.channel.send(out)
 
-    @commands.group(pass_context=True)
+    @commands.group()
     async def wat(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send("bruh that isn't a thing.")
@@ -199,9 +199,9 @@ class stupid(commands.Cog):
         data = stupid_collection.find_one({"key":key})["output"]
         if data is not None:
             if ctx.message.channel.name == "another-chat":
-                await anotherchat_webhook.send(data, username=ctx.message.author.nick, avatar_url=ctx.message.author.avatar_url)
+                await self.anotherchat_webhook.send(data, username=ctx.author.nick, avatar_url=ctx.author.avatar_url)
             elif ctx.message.channel.name == "botspam":
-                await botspam_webhook.send(data, username=ctx.message.author.nick, avatar_url=ctx.message.author.avatar_url)
+                await self.botspam_webhook.send(data, username=ctx.author.nick, avatar_url=ctx.author.avatar_url)
             else:
                 await ctx.send(data)
         else:
@@ -237,7 +237,7 @@ class stupid(commands.Cog):
                 out += letter
         await ctx.send(out)
     @wat.command(name="react")
-    async def react(self, ctx, id_:discord.Message, *emojis):
+    async def react(self, ctx, id_: discord.Message, *emojis):
         for i in emojis:
             await id_.add_reaction(i)
         await ctx.message.delete()
@@ -252,7 +252,7 @@ class stupid(commands.Cog):
 
         await ctx.send(out)
 
-    @commands.group(pass_context=True)
+    @commands.group()
     async def notes(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send("bruh that isn't a thing.")
@@ -287,13 +287,13 @@ class stupid(commands.Cog):
         commit_die.append(output)
         await ctx.send("Added.")
     
-    @commands.command(name="search") #under work
+   ''' @commands.command(name="search") #under work
     async def ddg_search(self, ctx, *, query):
         querystring = {"no_redirect":"1","no_html":"1","callback":"process_duckduckgo","skip_disambig":"1","q":query,"format":"xml"}
         async with session.get(ddg_url, headers=ddg_headers, params=querystring) as response:
             return_text = await response.text()
             print(return_text)
-        '''embed = discord.Embed(name="Search Results", color=discord.Color.dark_blue(), url=return_text["AbstractURL"])
+        embed = discord.Embed(name="Search Results", color=discord.Color.dark_blue(), url=return_text["AbstractURL"])
         embed.add_field(name=return_text["Heading"], description=return_text["AbstractText"])
         embed.set_footer(text="Results from DuckDuckGo", icon_url=return_text["image"])
         await ctx.send(embed=embed)'''

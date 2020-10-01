@@ -5,12 +5,14 @@ insert further documentation here, insert documentation near new functions or va
 """
 import os
 import random
+
 import discord
-from discord import activity
-from discord import guild 
 from discord.ext import commands,tasks, menus
+
 import asyncio
+from aiohttp import ClientSession
 from pymongo import MongoClient
+
 from random import choice
 from TOKEN import TOKEN
 #local mongodb database stuff
@@ -77,7 +79,8 @@ class HelpMenu(menus.Menu):
 @bot.event
 async def on_ready(): #sends this message when bot starts working in #bot-tests
     await bot.get_channel(703141348131471440).send("its popi time!!")
-
+    bot.session = ClientSession()
+    
 @bot.event   
 async def on_message(message):
     #chat money
