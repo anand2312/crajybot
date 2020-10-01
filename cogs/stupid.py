@@ -286,17 +286,6 @@ class stupid(commands.Cog):
     async def commit_add(self, ctx, *,output):
         commit_die.append(output)
         await ctx.send("Added.")
-    
-   ''' @commands.command(name="search") #under work
-    async def ddg_search(self, ctx, *, query):
-        querystring = {"no_redirect":"1","no_html":"1","callback":"process_duckduckgo","skip_disambig":"1","q":query,"format":"xml"}
-        async with session.get(ddg_url, headers=ddg_headers, params=querystring) as response:
-            return_text = await response.text()
-            print(return_text)
-        embed = discord.Embed(name="Search Results", color=discord.Color.dark_blue(), url=return_text["AbstractURL"])
-        embed.add_field(name=return_text["Heading"], description=return_text["AbstractText"])
-        embed.set_footer(text="Results from DuckDuckGo", icon_url=return_text["image"])
-        await ctx.send(embed=embed)'''
 
     @commands.group(name="bday", aliases=["birthday"], invoke_without_command=True)
     async def bday(self, ctx, person: discord.Member=None):
