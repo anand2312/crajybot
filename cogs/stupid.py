@@ -325,7 +325,7 @@ class stupid(commands.Cog):
     @bday.command(name="all")
     async def bday_all(self, ctx):
         response = discord.Embed(title="Everyone's birthdays", color=discord.Color.blurple())
-        for person in bday_collection.find():
+        for person in bday_collection.find().sort('date', pymongo.ASCENDING):
             person_obj = discord.utils.get(ctx.guild.members, name=person['user'].split('#')[0])
             response.add_field(name=person_obj.nick, value=person['date'].strftime('%d %B %Y'), inline=False)
         await ctx.send(embed=response)

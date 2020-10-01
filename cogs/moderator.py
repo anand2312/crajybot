@@ -23,83 +23,83 @@ class Moderator(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.group(name="change-money",aliases=["c-money","cm"], pass_context=True)                  #gives admins, mods the permission to change money to their own bank (for now)
-    @commands.has_any_role("Bot Dev","Moderators","admin")                      #this allows multiple roles to have access to one command
-    async def change_money(self,ctx):
+    @commands.group(name="change-money",aliases=["c-money","cm"])                  #gives admins, mods the permission to change money to their own bank (for now)
+    @commands.has_any_role("Bot Dev","Moderators","admin")                    
+    async def change_money(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send("Invalid action.")
 
     @change_money.command(name="add")
-    async def add_money(self, ctx, baltype:str, user:discord.Member, amt:int):
-        economy_collection.update_one({'user':str(user)},{"$inc":{baltype:amt}})
-        response = discord.Embed(title = str(ctx.message.author.name), description = f"Added {amt} to {user}\'s {baltype}!" ,colour=discord.Colour.green())
-        await ctx.message.channel.send(content=None, embed=response) 
+    async def add_money(self, ctx, baltype: str, user: discord.Member, amt: int):
+        economy_collection.update_one({'user': user.id},{"$inc": {baltype:amt}})
+        response = discord.Embed(title=str(ctx.message.author.name), description=f"Added {amt} to {user}\'s {baltype}!" ,colour=discord.Colour.green())
+        await ctx.send(embed=response) 
 
     @change_money.command(name="remove")
-    async def remove_money(self, ctx, baltype:str, user:discord.Member, amt:int):
-        economy_collection.update_one({'user':str(user)},{"$inc":{baltype:-amt}})
-        response = discord.Embed(title = str(ctx.message.author.name), description = f"Removed {amt} from {user}\'s {baltype}!" ,colour=discord.Colour.red())
-        await ctx.message.channel.send(content=None, embed=response)
+    async def remove_money(self, ctx, baltype: str, user: discord.Member, amt: int):
+        economy_collection.update_one({'user': user.id}, {"$inc": {baltype:-amt}})
+        response = discord.Embed(title=str(ctx.author.name), description=f"Removed {amt} from {user}\'s {baltype}!" ,colour=discord.Colour.red())
+        await ctx.send(embed=response)
 
     @change_money.command(name="set")
-    async def set_money(self, ctx, baltype:str, user:discord.Member, amt:int):
-        economy_collection.update_one({'user':str(user)},{"$set":{baltype:amt}})
+    async def set_money(self, ctx, baltype: str, user: discord.Member, amt: int):
+        economy_collection.update_one({'user': user.id}, {"$set": {baltype: amt}})
         response = discord.Embed(title = str(ctx.message.author.name), description = f"Set {amt} to {user}\'s {baltype}!" ,colour=discord.Colour.orange()) 
-        await ctx.message.channel.send(content=None, embed=response)
+        await ctx.send(embed=response)
     
     @commands.command(name = "change-stock")
     @commands.has_any_role("Moderators","admin","Bot Dev")
     async def change_stock(self, ctx, item:str, n:int):
-        store_collection.update_one({'name':item.lower().capitalize()}, {"$set":{'stock':n}})     
-        response = discord.Embed(title = str(ctx.message.author.name), description = f"Updated stock of {item}")
-        if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content = None, embed = response)
+        store_collection.update_one({'name': item.lower().capitalize()}, {"$set": {'stock': n}})     
+        response = discord.Embed(title = str(ctx.message.author.name), description=f"Updated stock of {item}")
+        if ctx.message.channel.name in channels_available: await ctx.message.channel.send(embed=response)
 
     @commands.command(name = "remove-user")
     @commands.has_any_role("Moderators","admin","Bot Dev")
     async def remove_user(self, ctx, member:discord.Member):
         try:
-            economy_collection.delete_one({'user':str(member)})
+            economy_collection.delete_one({'user': member.id})
             await member.send(f"haha popi you got deleted from the bot database")
         except:
-            await ctx.message.channnel.send("User not found")
+            await ctx.send("User not found")
 
-    @commands.group(name = "change-inventory",aliases=["c-inv"], pass_context=True)
+    @commands.group(name = "change-inventory", aliases=["c-inv"])
     @commands.has_any_role("Moderators","admin","Bot Dev")
-    async def change_inventory(self,ctx):
+    async def change_inventory(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send("Invalid action.")
 
     @change_inventory.command(name="add")
-    async def add_inv(self, ctx, item:str, user:discord.Member, amt:int):
-        user_data = economy_collection.find_one({'user':str(user)})
+    async def add_inv(self, ctx, item: str, user: discord.Member, amt: int):
+        user_data = economy_collection.find_one({'user': user.id})
         item = item.lower()
         user_data["inv"][item] += amt
-        economy_collection.update_one({'user':str(user)},{"$set":user_data})
-        response = discord.Embed(title = str(ctx.message.author.name), description = f"Added {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.green())
-        await ctx.message.channel.send(content=None, embed=response)
+        economy_collection.update_one({'user': user.id},{"$set": user_data})
+        response = discord.Embed(title=str(ctx.author.name), description=f"Added {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.green())
+        await ctx.message.channel.send(embed=response)
 
     @change_inventory.command(name="remove")
-    async def remove_inv(self, ctx, item:str, user:discord.Member, amt:int):
-        user_data = economy_collection.find_one({'user':str(user)})
+    async def remove_inv(self, ctx, item: str, user: discord.Member, amt: int):
+        user_data = economy_collection.find_one({'user': user.id})
         item = item.lower()
         user_data["inv"][item] -= amt
-        economy_collection.update_one({'user':str(user)},{"$set":user_data})
-        response = discord.Embed(title = str(ctx.message.author.name), description = f"Removed {amt} {item}(s) from {user}\'s inventory!",colour=discord.Colour.red())
-        await ctx.message.channel.send(content=None, embed=response)
+        economy_collection.update_one({'user': user.id},{"$set": user_data})
+        response = discord.Embed(title=str(ctx.message.author.name), description=f"Removed {amt} {item}(s) from {user}\'s inventory!",colour=discord.Colour.red())
+        await ctx.message.channel.send(embed=response)
 
     @change_inventory.command(name="set")
-    async def set_inv(self, ctx, item:str, user:discord.Member, amt:int):
-        user_data = economy_collection.find_one({'user':str(user)})
+    async def set_inv(self, ctx, item: str, user: discord.Member, amt: int):
+        user_data = economy_collection.find_one({'user': user.id})
         item = item.lower()
         user_data["inv"][item] = amt
-        economy_collection.update_one({'user':str(user)},{"$set":user_data})
-        response = discord.Embed(title = str(ctx.message.author.name), description = f"Set {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.orange())
+        economy_collection.update_one({'user': user.id},{"$set": user_data})
+        response = discord.Embed(title=str(ctx.message.author.name), description=f"Set {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.orange())
         await ctx.message.channel.send(content=None, embed=response)
 
     @commands.command(name="change-price")
     @commands.has_any_role("Moderators","admin","Bot Dev")
     async def change_price(self, ctx, item:str, price:int):
-        store_collection.update_one({'name':item.lower().capitalize()}, {"$set":{"price":price}})
+        store_collection.update_one({'name':item.lower().capitalize()}, {"$set": {"price": price}})
         await ctx.send("Price changed")
 
     @commands.command(name="query")
@@ -113,9 +113,9 @@ class Moderator(commands.Cog):
         if isinstance(id_, int):
             x = pins_collection.delete_one({"_id":id_})
             if x.deleted_count > 0:
-                return await ctx.send(f"Deleted tag with ID {id_}")
+                return await ctx.send(f"Deleted pin with ID {id_}")
             else:
-                return await ctx.send("No tag with that ID could be found")
+                return await ctx.send("No pin with that ID could be found")
 
         else:
             if id_.lower() == "all":
