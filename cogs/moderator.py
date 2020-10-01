@@ -26,7 +26,7 @@ channels_available = ["bot-test","botspam-v2","botspam"]
 class Moderator(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.git_helper_webhook = discord.Webhook.partial(GIT_HELPER['id'], GIT_HELPER['token'], discord.AsyncWebhookAdapter(self.bot.session))
+        self.git_helper_webhook = discord.Webhook.partial(GIT_HELPER['id'], GIT_HELPER['token'], adapter=discord.AsyncWebhookAdapter(self.bot.session))
     @commands.group(name="change-money",aliases=["c-money","cm"])                  #gives admins, mods the permission to change money to their own bank (for now)
     @commands.has_any_role("Bot Dev","Moderators","admin")                    
     async def change_money(self, ctx):

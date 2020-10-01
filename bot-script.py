@@ -25,6 +25,7 @@ store_collection = db["store_data"]
 
 #bot which controls everything; subclass of Client
 bot = commands.Bot(command_prefix='.', activity=discord.Activity(type=discord.ActivityType.watching, name="thug_sgt"))
+bot.session = ClientSession()
 
 channels_available = ["bot-test","botspam-v2","botspam"] #Channels where the bot works
 chat_money_channels = ['another-chat']
@@ -79,8 +80,7 @@ class HelpMenu(menus.Menu):
 @bot.event
 async def on_ready(): #sends this message when bot starts working in #bot-tests
     await bot.get_channel(703141348131471440).send("its popi time!!")
-    bot.session = ClientSession()
-    
+
 @bot.event   
 async def on_message(message):
     #chat money
