@@ -35,56 +35,6 @@ ddg_headers =  {
     'x-rapidapi-key': KEY
     }
 
-#list of responses for .commit
-commit_die = [
-    "Go commit not alive",
-"Go commit aliven't",
-"Go commit uninstall life",
-"Go commit discontinue life",
-"Go commit short-circuit life",
-"Go commit not feeling so good",
-"Go commit blood not flow",
-"Go commit death-pacito",
-"Go commit sewer side",
-"Go commit oxygen not reach lungs",
-"Go commit heart not pumping blood",
-"Go commit cease the means of carbon dioxide production",
-"Go commit neck rope",
-"Go commit wrist knife",
-"Go commit jugular scissor",
-"Go commit plug fork",
-"Go commit swallow lit firework",
-"Go commit celebrity's career after saying n-word",
-"Go commit train track picnic",
-"Go commit exhaust pipe succ",
-"Go commit shove head in oven",
-"Go commit skydive no parachute",
-"Go commit 3 shots of cyanide",
-"Go commit approach lion during safari",
-"Go commit cliff jump",
-"Go commit skinny dip in flood",
-"Go commit gay in Iran",
-"Go commit break into gun owner's home",
-"Go commit XXXTentacion leave motorbike store, Go commit 30 days no eat",
-"Go commit hold breath underwater for 10 minutes",
-"Go commit bite dust",
-"Go commit Logan Paul's reputation after suicide forest vlog",
-"Go commit jump overboard on ferry",
-'Go commit choir in "This is America" music video',
-"Go commit motorway chicken",
-"Go commit bully weird kid in American school Go commit dog in Sputnik rocket",
-"Go commit bucket kick",
-"Go commit fetus in liberal's womb",
-"Go commit neck dislocate",
-"Go commit Niagara Falls jump",
-"Go commit Robbie Rotten cannonball hit",
-"Go commit stare at enderman",
-"Go commit swim in lava",
-"Go commit oof IRL",
-"Go commit Ukraine's population in 1930s",
-"Go commit liver after 10 shots of vodka"
-]
-
 #MongoDB initialization
 client = MongoClient("mongodb://localhost:27017/")
 db = client["bot-data"]
@@ -94,7 +44,6 @@ notes_collection = db["notes"]
 bday_collection = db["bday"]
 pins_collection = db["pins"]
 role_names_collection = db["role"]
-
 
 
 class stupid(commands.Cog):
@@ -403,6 +352,12 @@ class stupid(commands.Cog):
             val += i['name'] + "\n"
         embed.description = val
         return await ctx.send(embed=embed)
+
+    @commands.command(name="role-name-remove", aliases=["rolenameremove"])
+    @commands.has_any_role('Moderators', 'admin')
+    async def role_name_remove(self, ctx, name: str):
+        role_names_collection.delete_one({'name': name})
+        return await ctx.send(f"Removed `name` (if it exists in the database)")
         
     @tasks.loop(hours=12)
     async def role_name_loop(self):

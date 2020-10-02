@@ -7,7 +7,7 @@ import os
 import random
 
 import discord
-from discord.ext import commands,tasks, menus
+from discord.ext import commands, tasks, menus
 
 import asyncio
 from aiohttp import ClientSession
@@ -24,7 +24,13 @@ rpg_collection = db["rpg_data"]
 store_collection = db["store_data"]
 
 #bot which controls everything; subclass of Client
-bot = commands.Bot(command_prefix='.', activity=discord.Activity(type=discord.ActivityType.watching, name="thug_sgt"))
+
+intents = discord.Intents.default()
+intents.members = True 
+bot = commands.Bot(command_prefix='.',
+                   activity=discord.Activity(type=discord.ActivityType.watching, name="thug_sgt"),
+                   intents=intents)
+
 bot.session = ClientSession()
 
 channels_available = ["bot-test","botspam-v2","botspam"] #Channels where the bot works
