@@ -41,7 +41,7 @@ class Economy(commands.Cog):
             amount = int(amount)
             if economy_collection.find_one({'user': ctx.author.id})['bank'] >= amount:
                 economy_collection.update_one({'user': ctx.author.id},{"$inc": {'bank': -amount, 'cash':amount}})
-                response = discord.Embed(title = str(ctx.message.author), description = f"Withdrew {amount}", colour = discord.Color.green())
+                response = discord.Embed(title = str(ctx.message.author), description = f"Withdrew {int(amount)}", colour = discord.Color.green())
                 await ctx.message.channel.send(embed=response)
             else:
                 await ctx.message.channel.send("You do not have that much balance")
@@ -49,7 +49,7 @@ class Economy(commands.Cog):
             if amount.lower() == "all":
                 user_data = economy_collection.find_one({'user': ctx.author.id})
                 economy_collection.find_one_and_update({'user': ctx.author.id}, {"$set":{'bank': 0, 'cash': user_data['cash']+user_data['bank']}})
-                response = discord.Embed(title = str(ctx.message.author), description = f"Withdrew {user_data['bank']}", colour = discord.Color.green())
+                response = discord.Embed(title = str(ctx.message.author), description = f"Withdrew {int(user_data['bank'])}", colour = discord.Color.green())
                 await ctx.message.channel.send(embed=response)
 
     @commands.command(name="deposit", aliases=["dep"])
@@ -59,7 +59,7 @@ class Economy(commands.Cog):
                 user_data = economy_collection.find_one({'user': ctx.author.id})
                 if user_data['cash'] >= amount:
                     economy_collection.update_one({'user': ctx.author.id}, {"$inc":{'cash': -amount, 'bank': amount}})
-                    response = discord.Embed(title = str(ctx.message.author), description = f"Deposited {amount}", colour = discord.Color.green())
+                    response = discord.Embed(title = str(ctx.message.author), description = f"Deposited {int(amount)}", colour = discord.Color.green())
                     await ctx.message.channel.send(embed=response)
                 else:
                     await ctx.message.channel.send("You don't have that much moni to deposit")
@@ -67,7 +67,7 @@ class Economy(commands.Cog):
                 if amount.lower() == "all":
                     user_data = economy_collection.find_one({'user': ctx.author.id})
                     economy_collection.update_one({'user': ctx.author.id}, {"$inc":{'cash': -user_data['cash'], 'bank': user_data['cash']}})
-                    response = discord.Embed(title = str(ctx.message.author), description = f"Deposited {user_data['cash']}", colour = discord.Color.green())
+                    response = discord.Embed(title = str(ctx.message.author), description = f"Deposited {int(user_data['cash'])}", colour = discord.Color.green())
                     await ctx.message.channel.send(embed=response)
                     
     @commands.command(name='bal')
@@ -75,11 +75,11 @@ class Economy(commands.Cog):
         user_dict = self.get_user_dict(ctx, user)
 
         networth = (user_dict['cash'] + user_dict['bank']) - user_dict['debt']
-        response = discord.Embed(title=str(user), description="Balance is:")
-        response.add_field(name="Cash Balance : ",value=f"{user_dict['cash']}", inline = False)
-        response.add_field(name="Bank balance : ",value=f"{user_dict['bank']}", inline = False)
+        response = discord.Embed(title=str(ctx.message.author), description="Balance is:")
+        response.add_field(name="Cash Balance : ",value=f"{int(user_dict['cash'])}", inline = False)
+        response.add_field(name="Bank balance : ",value=f"{int(user_dict['bank'])}", inline = False)
         response.add_field(name="Debt : ",value=f"{-user_dict['debt']}", inline = False)
-        response.add_field(name="Net Worth : ",value=networth, inline = False)
+        response.add_field(name="Net Worth : ",value=int(networth), inline = False)
 
         return await ctx.send(embed=response)
 
@@ -206,7 +206,7 @@ class Economy(commands.Cog):
     @commands.command(name="inventory", aliases=["inv"])
     async def inventory(self, ctx, user: typing.Union[discord.Member, str]=None):
         user_data = self.get_user_dict(ctx, user)
-        response = discord.Embed(title=str(user), description="Inventory")
+        response = discord.Embed(title=str(ctx.message.author), description="Inventory")
         for k in user_data['inv']:
             response.add_field(name=k, value=user_data['inv'][k], inline=False)
         return await ctx.send(embed=response)
@@ -282,7 +282,7 @@ class Economy(commands.Cog):
                 reciever['cash'] += amount
                 economy_collection.update_one({'user': ctx.author.id}, {"$set": sender})
                 economy_collection.update_one({'user': person.id}, {"$set": reciever})
-                response = discord.Embed(title='Money Transfer: ', description=f"{ctx.author.mention} transferred {amount} to {person.mention}")
+                response = discord.Embed(title='Money Transfer: ', description=f"{ctx.author.mention} transferred {int(amount)} to {person.mention}")
             else:
                 response = discord.Embed(title='Money Transfer: ', description=f"You don't have enough money on hand.")
         return await ctx.send(embed=response)
