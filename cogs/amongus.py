@@ -24,7 +24,6 @@ class AmongUs(commands.Cog):
         
         raise error
 
-
     @commands.group(name="among_us",
                     aliases=["amongus", "play", "among-us"],
                     invoke_without_command=True)

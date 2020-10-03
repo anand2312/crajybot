@@ -111,26 +111,27 @@ async def on_member_join(member):
         await member.send("You have been added to our bot database!")
     else:
         return
-#testing some cogs stuff
+
+
 @bot.command()
 @commands.has_any_role("admin","Bot Dev")
 async def load(ctx, extension):
     bot.load_extension(f"cogs.{extension}")
     response = discord.Embed(title="Cog Loaded", description=str(extension), colour=discord.Color.green())
-    await ctx.message.channel.send(content=None, embed=response)
+    await ctx.send(embed=response)
 
 @bot.command()
 @commands.has_any_role("admin","Bot Dev")
 async def unload(ctx, extension):
     bot.unload_extension(f"cogs.{extension}")
     response = discord.Embed(title="Cog Unloaded", description=str(extension), colour=discord.Color.red())
-    await ctx.message.channel.send(content=None, embed=response)
+    await ctx.send(embed=response)
 
 @bot.command(name='popi')
 async def popi(ctx):
     reply = random.choice(["poopi really do be poopie though",f"{ctx.message.author.mention} is a poopie?oh no......"]) #Choice chooses 1 object from the list
     response = discord.Embed(title='popi',description=reply)
-    if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
+    if ctx.message.channel.name in channels_available: await ctx.send(embed=response)
 
 @bot.command(name='help')
 async def help(ctx):
@@ -145,7 +146,7 @@ async def stock_price():
     else: rand_val = -random.randint(1,6)
     stock_data = store_collection.find_one({'name':'Stock'})
     new_price = stock_data['price'] + rand_val
-    store_collection.update_one({'name':'Stock'},{"$inc":{"price":rand_val}})
+    store_collection.update_one({'name': 'Stock'}, {"$inc": {"price": rand_val}})
     await message_channel.send(f"Stock price : {new_price}")
 
 @stock_price.before_loop
