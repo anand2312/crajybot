@@ -72,10 +72,11 @@ class Economy(commands.Cog):
                     
     @commands.command(name='bal')
     async def balance(self, ctx, user: typing.Union[discord.Member, str]=None):
+        if user is None: user = ctx.author
         user_dict = self.get_user_dict(ctx, user)
 
         networth = (user_dict['cash'] + user_dict['bank']) - user_dict['debt']
-        response = discord.Embed(title=str(ctx.message.author), description="Balance is:")
+        response = discord.Embed(title=str(user), description="Balance is:")
         response.add_field(name="Cash Balance : ",value=f"{int(user_dict['cash'])}", inline = False)
         response.add_field(name="Bank balance : ",value=f"{int(user_dict['bank'])}", inline = False)
         response.add_field(name="Debt : ",value=f"{-user_dict['debt']}", inline = False)
@@ -205,8 +206,9 @@ class Economy(commands.Cog):
 
     @commands.command(name="inventory", aliases=["inv"])
     async def inventory(self, ctx, user: typing.Union[discord.Member, str]=None):
+        if user is None: user = ctx.author
         user_data = self.get_user_dict(ctx, user)
-        response = discord.Embed(title=str(ctx.message.author), description="Inventory")
+        response = discord.Embed(title=str(user), description="Inventory")
         for k in user_data['inv']:
             response.add_field(name=k, value=user_data['inv'][k], inline=False)
         return await ctx.send(embed=response)
