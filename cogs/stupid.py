@@ -8,6 +8,7 @@ from aiohttp import ClientSession
 from typing import Optional, Union
 import random
 import datetime
+from contextlib import suppress
 import itertools
 
 from KEY import *       #rapidapi key
@@ -358,6 +359,17 @@ class stupid(commands.Cog):
     async def role_name_remove(self, ctx, name: str):
         role_names_collection.delete_one({'name': name})
         return await ctx.send(f"Removed `name` (if it exists in the database)")
+
+    @commands.command(name="quote", aliases=["qotd"])
+    async def qotd(self, ctx):
+        async with ctx.typing():
+            async with self.bot.session.get(r"http://quotes.rest/qod.json") as response:
+                data = await response.json()
+            try:
+                out = f"{data['contents']['quotes'][0]['quote']}\n~{data['contents']['quotes'][0]['author']}"
+            except KeyError:
+                out = f"bro we're poor so we can't use this command for another {data['error']['message'][-26:]} :pensive:"
+            await ctx.send(out)
         
     @tasks.loop(hours=12)
     async def role_name_loop(self):

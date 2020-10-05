@@ -171,9 +171,9 @@ async def colorloop_before():
 
 '''for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
-        bot.load_extension(f'cogs.{filename[:-3]}')'''
-bot.load_extension('cogs.economy')
+        bot.load_extension(f'cogs.{filename[:-3]}')
 
 color_loop.start()
-stock_price.start()
+stock_price.start()'''
+bot.load_extension('cogs.stupid')
 bot.run(TOKEN)
