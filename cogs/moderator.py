@@ -134,6 +134,23 @@ class Moderator(commands.Cog):
                 else:
                     return await ctx.send("Terminated.")
 
+    @commands.command()
+    @commands.has_any_role("admin","Bot Dev")
+    async def load(self, ctx, extension):
+        try:
+            bot.load_extension(f"cogs.{extension}")
+            response = discord.Embed(title="Cog Loaded", description=extension, color=discord.Color.green())
+        except Exception as e:
+            response = discord.Embed(title=f"{extension} cog load failed", description=str(e), color=discord.Color.red())
+        await ctx.send(embed=response)
+
+    @commands.command()
+    @commands.has_any_role("admin","Bot Dev")
+    async def unload(self, ctx, extension):
+        bot.unload_extension(f"cogs.{extension}")
+        response = discord.Embed(title="Cog Unloaded", description=extension, colour=discord.Color.red())
+        await ctx.send(embed=response)
+
     @commands.command(name="bruh-id")
     @commands.has_any_role('admin')
     async def idConvertion(self, ctx):    #for single use lmao

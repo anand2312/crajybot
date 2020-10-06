@@ -124,12 +124,12 @@ class Economy(commands.Cog):
         if random.randint(1,10) in winning_odds:
             rand_val = random.randint(150,400)
             economy_collection.update({'user': ctx.author.id}, {"$inc": {'cash': rand_val}})
-            response = discord.Embed(title=str(ctx.message.author), description=f"You successfuly commited crime and earned {rand_val}!", colour=discord.Colour.green())
+            response = discord.Embed(title=str(ctx.author), description=f"You successfuly commited crime and earned {rand_val}!", colour=discord.Colour.green())
         else:
             rand_val = random.randint(150,250)
             economy_collection.update({'user': ctx.author.id}, {"$inc": {'cash': -rand_val}})
-            response = discord.Embed(title=str(ctx.message.author), description=f"You got caught and were fined {rand_val}!", colour=discord.Colour.red())
-        return await ctx.message.channel.send(embed=response)
+            response = discord.Embed(title=str(ctx.author), description=f"You got caught and were fined {rand_val}!", colour=discord.Colour.red())
+        return await ctx.send(embed=response)
 
     @crime.error
     async def crime_error(self,ctx,error):            
@@ -151,7 +151,7 @@ class Economy(commands.Cog):
         for i in leaderboard_data:
             person = ctx.guild.get_member(i['user'])
             response.add_field(name=f"{leaderboard_data.index(i)+1}. {person.nick}", value=f"Balance {i['bank'] + i['cash']}", inline=False)
-        return await ctx.message.channel.send(embed=response)
+        return await ctx.send(embed=response)
 
     @commands.command(name="get-loan", aliases=["gl"])    
     async def loan(self,ctx,loan_val:int):

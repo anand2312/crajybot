@@ -7,7 +7,10 @@ from aiohttp import ClientSession
 
 from typing import Optional, Union
 import random
+
 import datetime
+import pytz
+
 from contextlib import suppress
 import itertools
 
@@ -387,22 +390,20 @@ class stupid(commands.Cog):
 
     @tasks.loop(hours=24)
     async def birthday_loop(self):
-        print("Running birthday loop")
         data = bday_collection.find()
+        tz_oman = pytz.timezone("Asia/Dubai")
         for person in data:
-            if person['date'].strftime("%d-%B") == datetime.datetime.now().strftime('%d-%B'):
+            if person['date'].strftime("%d-%B") == datetime.datetime.now(tz_oman).strftime('%d-%B'):
                 person_obj = discord.utils.get(guild.members, name=person['user'].split("#")[0])
-                await wishchannel.send(f"It's {person_obj.mention}'s birthday today! @everyone")
+                await wishchannel.send(f"It's {person_obj.mention}'s birthday today! @here")
     
     @birthday_loop.before_loop
     async def birthdayloop_before(self):
-        
         global guild
         global wishchannel
         await self.bot.wait_until_ready()
         guild = self.bot.get_guild(298871492924669954)
         wishchannel = guild.get_channel(392576275761332226)
-
 
 def setup(bot):
     bot.add_cog(stupid(bot))

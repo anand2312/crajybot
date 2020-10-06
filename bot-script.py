@@ -112,21 +112,6 @@ async def on_member_join(member):
     else:
         return
 
-
-@bot.command()
-@commands.has_any_role("admin","Bot Dev")
-async def load(ctx, extension):
-    bot.load_extension(f"cogs.{extension}")
-    response = discord.Embed(title="Cog Loaded", description=str(extension), colour=discord.Color.green())
-    await ctx.send(embed=response)
-
-@bot.command()
-@commands.has_any_role("admin","Bot Dev")
-async def unload(ctx, extension):
-    bot.unload_extension(f"cogs.{extension}")
-    response = discord.Embed(title="Cog Unloaded", description=str(extension), colour=discord.Color.red())
-    await ctx.send(embed=response)
-
 @bot.command(name='popi')
 async def popi(ctx):
     reply = random.choice(["poopi really do be poopie though",f"{ctx.message.author.mention} is a poopie?oh no......"]) #Choice chooses 1 object from the list
