@@ -138,7 +138,7 @@ class Moderator(commands.Cog):
     @commands.has_any_role("admin","Bot Dev")
     async def load(self, ctx, extension):
         try:
-            bot.load_extension(f"cogs.{extension}")
+            self.bot.load_extension(f"cogs.{extension}")
             response = discord.Embed(title="Cog Loaded", description=extension, color=discord.Color.green())
         except Exception as e:
             response = discord.Embed(title=f"{extension} cog load failed", description=str(e), color=discord.Color.red())
@@ -147,7 +147,7 @@ class Moderator(commands.Cog):
     @commands.command()
     @commands.has_any_role("admin","Bot Dev")
     async def unload(self, ctx, extension):
-        bot.unload_extension(f"cogs.{extension}")
+        self.bot.unload_extension(f"cogs.{extension}")
         response = discord.Embed(title="Cog Unloaded", description=extension, colour=discord.Color.red())
         await ctx.send(embed=response)
 
@@ -189,5 +189,6 @@ class Moderator(commands.Cog):
             embed.set_footer(text=f"Requested by {ctx.author.name}")
 
         await self.git_helper_webhook.send(username="Crajy Helper", embed=embed)
+    
 def setup(bot):
     bot.add_cog(Moderator(bot))

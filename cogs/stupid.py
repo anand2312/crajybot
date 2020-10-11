@@ -56,10 +56,12 @@ class stupid(commands.Cog):
 
         self.birthday_loop.start()
         self.role_name_loop.start()   
+        self.qotd_cache_loop.start()
 
         self.anotherchat_webhook = discord.Webhook.partial(ANOTHERCHAT_HOOK['id'], ANOTHERCHAT_HOOK['token'], adapter=discord.AsyncWebhookAdapter(self.bot.session))
         self.botspam_webhook = discord.Webhook.partial(BOTSPAM_HOOK['id'], BOTSPAM_HOOK['token'], adapter=discord.AsyncWebhookAdapter(self.bot.session))
        
+       self.cached_qotd = None
     @commands.command(name="fancy", aliases=["f"])
     async def fancy(self, ctx, *, message):
         querystring = {"text":message}
@@ -366,13 +368,18 @@ class stupid(commands.Cog):
     @commands.command(name="quote", aliases=["qotd"])
     async def qotd(self, ctx):
         async with ctx.typing():
-            async with self.bot.session.get(r"http://quotes.rest/qod.json") as response:
-                data = await response.json()
-            try:
-                out = f"{data['contents']['quotes'][0]['quote']}\n~{data['contents']['quotes'][0]['author']}"
-            except KeyError:
-                out = f"bro we're poor so we can't use this command for another {data['error']['message'][-26:]} :pensive:"
-            await ctx.send(out)
+            await ctx.send(self.cached_qotd)
+
+    @tasks.loop(hours=1)
+    async def qotd_cache_loop(self):
+        async with self.bot.session.get(r"http://quotes.rest/qod.json") as response:
+            data = await response.json()
+        self.cached_qotd = f"{data['contents']['quotes'][0]['quote']}\n~{data['contents']['quotes'][0]['author']}"
+        return
+
+    @qotd_cache_loop.before_loop
+    async def before_qotd_cache(self):
+        await self.bot.wait_until_ready()
         
     @tasks.loop(hours=12)
     async def role_name_loop(self):
@@ -380,9 +387,7 @@ class stupid(commands.Cog):
         role = guild.get_role(420169837524942848)
         data = [obj for obj in role_names_collection.find()]
         new_name_data = random.choice(data)
-        print("running name loop")
         await role.edit(name=new_name_data['name'])
-        print("edited")
 
     @role_name_loop.before_loop
     async def rolename_before(self):
