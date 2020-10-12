@@ -363,7 +363,7 @@ class stupid(commands.Cog):
     @commands.has_any_role('Moderators', 'admin')
     async def role_name_remove(self, ctx, name: str):
         role_names_collection.delete_one({'name': name})
-        return await ctx.send(f"Removed `name` (if it exists in the database)")
+        return await ctx.send(f"Removed `{name}` (if it exists in the database)")
 
     @commands.command(name="quote", aliases=["qotd"])
     async def qotd(self, ctx):
