@@ -150,12 +150,12 @@ class stupid(commands.Cog):
             await ctx.message.channel.send("Key doesn't exist")    
 
     @wat.command(name="use", aliases=["-u"])
-    async def use(self, ctx, key):
-        data = stupid_collection.find_one({"key":key})["output"]
+    async def use(self, ctx, *, key):
+        data = stupid_collection.find_one({"key": key})["output"]
         if data is not None:
-            if ctx.message.channel.name == "another-chat":
+            if ctx.channel.name == "another-chat":
                 await self.anotherchat_webhook.send(data, username=ctx.author.nick, avatar_url=ctx.author.avatar_url)
-            elif ctx.message.channel.name == "botspam":
+            elif ctx.channel.name == "botspam":
                 await self.botspam_webhook.send(data, username=ctx.author.nick, avatar_url=ctx.author.avatar_url)
             else:
                 await ctx.send(data)
