@@ -178,5 +178,4 @@ for filename in os.listdir('./cogs'):
 
 color_loop.start()
 stock_price.start()
-bot.load_extension('cogs.stupid')
 bot.run(TOKEN)

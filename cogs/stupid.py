@@ -307,7 +307,7 @@ class stupid(commands.Cog):
         await paginator.run()
 
     @commands.command(name="fetch-pin", aliases=["fetchpin"])
-    async def fetch_pin(self, identifier: Union[str, int]):
+    async def fetch_pin(self, ctx, identifier: Union[str, int]):
         if isinstance(identifier, str):
             data = pins_collection.find_one({"name": identifier})
         elif isinstance(identifier, int):
