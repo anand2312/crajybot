@@ -154,7 +154,7 @@ class Economy(commands.Cog):
         for i in leaderboard_data:
             person = ctx.guild.get_member(i['user'])
             with suppress(AttributeError):
-                response.add_field(name=f"{leaderboard_data.index(i)+1}. {person.nick}", value=f"Balance {i['bank'] + i['cash']}", inline=False)
+                response.add_field(name=f"{leaderboard_data.index(i)+1}. {person.nick if person.nick is not None else person.name}", value=f"Balance {i['bank'] + i['cash']}", inline=False)
         return await ctx.send(embed=response)
 
     @commands.command(name="get-loan", aliases=["gl"])    
