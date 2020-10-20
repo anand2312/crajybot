@@ -157,23 +157,6 @@ class Moderator(commands.Cog):
         reply_embed.set_footer(text=f"Pinned by {ctx.author.name}", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=reply_embed)
 
-    @commands.command()
-    @commands.has_any_role("Bot Dev")
-    async def load(self, ctx, extension):
-        try:
-            self.bot.load_extension(f"cogs.{extension}")
-            response = discord.Embed(title="Cog Loaded", description=extension, color=discord.Color.green())
-        except Exception as e:
-            response = discord.Embed(title=f"{extension} cog load failed", description=str(e), color=discord.Color.red())
-        await ctx.send(embed=response)
-
-    @commands.command()
-    @commands.has_any_role("Bot Dev")
-    async def unload(self, ctx, extension):
-        self.bot.unload_extension(f"cogs.{extension}")
-        response = discord.Embed(title="Cog Unloaded", description=extension, colour=discord.Color.red())
-        await ctx.send(embed=response)
-
     @commands.has_any_role("Bot Dev")
     @commands.command(name="server-update", aliases=["git-pull", "gitpull", "serverupdate"])
     async def server_update(self, ctx):
@@ -181,7 +164,7 @@ class Moderator(commands.Cog):
             out = git.cmd.Git().pull(r"https://github.com/AbsoluteMadlad12/CrajyBot-private", "master")
         except Exception as e:
             await ctx.message.add_reaction("❌")
-            return await ctx.send(embed=discord.Embed(title="Unexpected error", description=e, color=discord.Color.red()))
+            return await ctx.send(embed=discord.Embed(title="Unexpected error", description=str(e), color=discord.Color.red()))
 
         await ctx.message.add_reaction("✅")
         if out != "Already up to date.":
