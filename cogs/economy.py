@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands
+
 from pymongo import MongoClient
+
+from contextlib import suppress
 import typing
 import asyncio
 import random
@@ -150,7 +153,8 @@ class Economy(commands.Cog):
         response = discord.Embed(title="Crajy Leaderboard", description="")
         for i in leaderboard_data:
             person = ctx.guild.get_member(i['user'])
-            response.add_field(name=f"{leaderboard_data.index(i)+1}. {person.nick}", value=f"Balance {i['bank'] + i['cash']}", inline=False)
+            with suppress(AttributeError):
+                response.add_field(name=f"{leaderboard_data.index(i)+1}. {person.nick if person.nick is not None else person.name}", value=f"Balance {i['bank'] + i['cash']}", inline=False)
         return await ctx.send(embed=response)
 
     @commands.command(name="get-loan", aliases=["gl"])    

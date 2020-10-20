@@ -61,7 +61,7 @@ class stupid(commands.Cog):
         self.anotherchat_webhook = discord.Webhook.partial(ANOTHERCHAT_HOOK['id'], ANOTHERCHAT_HOOK['token'], adapter=discord.AsyncWebhookAdapter(self.bot.session))
         self.botspam_webhook = discord.Webhook.partial(BOTSPAM_HOOK['id'], BOTSPAM_HOOK['token'], adapter=discord.AsyncWebhookAdapter(self.bot.session))
        
-       self.cached_qotd = None
+        self.cached_qotd = None
     @commands.command(name="fancy", aliases=["f"])
     async def fancy(self, ctx, *, message):
         querystring = {"text":message}
@@ -150,12 +150,12 @@ class stupid(commands.Cog):
             await ctx.message.channel.send("Key doesn't exist")    
 
     @wat.command(name="use", aliases=["-u"])
-    async def use(self, ctx, key):
-        data = stupid_collection.find_one({"key":key})["output"]
+    async def use(self, ctx, *, key):
+        data = stupid_collection.find_one({"key": key})["output"]
         if data is not None:
-            if ctx.message.channel.name == "another-chat":
+            if ctx.channel.name == "another-chat":
                 await self.anotherchat_webhook.send(data, username=ctx.author.nick, avatar_url=ctx.author.avatar_url)
-            elif ctx.message.channel.name == "botspam":
+            elif ctx.channel.name == "botspam":
                 await self.botspam_webhook.send(data, username=ctx.author.nick, avatar_url=ctx.author.avatar_url)
             else:
                 await ctx.send(data)
@@ -352,7 +352,7 @@ class stupid(commands.Cog):
     @commands.has_any_role('Moderators', 'admin')
     async def role_name_remove(self, ctx, name: str):
         role_names_collection.delete_one({'name': name})
-        return await ctx.send(f"Removed `name` (if it exists in the database)")
+        return await ctx.send(f"Removed `{name}` (if it exists in the database)")
 
     @commands.command(name="quote", aliases=["qotd"])
     async def qotd(self, ctx):

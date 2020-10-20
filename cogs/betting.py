@@ -17,7 +17,7 @@ class Betting(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def cog_check(ctx):
+    async def cog_check(self, ctx):
         return ctx.channel.name in ["botspam", "bot-test", "admin-botspam"]
 
     @commands.command(name = "roulette")
