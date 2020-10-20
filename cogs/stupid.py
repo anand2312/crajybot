@@ -312,7 +312,7 @@ class stupid(commands.Cog):
             data = pins_collection.find_one({"name": identifier})
         elif isinstance(identifier, int):
             data = pins_collection.find_one({"_id": identifier})
-        embed = discord.Embed(title=f"Pin **{data["_id"]}**", url=data["message_jump_url"], color=discord.Color.blurple())
+        embed = discord.Embed(title=f"Pin **{data['_id']}**", url=data["message_jump_url"], color=discord.Color.blurple())
         text = f"**{data['message_synopsis']}**\n  _by {data['message_author']} on {data['date']}_"
         embed.description = text 
         embed.set_footer(text=f"Requested by {ctx.author.nick}. Click on the embed title to go to the message.", icon_url=ctx.author.avatar_url)
