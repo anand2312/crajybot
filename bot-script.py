@@ -114,9 +114,27 @@ async def on_member_join(member):
 
 @bot.command(name='popi')
 async def popi(ctx):
-    reply = random.choice(["poopi really do be poopie though",f"{ctx.message.author.mention} is a poopie?oh no......"]) #Choice chooses 1 object from the list
+    reply = random.choice(["poopi really do be poopie though",f"{ctx.author.mention} is a poopie?oh no......"]) #Choice chooses 1 object from the list
     response = discord.Embed(title='popi',description=reply)
-    if ctx.message.channel.name in channels_available: await ctx.send(embed=response)
+    response.set_footer(text=f"Ping- {bot.latency * 1000} ms")
+    if ctx.channel.name in channels_available: await ctx.send(embed=response)
+
+@commands.command()
+@commands.has_any_role("Bot Dev")
+async def load(ctx, extension):
+    try:
+        bot.load_extension(f"cogs.{extension}")
+        response = discord.Embed(title="Cog Loaded", description=extension, color=discord.Color.green())
+    except Exception as e:
+        response = discord.Embed(title=f"{extension} cog load failed", description=str(e), color=discord.Color.red())
+    await ctx.send(embed=response)
+
+@commands.command()
+@commands.has_any_role("Bot Dev")
+async def unload(ctx, extension):
+    bot.unload_extension(f"cogs.{extension}")
+    response = discord.Embed(title="Cog Unloaded", description=extension, colour=discord.Color.red())
+    await ctx.send(embed=response)
 
 @bot.command(name='help')
 async def help(ctx):
