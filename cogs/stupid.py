@@ -273,29 +273,6 @@ class stupid(commands.Cog):
             person_obj = discord.utils.get(ctx.guild.members, name=person['user'].split('#')[0])
             response.add_field(name=person_obj.nick, value=person['date'].strftime('%d %B %Y'), inline=False)
         await ctx.send(embed=response)
-
-    @commands.has_any_role("Moderators", "admin")
-    @commands.command(name="pin")
-    async def pin(self, ctx, id_: discord.Message, name_: str=None):
-        old_data = pins_collection.find().sort("_id", -1).limit(1)
-        try:
-            last_pin = old_data[0]['_id']
-        except IndexError:
-            last_pin = 0
-        document = dict(_id= last_pin+1,
-            message_synopsis = id_.content[:30] + "...",
-            message_jump_url = id_.jump_url,
-            message_author = id_.author.name,
-            date = datetime.date.today().strftime('%B %d, %Y'),
-            name = None if name_ is None else name_)
-
-        pins_collection.insert_one(document)
-
-        await id_.add_reaction("📌")
-        reply_embed = discord.Embed(title=f"Pinned!", description=f"_{document['message_synopsis'][:10]+'...'}_\n with ID {last_pin+1}", color=discord.Color.green())
-        reply_embed.set_thumbnail(url= r"https://media.discordapp.net/attachments/612638234782072882/758190572526764052/emoji.png?width=58&height=58")
-        reply_embed.set_footer(text=f"Pinned by {ctx.author.name}", icon_url=ctx.author.avatar_url)
-        await ctx.send(embed=reply_embed)
         
     @commands.command(name="pins")
     async def pins(self, ctx): #install disputils on VM
@@ -316,7 +293,7 @@ class stupid(commands.Cog):
                 counter += 1
             else:
                 embed.add_field(name=f"{pin['message_synopsis']}",
-                                value=f"[_~{pin['message_author']}_, on {pin['date']}]({pin['message_jump_url']})\nPin ID:{pin['_id']}", 
+                                value=f"[_~{pin['message_author']}_, on {pin['date']}]({pin['message_jump_url']})\nPin ID:{pin['_id']} {'' if pin['name'] is None else pin['name']}", 
                                 inline=False)
                 embeds.append(embed)
                 counter += 1
@@ -329,6 +306,18 @@ class stupid(commands.Cog):
         paginator = disputils.BotEmbedPaginator(ctx, embeds)
         await paginator.run()
 
+    @commands.command(name="fetch-pin", aliases=["fetchpin"])
+    async def fetch_pin(self, identifier: Union[str, int]):
+        if isinstance(identifier, str):
+            data = pins_collection.find_one({"name": identifier})
+        elif isinstance(identifier, int):
+            data = pins_collection.find_one({"_id": identifier})
+        embed = discord.Embed(title=f"Pin **{data["_id"]}**", url=data["message_jump_url"], color=discord.Color.blurple())
+        text = f"**{data['message_synopsis']}**\n  _by {data['message_author']} on {data['date']}_"
+        embed.description = text 
+        embed.set_footer(text=f"Requested by {ctx.author.nick}. Click on the embed title to go to the message.", icon_url=ctx.author.avatar_url)
+        return await ctx.send(embed=embed)
+        
     @commands.command(name="role-name")
     async def role_name(self, ctx, *, name: str):
         if len(name) > 15:

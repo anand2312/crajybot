@@ -113,7 +113,7 @@ class Moderator(commands.Cog):
         pass
 
     @commands.command(name="clear-pin", aliases=["clearpins", "clear-pins"])
-    @commands.has_any_role("admin", "Moderators")
+    @commands.has_guild_permissions(administrator=True)
     async def remove_pins(self, ctx, id_: typing.Union[int, str]):
         if isinstance(id_, int):
             x = pins_collection.delete_one({"_id":id_})
@@ -134,8 +134,31 @@ class Moderator(commands.Cog):
                 else:
                     return await ctx.send("Terminated.")
 
+    @commands.has_guild_permissions(administrator=True)
+    @commands.command(name="pin")
+    async def pin(self, ctx, id_: discord.Message, name_: str=None):
+        old_data = pins_collection.find().sort("_id", -1).limit(1)
+        try:
+            last_pin = old_data[0]['_id']
+        except IndexError:
+            last_pin = 0
+        document = dict(_id= last_pin+1,
+            message_synopsis = id_.content[:30] + "...",
+            message_jump_url = id_.jump_url,
+            message_author = id_.author.name,
+            date = datetime.date.today().strftime('%B %d, %Y'),
+            name = name_)
+
+        pins_collection.insert_one(document)
+
+        await id_.add_reaction("📌")
+        reply_embed = discord.Embed(title=f"Pinned!", description=f"_{document['message_synopsis'][:10]+'...'}_\n with ID {last_pin+1}", color=discord.Color.green())
+        reply_embed.set_thumbnail(url= r"https://media.discordapp.net/attachments/612638234782072882/758190572526764052/emoji.png?width=58&height=58")
+        reply_embed.set_footer(text=f"Pinned by {ctx.author.name}", icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=reply_embed)
+
     @commands.command()
-    @commands.has_any_role("admin","Bot Dev")
+    @commands.has_any_role("Bot Dev")
     async def load(self, ctx, extension):
         try:
             self.bot.load_extension(f"cogs.{extension}")
@@ -145,32 +168,13 @@ class Moderator(commands.Cog):
         await ctx.send(embed=response)
 
     @commands.command()
-    @commands.has_any_role("admin","Bot Dev")
+    @commands.has_any_role("Bot Dev")
     async def unload(self, ctx, extension):
         self.bot.unload_extension(f"cogs.{extension}")
         response = discord.Embed(title="Cog Unloaded", description=extension, colour=discord.Color.red())
         await ctx.send(embed=response)
 
-    @commands.command(name="bruh-id")
-    @commands.has_any_role('admin')
-    async def idConvertion(self, ctx):    #for single use lmao
-        everyone = economy_collection.find()
-        count = 0
-        for person in everyone:
-            name, discrim = person['user'].split("#")
-            person_object = discord.utils.get(ctx.guild.members, name=name)
-            if person_object is None:
-                person_object = discord.utils.get(ctx.guild.members, discriminator=discrim)
-            if person_object is None:
-                await ctx.send(f"{name} user object not found.")
-                continue
-            economy_collection.update_one({'user': person['user']}, {"$set":{'user':person_object.id}})
-            await ctx.send(f"Edited {person['user']}")
-            count += 1
-
-        await ctx.send(f"Modified records for {count} members out of {len(ctx.guild.members)} members.")
-
-    @commands.is_owner()
+    @commands.has_any_role("Bot Dev")
     @commands.command(name="server-update", aliases=["git-pull", "gitpull", "serverupdate"])
     async def server_update(self, ctx):
         try:
