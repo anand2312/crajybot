@@ -54,7 +54,6 @@ class stupid(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        self.birthday_loop.start()
         self.role_name_loop.start()   
         self.qotd_cache_loop.start()
 
@@ -356,8 +355,39 @@ class stupid(commands.Cog):
 
     @commands.command(name="quote", aliases=["qotd"])
     async def qotd(self, ctx):
-        async with ctx.typing():
-            await ctx.send(self.cached_qotd)
+        await ctx.send(self.cached_qotd)
+
+    @commands.command(name="change-presence", aliases=["changepresence", "changestatus", "change-status"])
+    async def change_presence(self, ctx, activity: str, *, status: str):
+        if activity.lower() not in ["playing", "watching", "listening", "streaming"]:
+            return await ctx.send('Status has to be one of `"playing", "watching", "listening", "streaming"`')
+        
+        if len(status) > 20:
+            return await ctx.send("bro too long bro")
+
+        if ctx.author.guild_permissions.administrator:
+            pass
+        else:
+            data = economy_collection.find_one({'user': ctx.author.id})
+            if data['inv']['bot status'] >= 1:
+                data['inv']['bot status'] -= 1
+                economy_collection.update_one({'user': ctx.author.id}, {"$set": data})
+            else:
+                return await ctx.send("Buy the `bot status` item!")
+
+        discord_activity = discord.Activity(name=status)
+
+        if activity.lower() == "playing":
+            discord_activity.type = discord.ActivityType.playing
+        elif activity.lower() == "listening":
+            discord_activity.type = discord.ActivityType.listening
+        elif activity.lower() == "watching":
+            discord_activity.type = discord.ActivityType.watching
+        elif activity.lower() == "streaming":
+            discord_activity = discord.Streaming(activity)
+            
+        await ctx.message.add_reaction("✅")
+        return await self.bot.change_presence(status=discord.Status.online, activity=discord_activity)
 
     @tasks.loop(hours=1)
     async def qotd_cache_loop(self):
@@ -381,23 +411,6 @@ class stupid(commands.Cog):
     @role_name_loop.before_loop
     async def rolename_before(self):
         await self.bot.wait_until_ready()
-
-    @tasks.loop(hours=24)
-    async def birthday_loop(self):
-        data = bday_collection.find()
-        tz_oman = pytz.timezone("Asia/Dubai")
-        for person in data:
-            if person['date'].strftime("%d-%B") == datetime.datetime.now(tz_oman).strftime('%d-%B'):
-                person_obj = discord.utils.get(guild.members, name=person['user'].split("#")[0])
-                await wishchannel.send(f"It's {person_obj.mention}'s birthday today! @here")
-    
-    @birthday_loop.before_loop
-    async def birthdayloop_before(self):
-        global guild
-        global wishchannel
-        await self.bot.wait_until_ready()
-        guild = self.bot.get_guild(298871492924669954)
-        wishchannel = guild.get_channel(392576275761332226)
 
 def setup(bot):
     bot.add_cog(stupid(bot))

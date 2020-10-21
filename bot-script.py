@@ -6,6 +6,9 @@ insert further documentation here, insert documentation near new functions or va
 import os
 import random
 
+import datetime
+import pytz
+
 import discord
 from discord.ext import commands, tasks, menus
 
@@ -15,6 +18,7 @@ from pymongo import MongoClient
 
 from random import choice
 from TOKEN import TOKEN
+
 #local mongodb database stuff
 client = MongoClient("mongodb://localhost:27017/")
 db = client["bot-data"]
@@ -170,12 +174,31 @@ async def colorloop_before():
     await bot.wait_until_ready()
     guild = bot.get_guild(298871492924669954)
 
+@tasks.loop(hours=24)
+async def birthday_loop():
+    data = bday_collection.find()
+    tz_oman = pytz.timezone("Asia/Dubai")
+    for person in data:
+        if person['date'].strftime("%d-%B") == datetime.datetime.now(tz_oman).strftime('%d-%B'):
+            person_obj = discord.utils.get(guild.members, name=person['user'].split("#")[0])
+            await wishchannel.send(f"It's {person_obj.mention}'s birthday today! @here")
+
+@birthday_loop.before_loop
+async def birthdayloop_before():
+    global guild
+    global wishchannel
+    await bot.wait_until_ready()
+    guild = bot.get_guild(298871492924669954)
+    wishchannel = guild.get_channel(392576275761332226)
+
 #loading cogs
 
-for filename in os.listdir('./cogs'):
+'''for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         bot.load_extension(f'cogs.{filename[:-3]}')
-
-color_loop.start()
-stock_price.start()
+'''
+bot.load_extension('cogs.stupid')
+#birthday_loop.start()
+#color_loop.start()
+#stock_price.start()
 bot.run(TOKEN)
