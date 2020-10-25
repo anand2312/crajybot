@@ -1,13 +1,16 @@
 import discord 
 from discord.ext import commands
+
 import requests
+
 import random
 import asyncio
 import typing
 import git
+
 from pymongo import MongoClient
 
-from TOKEN import GIT_HELPER
+from secret.TOKEN import GIT_HELPER
 #do whatever imports you need; I've just done a few which I could think of
 
 client = MongoClient("mongodb://localhost:27017/")

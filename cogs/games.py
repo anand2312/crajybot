@@ -1,13 +1,18 @@
 import discord
 from discord.ext import commands
+
 from pymongo import MongoClient
-import tictactoe
+
+import utils.tictactoe as tictactoe
+from secret.KEY import *
+
 import random
-from KEY import *
 import asyncio
 import datetime
+
 from random_word import RandomWords
 from PyDictionary import PyDictionary
+
 from akinator.async_aki import Akinator
 
 

@@ -4,6 +4,7 @@ from discord.ext import commands
 from pymongo import MongoClient
 
 from contextlib import suppress
+
 import typing
 import asyncio
 import random

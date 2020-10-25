@@ -17,29 +17,28 @@ from aiohttp import ClientSession
 from pymongo import MongoClient
 
 from random import choice
-from TOKEN import TOKEN
-
-#local mongodb database stuff
-client = MongoClient("mongodb://localhost:27017/")
-db = client["bot-data"]
-
-economy_collection = db["econ_data"]
-rpg_collection = db["rpg_data"]
-store_collection = db["store_data"]
-
+from secret.TOKEN import TOKEN
+from utils.help_class import HelpCommand
 #bot which controls everything; subclass of Client
 
 intents = discord.Intents.default()
 intents.members = True 
 bot = commands.Bot(command_prefix='.',
                    activity=discord.Activity(type=discord.ActivityType.watching, name="thug_sgt"),
+                   help_command=HelpCommand(),
                    intents=intents)
 
-bot.session = ClientSession()
+bot.session = ClientSession()   #aiohttp clientsession
+ 
+bot.mongo = MongoClient("mongodb://localhost:27017/")   #mongodb database
+db = bot.mongo["bot-data"]
+
+bot.economy_collection = db["econ_data"]
+bot.store_collection = db["store_data"]
 
 channels_available = ["bot-test","botspam-v2","botspam"] #Channels where the bot works
 chat_money_channels = ['another-chat']
-bot.remove_command('help') 
+ 
 #Lets us implement our own help command instead of the built in one
 class HelpMenu(menus.Menu):
     async def send_initial_message(self, ctx, channel):
@@ -96,14 +95,14 @@ async def on_message(message):
     #chat money
     if message.author.bot: return
     if str(message.channel) in chat_money_channels:
-        economy_collection.update_one({"user":message.author.id}, {"$inc": {"cash": 10}})
+        bot.economy_collection.update_one({"user":message.author.id}, {"$inc": {"cash": 10}})
     await bot.process_commands(message)
 
 @bot.event    #to be tested!
 async def on_member_join(member):
-    check = economy_collection.find_one({'user': member.id})
+    check = bot.economy_collection.find_one({'user': member.id})
     if check is None:
-        economy_collection.insert_one({
+        bot.economy_collection.insert_one({
                 "user" : str(member),
                 "cash" : 0,
                 "bank" : 2500,
@@ -140,7 +139,7 @@ async def unload(ctx, extension):
     response = discord.Embed(title="Cog Unloaded", description=extension, colour=discord.Color.red())
     await ctx.send(embed=response)
 
-@bot.command(name='help')
+@bot.command(name='help1')
 async def help(ctx):
     menu = HelpMenu(clear_reactions_after=300)
     await menu.start(ctx)
@@ -151,9 +150,10 @@ async def stock_price():
     rand_sign = random.choice(["+","-"])
     if rand_sign == "+": rand_val = random.randint(1,6)
     else: rand_val = -random.randint(1,6)
-    stock_data = store_collection.find_one({'name':'Stock'})
+    stock_data = bot.store_collection.find_one({'name':'Stock'})
     new_price = stock_data['price'] + rand_val
-    store_collection.update_one({'name': 'Stock'}, {"$inc": {"price": rand_val}})
+
+    bot.store_collection.update_one({'name': 'Stock'}, {"$inc": {"price": rand_val}})
     await message_channel.send(f"Stock price : {new_price}")
 
 @stock_price.before_loop
@@ -193,11 +193,11 @@ async def birthdayloop_before():
 
 #loading cogs
 
-'''for filename in os.listdir('./cogs'):
+for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         bot.load_extension(f'cogs.{filename[:-3]}')
-'''
-bot.load_extension('cogs.stupid')
+
+#bot.load_extension('cogs.stupid')
 #birthday_loop.start()
 #color_loop.start()
 #stock_price.start()

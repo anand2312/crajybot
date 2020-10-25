@@ -14,8 +14,8 @@ import pytz
 from contextlib import suppress
 import itertools
 
-from KEY import *       #rapidapi key
-from TOKEN import BOTSPAM_HOOK, ANOTHERCHAT_HOOK
+from secret.KEY import *       #rapidapi key
+from secret.TOKEN import BOTSPAM_HOOK, ANOTHERCHAT_HOOK
 
 #API requests headers and URLs
 fancy_url = "https://ajith-fancy-text-v1.p.rapidapi.com/text"
@@ -231,47 +231,6 @@ class stupid(commands.Cog):
     async def notes_pop(self, ctx):
         notes_collection.delete_one({"user":str(ctx.message.author)})
         await ctx.send("Notes cleared.")
-
-    @commands.group(name="commit", invoked_without_command=True)
-    async def commit(self, ctx):
-        await ctx.send(random.choice(commit_die))
-
-    @commit.command(name="add", aliases=["-a"])
-    async def commit_add(self, ctx, *,output):
-        commit_die.append(output)
-        await ctx.send("Added.")
-
-    @commands.group(name="bday", aliases=["birthday"], invoke_without_command=True)
-    async def bday(self, ctx, person: discord.Member=None):
-        if person is None:
-            person = ctx.message.author
-        date = bday_collection.find_one({"user":str(person)})
-        await ctx.send(embed=discord.Embed(title=f"{person.nick}'s birthday", description=f"{date['date'].strftime('%d %B %Y')}", color=discord.Color.blurple()))
-        
-
-    @bday.command(name="add", aliases=["-a"])
-    async def bday_add(self, ctx, person: discord.Member=None):
-        if person is None:
-            person = ctx.message.author
-        
-        await ctx.send(f"Send {person.nick}'s birthday, in DD-MM-YYYY format")
-        def check(m):
-            return m.author == ctx.message.author and len(m.content.split("-")) == 3 and m.guild is not None
-
-        reply = await self.bot.wait_for('message', check=check, timeout=30)
-        date_vals = list(map(int, reply.content.split("-")))
-
-        bday_collection.update_one({'user':str(person)}, {'$set':{'date':datetime.datetime(date_vals[2], date_vals[1], date_vals[0])}}, upsert=True)
-
-        await ctx.send(f"Added {person.nick}'s birthday to the database. He shall be wished 😔")
-
-    @bday.command(name="all")
-    async def bday_all(self, ctx):
-        response = discord.Embed(title="Everyone's birthdays", color=discord.Color.blurple())
-        for person in bday_collection.find().sort('date', ASCENDING):
-            person_obj = discord.utils.get(ctx.guild.members, name=person['user'].split('#')[0])
-            response.add_field(name=person_obj.nick, value=person['date'].strftime('%d %B %Y'), inline=False)
-        await ctx.send(embed=response)
         
     @commands.command(name="pins")
     async def pins(self, ctx): #install disputils on VM
@@ -362,7 +321,7 @@ class stupid(commands.Cog):
         if activity.lower() not in ["playing", "watching", "listening", "streaming"]:
             return await ctx.send('Status has to be one of `"playing", "watching", "listening", "streaming"`')
         
-        if len(status) > 20:
+        if len(status) > 25:
             return await ctx.send("bro too long bro")
 
         if ctx.author.guild_permissions.administrator:
