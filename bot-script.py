@@ -35,6 +35,12 @@ db = bot.mongo["bot-data"]
 
 bot.economy_collection = db["econ_data"]
 bot.store_collection = db["store_data"]
+bot.games_leaderboard = db["games"]
+bot.stupid_collection = db["stupid"]
+bot.notes_collection = db["notes"]
+bot.bday_collection = db["bday"]
+bot.pins_collection = db["pins"]
+bot.role_names_collection = db["role"]
 
 channels_available = ["bot-test","botspam-v2","botspam"] #Channels where the bot works
 chat_money_channels = ['another-chat']
