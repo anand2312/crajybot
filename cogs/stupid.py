@@ -243,7 +243,7 @@ class stupid(commands.Cog):
         embed.set_footer(text=f"Requested by {ctx.author.nick}. Click on the embed title to go to the message.", icon_url=ctx.author.avatar_url)
         return await ctx.send(embed=embed)
         
-    @commands.group(name="role-name", aliases=["rolename", "rolenames"] invoke_without_command=True)
+    @commands.group(name="role-name", aliases=["rolename", "rolenames"], invoke_without_command=True)
     async def role_name(self, ctx, *, name: str):
         if len(name) > 15:
             return await ctx.send("bro too long bro")
