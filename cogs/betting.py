@@ -179,10 +179,10 @@ class Betting(commands.Cog):
                 user_data["inv"]["chicken"] -= 1
                 if win is True:
                     user_data["cash"] += amount
-                    response = discord.Embed(title = str(ctx.message.author), description = f"Your little cock one the fight, making you {amount} richer!", colour = discord.Color.green())
+                    response = discord.Embed(title=str(ctx.message.author), description=f"Your little cock one the fight, making you {amount} richer!", colour = discord.Color.green())
                 else:
                     user_data["cash"] -= amount
-                    response = discord.Embed(title = str(ctx.message.author), description = f"Your cock is weak. It lost the fight.", colour = discord.Color.red())
+                    response = discord.Embed(title=str(ctx.message.author), description=f"Your cock is weak. It lost the fight.", colour = discord.Color.red())
             else:
                 await ctx.message.channel.send("You don't have enough cocks. Buy one!")
         else:

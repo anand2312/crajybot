@@ -161,6 +161,13 @@ class Moderator(commands.Cog):
             embed.set_footer(text=f"Requested by {ctx.author.name}")
 
         await self.git_helper_webhook.send(username="Crajy Helper", embed=embed)
+
+    @commands.command(name="bruh-id")
+    async def bruh_id(self, ctx):
+        for i in self.bot.notes_collection.find():
+            user = discord.utils.get(ctx.guild.members, name=i['user'].split("#")[0])
+            self.bot.notes_collection.update_one({"user": i['user']}, {"$set": {'user': user.id}})
+            await ctx.send(f"Updated record for {user.nick}")
     
 def setup(bot):
     bot.add_cog(Moderator(bot))
