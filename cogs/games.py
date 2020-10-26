@@ -1,19 +1,20 @@
 import discord
 from discord.ext import commands
+
 from pymongo import MongoClient
-import tictactoe
+
+import utils.tictactoe as tictactoe
+from secret.KEY import *
+
 import random
-from KEY import *
 import asyncio
 import datetime
+
 from random_word import RandomWords
 from PyDictionary import PyDictionary
+
 from akinator.async_aki import Akinator
 
-
-client = MongoClient("mongodb://localhost:27017/")
-db = client["bot-data"]
-games_leaderboard = db["games"]
 
 d = PyDictionary()
 r = RandomWords()
@@ -142,7 +143,7 @@ class Games(commands.Cog):
                 except asyncio.TimeoutError:
                     return await ctx.send(f"Time up! No one guessed the word. The word was **{answer_val}**")
         
-                games_leaderboard.update_one({"user":str(reply.author)}, {"$inc":{"wins":1}}, upsert=True)
+                self.bot.games_leaderboard.update_one({"user":str(reply.author)}, {"$inc":{"wins":1}}, upsert=True)
                 return await ctx.send(f"{reply.author.mention} got it right! The word was **{reply.content}**")
 
             else:
@@ -161,7 +162,7 @@ class Games(commands.Cog):
         except asyncio.TimeoutError:
             return await ctx.send(f"Time up! No one guessed the word. The word was **{answer_val}**")
         
-        games_leaderboard.update_one({"user":str(reply.author)}, {"$inc":{"wins":1}}, upsert=True)
+        self.bot.games_leaderboard.update_one({"user":str(reply.author)}, {"$inc":{"wins":1}}, upsert=True)
         return await ctx.send(f"{reply.author.mention} got it right! The word was **{reply.content}**")
 
 
@@ -233,7 +234,7 @@ class Games(commands.Cog):
     @commands.command(name="games-leaderboard", aliases=["g-lb", "glb", "g-top", "gtop", "games-top"])
     async def games_top(self, ctx):
         out = ""
-        for i, j in enumerate(games_leaderboard.find({"$query":{}, "$orderby":{"wins":-1}})):
+        for i, j in enumerate(self.bot.games_leaderboard.find({"$query":{}, "$orderby":{"wins":-1}})):
             out += f"{i+1}. {j['user']}  **{j['wins']}** wins\n"
         await ctx.send(out)
     

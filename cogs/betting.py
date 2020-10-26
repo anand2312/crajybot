@@ -5,14 +5,6 @@ import asyncio
 from pymongo import MongoClient
 #do whatever imports you need; I've just done a few which I could think of
 
-client = MongoClient("mongodb://localhost:27017/")
-db = client["bot-data"]
-
-economy_collection = db["econ_data"]
-store_collection = db["store_data"]
-
-channels_available = ["bot-test","botspam-v2","botspam"]
-
 class Betting(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -22,7 +14,7 @@ class Betting(commands.Cog):
 
     @commands.command(name = "roulette")
     async def roulette(self, ctx, amount:int, bet:str):
-        user_dict = economy_collection.find_one({'user': ctx.author.id})
+        user_dict = self.bot.economy_collection.find_one({'user': ctx.author.id})
 
         if amount <= user_dict['cash'] and user_dict['cash'] > 0:
 
@@ -44,7 +36,7 @@ class Betting(commands.Cog):
             if bet in roulette_table.keys():
                 win_number = random.randint(0,36)
                 user_dict['cash'] -= amount
-                economy_collection.update_one({'user': ctx.author.id}, {"$set": user_dict})
+                self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": user_dict})
                 response1 = discord.Embed(title=str(ctx.message.author), description=f"You've placed a bet on {bet}.")
                 response1.set_footer(text=f"Please wait 10 seconds")
                 await ctx.send(embed=response1)
@@ -107,7 +99,7 @@ class Betting(commands.Cog):
                 win_number = random.randint(0,36)
                 user_win = False
                 user_dict['cash'] -= amount
-                economy_collection.update_one({'user': ctx.author.id}, {"$set": user_dict})
+                self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": user_dict})
 
                 response1 = discord.Embed(title=str(ctx.message.author), description=f"You've placed a bet on {bet}.")
                 response1.set_footer(text=f"Please wait 10 seconds")
@@ -124,7 +116,7 @@ class Betting(commands.Cog):
 
             if user_win is True:
                 response2 = discord.Embed(title=f"Roulette Results {str(ctx.message.author)}", description=f"You won {multiplier * amount}!", colour=discord.Color.green())
-                economy_collection.update_one({'user': ctx.author.id}, {"$inc": {'cash': multiplier * amount}})
+                self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$inc": {'cash': multiplier * amount}})
                 await ctx.send(f"The ball fell on {win_number}")
                 await ctx.send(embed=response2)
             else:
@@ -147,7 +139,7 @@ class Betting(commands.Cog):
         users_list = await rr_message.reactions[0].users().flatten()
         users_list.pop(0)
 
-        rrr_cursor = economy_collection.find({'user': {"$in":[i.id for i in users_list]}})
+        rrr_cursor = self.bot.economy_collection.find({'user': {"$in":[i.id for i in users_list]}})
         rrr_data_full = []
         for i in rrr_cursor: rrr_data_full.append(i)
         rrr_matching_key = list(rrr_data_full)    #this will be used in the final update_money statement to match who all has to be updated
@@ -174,28 +166,28 @@ class Betting(commands.Cog):
                     if user_dict["user"] == winner["user"]:
                         user_dict["cash"] += (len(users_list) * amount)
         num = 0
-        for i in economy_collection.find({'user': {"$in": rrr_matching_key}}):
-            economy_collection.update_one(i, {"$set": rrr_data_full[num]})
+        for i in self.bot.economy_collection.find({'user': {"$in": rrr_matching_key}}):
+            self.bot.economy_collection.update_one(i, {"$set": rrr_data_full[num]})
             num += 1
         
     @commands.command(name = "cock-fight", aliases = ["cf","cockfight"])
     async def cockfight(self,ctx,amount:int):
-        user_data = economy_collection.find_one({'user': ctx.author.id})
+        user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
         win = random.choice([True, False, False, False])
         if amount > 0 and amount <= user_data["cash"]:
             if user_data["inv"]["chicken"] > 0:
                 user_data["inv"]["chicken"] -= 1
                 if win is True:
                     user_data["cash"] += amount
-                    response = discord.Embed(title = str(ctx.message.author), description = f"Your little cock one the fight, making you {amount} richer!", colour = discord.Color.green())
+                    response = discord.Embed(title=str(ctx.message.author), description=f"Your little cock one the fight, making you {amount} richer!", colour = discord.Color.green())
                 else:
                     user_data["cash"] -= amount
-                    response = discord.Embed(title = str(ctx.message.author), description = f"Your cock is weak. It lost the fight.", colour = discord.Color.red())
+                    response = discord.Embed(title=str(ctx.message.author), description=f"Your cock is weak. It lost the fight.", colour = discord.Color.red())
             else:
                 await ctx.message.channel.send("You don't have enough cocks. Buy one!")
         else:
             await ctx.message.channel.send("Invalid bet.")
-        economy_collection.update_one({'user': ctx.author.id}, {"$set":user_data})
+        self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set":user_data})
         return await ctx.send(embed=response)
 
 def setup(bot):

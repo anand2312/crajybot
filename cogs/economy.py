@@ -4,15 +4,10 @@ from discord.ext import commands
 from pymongo import MongoClient
 
 from contextlib import suppress
+
 import typing
 import asyncio
 import random
-
-client = MongoClient("mongodb://localhost:27017/")
-db = client["bot-data"]
-
-economy_collection = db["econ_data"]
-store_collection = db["store_data"]
 
 class Economy(commands.Cog):
     def __init__(self, bot):
@@ -25,7 +20,7 @@ class Economy(commands.Cog):
         """Helper function to get user data from database"""
         if user is not None:
             if isinstance(user, discord.Member): 
-                user_dict = economy_collection.find_one({'user': user.id})
+                user_dict = self.bot.economy_collection.find_one({'user': user.id})
             elif isinstance(user, str):
                 for member in ctx.guild.members:
                     if member.name.lower() == user.lower():
@@ -33,25 +28,25 @@ class Economy(commands.Cog):
                     elif member.nick is not None:
                         if member.nick.lower() == user.lower():
                             user = member
-                user_dict = economy_collection.find_one({'user': user.id})
+                user_dict = self.bot.economy_collection.find_one({'user': user.id})
         else: 
-            user_dict = economy_collection.find_one({'user': ctx.author.id})
+            user_dict = self.bot.economy_collection.find_one({'user': ctx.author.id})
         return user_dict
 
     @commands.command(name="withdraw", aliases=["with"])
     async def withdraw(self, ctx, amount):
         try:
             amount = int(amount)
-            if economy_collection.find_one({'user': ctx.author.id})['bank'] >= amount:
-                economy_collection.update_one({'user': ctx.author.id},{"$inc": {'bank': -amount, 'cash':amount}})
+            if self.bot.economy_collection.find_one({'user': ctx.author.id})['bank'] >= amount:
+                self.bot.economy_collection.update_one({'user': ctx.author.id},{"$inc": {'bank': -amount, 'cash':amount}})
                 response = discord.Embed(title = str(ctx.message.author), description = f"Withdrew {int(amount)}", colour = discord.Color.green())
                 await ctx.message.channel.send(embed=response)
             else:
                 await ctx.message.channel.send("You do not have that much balance")
         except ValueError:
             if amount.lower() == "all":
-                user_data = economy_collection.find_one({'user': ctx.author.id})
-                economy_collection.find_one_and_update({'user': ctx.author.id}, {"$set":{'bank': 0, 'cash': user_data['cash']+user_data['bank']}})
+                user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
+                self.bot.economy_collection.find_one_and_update({'user': ctx.author.id}, {"$set":{'bank': 0, 'cash': user_data['cash']+user_data['bank']}})
                 response = discord.Embed(title = str(ctx.message.author), description = f"Withdrew {int(user_data['bank'])}", colour = discord.Color.green())
                 await ctx.message.channel.send(embed=response)
 
@@ -59,17 +54,17 @@ class Economy(commands.Cog):
     async def deposit(self, ctx, amount):
             try:
                 amount = int(amount)
-                user_data = economy_collection.find_one({'user': ctx.author.id})
+                user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
                 if user_data['cash'] >= amount:
-                    economy_collection.update_one({'user': ctx.author.id}, {"$inc":{'cash': -amount, 'bank': amount}})
+                    self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$inc":{'cash': -amount, 'bank': amount}})
                     response = discord.Embed(title = str(ctx.message.author), description = f"Deposited {int(amount)}", colour = discord.Color.green())
                     await ctx.message.channel.send(embed=response)
                 else:
                     await ctx.message.channel.send("You don't have that much moni to deposit")
             except ValueError:
                 if amount.lower() == "all":
-                    user_data = economy_collection.find_one({'user': ctx.author.id})
-                    economy_collection.update_one({'user': ctx.author.id}, {"$inc":{'cash': -user_data['cash'], 'bank': user_data['cash']}})
+                    user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
+                    self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$inc":{'cash': -user_data['cash'], 'bank': user_data['cash']}})
                     response = discord.Embed(title = str(ctx.message.author), description = f"Deposited {int(user_data['cash'])}", colour = discord.Color.green())
                     await ctx.message.channel.send(embed=response)
                     
@@ -91,7 +86,7 @@ class Economy(commands.Cog):
     @commands.cooldown(1, 3600, commands.BucketType.user)  
     async def work(self, ctx):
         rand_val = random.randint(50,200)
-        economy_collection.update_one({'user': ctx.author.id}, {"$inc": {'cash': rand_val}})
+        self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$inc": {'cash': rand_val}})
         response = discord.Embed(title=str(ctx.message.author), description=f"You earned {rand_val}", colour=discord.Colour.green())
         return await ctx.message.channel.send(embed=response)
 
@@ -106,12 +101,12 @@ class Economy(commands.Cog):
         winning_odds=[1,2,3,4,5,6]
         if random.randint(1,10) in winning_odds:
             rand_val = random.randint(60,200)
-            economy_collection.update({'user': ctx.author.id}, {"$inc": {'cash': rand_val}})
+            self.bot.economy_collection.update({'user': ctx.author.id}, {"$inc": {'cash': rand_val}})
             response = discord.Embed(title=str(ctx.message.author), description=f"You whored out and earned {rand_val}!", colour=discord.Colour.green())
         
         else:
             rand_val = random.randint(60,200)
-            economy_collection.update({'user': ctx.author.id}, {"$inc": {'cash': -rand_val}})
+            self.bot.economy_collection.update({'user': ctx.author.id}, {"$inc": {'cash': -rand_val}})
             response = discord.Embed(title=str(ctx.message.author),description=f"You hooked up with a psychopath lost {rand_val}!",colour=discord.Colour.red())
         return await ctx.message.channel.send(embed=response)
     
@@ -126,11 +121,11 @@ class Economy(commands.Cog):
         winning_odds=[1,2,3,4]
         if random.randint(1,10) in winning_odds:
             rand_val = random.randint(150,400)
-            economy_collection.update({'user': ctx.author.id}, {"$inc": {'cash': rand_val}})
+            self.bot.economy_collection.update({'user': ctx.author.id}, {"$inc": {'cash': rand_val}})
             response = discord.Embed(title=str(ctx.author), description=f"You successfuly commited crime and earned {rand_val}!", colour=discord.Colour.green())
         else:
             rand_val = random.randint(150,250)
-            economy_collection.update({'user': ctx.author.id}, {"$inc": {'cash': -rand_val}})
+            self.bot.economy_collection.update({'user': ctx.author.id}, {"$inc": {'cash': -rand_val}})
             response = discord.Embed(title=str(ctx.author), description=f"You got caught and were fined {rand_val}!", colour=discord.Colour.red())
         return await ctx.send(embed=response)
 
@@ -141,7 +136,7 @@ class Economy(commands.Cog):
 
     @commands.command(name="leaderboard", aliases=["top","lb"])   
     async def leaderboard(self,ctx):
-        leaderboard_data = list(economy_collection.find())
+        leaderboard_data = list(self.bot.economy_collection.find())
         #Bubble sort inefficient.
         for i in range(0,len(leaderboard_data)):
             for j in range(0,len(leaderboard_data) - 1 - i):
@@ -160,21 +155,21 @@ class Economy(commands.Cog):
     @commands.command(name="get-loan", aliases=["gl"])    
     async def loan(self,ctx,loan_val:int):
         
-        user_data = economy_collection.find_one({'user': ctx.author.id})
+        user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
         if loan_val < user_data['bank'] * 2 and user_data["debt"] == 0:
             response = discord.Embed(title=str(ctx.message.author), description=f"You took a loan of {loan_val}!", colour=discord.Colour.red()) 
 
             user_data['debt'] += (loan_val + int(loan_val * 0.05))
             user_data['bank'] += loan_val
             
-            economy_collection.update_one({'user': ctx.author.id}, {"$set":user_data})              
+            self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set":user_data})              
             if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
 
             await asyncio.sleep(64800)           
                                    #checks if debt has been repaid, if not sends reminder
                                    #Search for a better option than asyncio.sleep
 
-            user_data = economy_collection.find_one({'user': ctx.author.id})
+            user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
             if user_data['debt'] != 0:                      
                 await ctx.message.author.send("You're about to default on your loan")
             else:
@@ -182,11 +177,11 @@ class Economy(commands.Cog):
             
             await asyncio.sleep(21600)
 
-            user_data = economy_collection.find_one({'user': ctx.author.id})
+            user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
             if user_data['debt'] != 0:
                 user_data['debt'] = 0
                 user_data['cash'] -= (loan_val + int(loan_val * 0.1))
-                economy_collection.update_one({'user': ctx.author.id}, {"$set": user_data})
+                self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": user_data})
                 await ctx.message.author.send(f"poopi you messed up big time")
         else:
             await ctx.message.channel.send("You cannot take a loan greater than twice your current balance / you have an unpaid loan, repay it and try again.")
@@ -194,12 +189,12 @@ class Economy(commands.Cog):
 
     @commands.command(name="repay-loan", aliases=["rl"])
     async def repay_loan(self, ctx):
-        user_data = economy_collection.find_one({'user': ctx.author.id})
+        user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
         if user_data['debt'] > 0:
             if user_data['cash'] >= user_data['debt']:
                 user_data['cash'] -= user_data['debt']
                 user_data['debt'] = 0
-                economy_collection.update_one({'user': ctx.author.id},{"$set": user_data})
+                self.bot.economy_collection.update_one({'user': ctx.author.id},{"$set": user_data})
                 response = discord.Embed(title=ctx.author.id, description=f"You've paid off your debt!", colour=discord.Color.green())
                 return await ctx.send(embed=response)
             else:
@@ -219,7 +214,7 @@ class Economy(commands.Cog):
 
     @commands.command(name='shop')
     async def shop(self, ctx):
-        shop_data = store_collection.find()
+        shop_data = self.bot.store_collection.find()
         response = discord.Embed(title="Shop", description="All available items")
 
         for i in shop_data:
@@ -229,20 +224,20 @@ class Economy(commands.Cog):
 
     @commands.command(name="buy")                        #IMPORTANT!! - For items that should have unlimited stock, use stock value as None in store_data collection.
     async def buy(self, ctx, number: int, *, item: str):         
-        store_data = store_collection.find_one({'name': item.lower().capitalize()})
-        user_data = economy_collection.find_one({'user': ctx.author.id})
+        store_data = self.bot.store_collection.find_one({'name': item.lower().capitalize()})
+        user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
 
         if user_data['cash'] >= (number * store_data['price']):
             if store_data['stock'] is not None:
                 if store_data['stock'] >= number:
                     user_data['cash'] -= (number * store_data['price'])
                     store_data['stock'] -= number
-                    store_collection.update_one({'name': item.lower().capitalize()}, {"$set": store_data})
+                    self.bot.store_collection.update_one({'name': item.lower().capitalize()}, {"$set": store_data})
                     try:
                         user_data["inv"][item.lower()] += number
                     except KeyError:
                         user_data["inv"][item.lower()] = number
-                    economy_collection.update_one({'user': ctx.author.id}, {"$set": user_data})
+                    self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": user_data})
                     response = discord.Embed(title=str(ctx.author), description=f"You bought {number} {item}s!", colour=discord.Color.green())      
                     return await ctx.send(embed=response)
                 else:
@@ -253,7 +248,7 @@ class Economy(commands.Cog):
                     user_data["inv"][item.lower()] += number
                 except KeyError:
                     user_data["inv"][item.lower()] = number
-                economy_collection.update_one({'user': ctx.author.id}, {"$set": user_data})
+                self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": user_data})
                 response = discord.Embed(title=str(ctx.author), description=f"You bought {number} {item}s!", colour=discord.Color.green())
                 return await ctx.send(embed=response)
         else:
@@ -261,19 +256,19 @@ class Economy(commands.Cog):
 
     @commands.command(name="sell")
     async def sell(self, ctx, n:int, item:str):
-        store = store_collection.find_one({'name': item.lower().capitalize()})
-        sell_data = economy_collection.find_one({'user': ctx.author.id})
+        store = self.bot.store_collection.find_one({'name': item.lower().capitalize()})
+        sell_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
         
         sell_data["inv"][item.lower()] -= n
         sell_data['cash'] += (store['price'] * n)
-        economy_collection.update_one({'user': ctx.author.id}, {"$set": sell_data})
+        self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": sell_data})
 
         response = discord.Embed(title=f"{str(ctx.message.author)}", description=f"You sold {n} {item}s for {store['price'] * n}")
         return await ctx.send(embed=response)
 
     @commands.command(name='givemoney')
     async def givemoney(self, ctx, person: typing.Union[discord.Member, str], amount: int):
-        sender = economy_collection.find_one({'user': ctx.author.id})
+        sender = self.bot.economy_collection.find_one({'user': ctx.author.id})
         reciever = self.get_user_dict(ctx, person)
 
         if isinstance(person, str):
@@ -286,8 +281,8 @@ class Economy(commands.Cog):
             if sender['cash'] >= amount:
                 sender['cash'] -= amount
                 reciever['cash'] += amount
-                economy_collection.update_one({'user': ctx.author.id}, {"$set": sender})
-                economy_collection.update_one({'user': person.id}, {"$set": reciever})
+                self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": sender})
+                self.bot.economy_collection.update_one({'user': person.id}, {"$set": reciever})
                 response = discord.Embed(title='Money Transfer: ', description=f"{ctx.author.mention} transferred {int(amount)} to {person.mention}")
             else:
                 response = discord.Embed(title='Money Transfer: ', description=f"You don't have enough money on hand.")
@@ -296,13 +291,19 @@ class Economy(commands.Cog):
     @commands.command(name="rob")
     @commands.cooldown(1, 3600, commands.BucketType.user)
     async def rob(self, ctx, person: typing.Union[discord.Member, str]):
-        robber = economy_collection.find_one({'user': ctx.author.id})
+        robber = self.bot.economy_collection.find_one({'user': ctx.author.id})
         victim = self.get_user_dict(ctx, person)
 
         if isinstance(person, str):
             try:
-                person = [member for member in ctx.guild.members if member.name.lower()==person.lower() or member.nick.lower()==person.lower()][0]
-            except IndexError:
+                for member in ctx.guild.members:
+                    if person.lower() == member.name.lower():
+                        person = member
+                    else:
+                        if member.nick is not None:
+                            if person.lower() in member.nick.lower():
+                                person = member
+            except:
                 await ctx.send("Person not found 😔")
                 ctx.command.reset_cooldown(ctx)      #should fix issue of faulty cooldown trigger
                 return
@@ -317,13 +318,13 @@ class Economy(commands.Cog):
                 victim['cash'] -= win_amount
                 robber['cash'] += win_amount
                 response = discord.Embed(title=str(ctx.author), description=f"You robbed {win_amount} from {str(person)}", colour=discord.Color.green())
-                economy_collection.update_one({'user': ctx.author.id}, {"$set": robber})
-                economy_collection.update_one({'user': person.id}, {"$set": victim})
+                self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": robber})
+                self.bot.economy_collection.update_one({'user': person.id}, {"$set": victim})
                 return await ctx.send(embed=response)
             else:
                 fine_amount = random.randint(75, 200)
                 robber['cash'] -= fine_amount
-                economy_collection.update_one({'user': ctx.author.id}, {"$set": robber})
+                self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": robber})
                 response = discord.Embed(title=str(ctx.message.author), description=f"You were caught robbing, and fined {fine_amount}", colour=discord.Color.red())
                 return await ctx.send(embed=response)
         else:
@@ -333,17 +334,18 @@ class Economy(commands.Cog):
     @rob.error
     async def rob_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
-            await ctx.message.channel.send(f"Time remaining = {int(error.retry_after//60)} mins and {int(error.retry_after)-(int(error.retry_after//60))*60} seconds")
+            return await ctx.message.channel.send(f"Time remaining = {int(error.retry_after//60)} mins and {int(error.retry_after)-(int(error.retry_after//60))*60} seconds")
+        ctx.command.reset_cooldown(ctx)
     
     @commands.command(name="use-item", aliases=["useitem"])
     async def use_item(self, ctx, item):
-        user_data = economy_collection.find_one({'user': ctx.author.id})
-        store_data = store_collection.find_one({'name': item})
+        user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
+        store_data = self.bot.store_collection.find_one({'name': item})
         role_get = store_data['role']
         for i in user_data["inv"]:
             if item.lower() in i.keys():
                 i[item.lower()] -= 1
-        economy_collection.update_one({'user': ctx.author.id},{"$set": user_data})
+        self.bot.economy_collection.update_one({'user': ctx.author.id},{"$set": user_data})
         
         if role_get != None:
             role = discord.utils.get(ctx.guild.roles, name = role_get)
