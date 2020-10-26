@@ -17,7 +17,7 @@ class Notes(commands.Cog):
         current = self.bot.notes_collection.find_one({"user": ctx.author.id})
         if current is None: current = "\n"
         else: current = current["notes"]
-        self.notes_collection.update_one({"user":ctx.author.id},{"$set":{"notes":current + content + "\n"}}, upsert=True)
+        self.bot.notes_collection.update_one({"user":ctx.author.id},{"$set":{"notes":current + content + "\n"}}, upsert=True)
         await ctx.send("Added to notes. Do ``.notes return`` to get everything stored.")
 
     @notes.command(name="return", aliases=["-r"])
