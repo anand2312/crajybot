@@ -128,7 +128,7 @@ async def popi(ctx):
     response.set_footer(text=f"Ping- {bot.latency * 1000} ms")
     if ctx.channel.name in channels_available: await ctx.send(embed=response)
 
-@commands.command()
+@bot.command()
 @commands.has_any_role("Bot Dev")
 async def load(ctx, extension):
     try:
@@ -138,7 +138,7 @@ async def load(ctx, extension):
         response = discord.Embed(title=f"{extension} cog load failed", description=str(e), color=discord.Color.red())
     await ctx.send(embed=response)
 
-@commands.command()
+@bot.command()
 @commands.has_any_role("Bot Dev")
 async def unload(ctx, extension):
     bot.unload_extension(f"cogs.{extension}")
