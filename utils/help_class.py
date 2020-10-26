@@ -42,7 +42,7 @@ class HelpCommand(commands.HelpCommand):
                               description=f"{group.help} \n **Usage** `{self.get_command_signature(group)}`",
                               color=discord.Color.blue())
         for cmd in group.commands:
-            embed.add_field(name=cmd.name, description=f"**Usage** `{self.get_command_signature(cmd)}`")
+            embed.add_field(name=cmd.name if cmd.name is not None else group.name, value=f"**Usage** `{self.get_command_signature(cmd)}`", inline=False)
     
         await ctx.send(embed=embed)
 
