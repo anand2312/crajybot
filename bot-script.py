@@ -182,7 +182,7 @@ async def colorloop_before():
 
 @tasks.loop(hours=24)
 async def birthday_loop():
-    data = bday_collection.find()
+    data = bot.bday_collection.find()
     tz_oman = pytz.timezone("Asia/Dubai")
     for person in data:
         if person['date'].strftime("%d-%B") == datetime.datetime.now(tz_oman).strftime('%d-%B'):
