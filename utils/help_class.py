@@ -41,17 +41,20 @@ class HelpCommand(commands.HelpCommand):
         embed = discord.Embed(title=f"Group - {group.name}",
                               description=f"{group.help} \n **Usage** `{self.get_command_signature(group)}`",
                               color=discord.Color.blue())
+        for cmd in group.commands:
+            embed.add_field(name=cmd.name, description=f"**Usage** `{self.get_command_signature(cmd)}`")
+    
         await ctx.send(embed=embed)
 
     async def send_command_help(self, command):
         ctx = self.context
         if command.root_parent is None:
             embed = discord.Embed(title=f"Help - {command.name}",
-                                  description=f"{command.help} \n **Usage** `{self.get_command_signature(command)}` \n **Aliases** `{', '.join(self.command.aliases)}`",
+                                  description=f"{command.help} \n **Usage** `{self.get_command_signature(command)}` \n **Aliases** `{', '.join(command.aliases)}`",
                                   color=discord.Color.blue())
         else:
             embed = discord.Embed(title=f"Help - {command.name}",
-                                  description=f"{command.help} \n **Usage** `{self.get_command_signature(command)}` \n **Aliases** `{', '.join(self.command.aliases)}`",
+                                  description=f"{command.help} \n **Usage** `{self.get_command_signature(command)}` \n **Aliases** `{', '.join(command.aliases)}`",
                                   color=discord.Color.blue())
             embed.set_footer(text=f"This command is part of the {command.root_parent.name} group.")
 
