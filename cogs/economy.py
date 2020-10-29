@@ -163,7 +163,7 @@ class Economy(commands.Cog):
             user_data['bank'] += loan_val
             
             self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set":user_data})              
-            if ctx.message.channel.name in channels_available: await ctx.message.channel.send(content=None,embed=response)
+            await ctx.send(embed=response)
 
             await asyncio.sleep(64800)           
                                    #checks if debt has been repaid, if not sends reminder
