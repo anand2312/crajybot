@@ -162,12 +162,84 @@ class Moderator(commands.Cog):
 
         await self.git_helper_webhook.send(username="Crajy Helper", embed=embed)
 
-    @commands.command(name="bruh-id")
-    async def bruh_id(self, ctx):
-        for i in self.bot.notes_collection.find():
-            user = discord.utils.get(ctx.guild.members, name=i['user'].split("#")[0])
-            self.bot.notes_collection.update_one({"user": i['user']}, {"$set": {'user': user.id}})
-            await ctx.send(f"Updated record for {user.nick}")
+    @commands.command(name="query", aliases=["db"])
+    async def mongo_query(self, ctx, collection: str, operation: str, _filter: str='{}', _update: str='{}', *, kwargs=""):
+        #parsing flags to be passed as kwargs. a flag should start with double dashes --
+        #and the name of the kwarg to be used, with the value after an =. For eg; --upsert=True
+        #multiple kwargs to be separated by spaces
+
+        collections = dict(
+            economy=self.bot.economy_collection,
+            store=self.bot.store_collection, 
+            games=self.bot.games_leaderboard,
+            stupid=self.bot.stupid_collection,
+            bday=self.bot.bday_collection,
+            pins=self.bot.pins_collection,
+            role=self.bot.role_names_collection
+        )
+
+        # parsing collection on which operation has to be run
+        for i in collections:
+            if i in collection.lower():
+                collection = collections[i]
+                break
+        else:
+            raise TypeError(
+        "Specified collection not found. Collections available are - "
+        "1. Economy\n"
+        "2. Store\n"
+        "3. Games\n"
+        "4. Stupid\n"
+        "5. Bday\n"
+        "6. Pins\n"
+        "7. Role"
+        )
+
+
+        kwarg_dict = {}
+        # parsing flags to kwargs
+        for kwarg in kwargs.split():
+            key, value = kwarg.split("=")
+            key = key.strip("--")
+            kwarg_dict[key] = bool(value)
+
+        _filter = eval(_filter)
+        _update = eval(_update)
+        operation = operation.lower()
+
+        embed = discord.Embed(title="Database Query", color=discord.Color.green())
+
+        if operation == "find":
+            data = collection.find(_filter)
+            out = ""
+            for i in data:
+                out += str(i) + "\n"
+            embed.description = f"```sql\n{out}\n```"
+            return await ctx.send(embed=embed)
+        elif operation == "find_one":
+            data = collection.find_one(_filter)
+            embed.description = f"```sql\n{data}\n```"
+            return await ctx.send(embed=embed)
+        elif operation == "update":
+            data = collection.update_many(_filter, _update, **kwarg_dict)
+            matched = data.matched_count
+            updated = data.modified_count
+            embed.description = f"```sql\nQuery OK; {{matched: {matched}, updated: {updated}}}\n```"
+            return await ctx.send(embed=embed)
+        elif operation == "delete":
+            data = collection.delete_many(_filter, **kwarg_dict)
+            matched = data.matched_count
+            deleted = data.deleted_count
+            embed.description = f"```sql\nQuery OK; {{matched: {matched}, deleted: {deleted}}}\n```"
+            return await ctx.send(embed=embed)
+    
+    @mongo_query.error
+    async def query_error(self, ctx, error):
+        embed = discord.Embed(title="Query Error", color=discord.Color.red())
+        embed.description = str(error)
+        await ctx.send(embed=embed)
+        raise error
+
     
 def setup(bot):
     bot.add_cog(Moderator(bot))

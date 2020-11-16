@@ -156,6 +156,7 @@ class stupid(commands.Cog):
         out = ""
         for i in self.bot.stupid_collection.find():
             out += i["key"] + "\n"
+        out += f"**Total**: {i}"
         await ctx.send(out)
 
     @wat.command(name="search", aliases=["-s"])
