@@ -124,7 +124,7 @@ async def on_member_join(member):
 @bot.event
 async def on_command_error(ctx, error):
     embed = discord.Embed(title="Command errored", color=discord.Color.red())
-    description = str(error)
+    embed.description = str(error)
     return await ctx.send(embed=embed)
 
 @bot.command(name='popi')
