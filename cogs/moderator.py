@@ -229,9 +229,8 @@ class Moderator(commands.Cog):
             return await ctx.send(embed=embed)
         elif operation == "delete":
             data = collection.delete_many(_filter, **kwarg_dict)
-            matched = data.matched_count
             deleted = data.deleted_count
-            embed.description = f"```sql\nQuery OK; {{matched: {matched}, deleted: {deleted}}}\n```"
+            embed.description = f"```sql\nQuery OK; {{deleted: {deleted}}}\n```"
             return await ctx.send(embed=embed)
     
     @mongo_query.error

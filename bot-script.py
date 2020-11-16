@@ -121,6 +121,12 @@ async def on_member_join(member):
     else:
         return
 
+@bot.event
+async def on_command_error(ctx, error):
+    embed = discord.Embed(title="Command errored", color=discord.Color.red())
+    description = str(error)
+    return await ctx.send(embed=embed)
+
 @bot.command(name='popi')
 async def popi(ctx):
     reply = random.choice(["poopi really do be poopie though",f"{ctx.author.mention} is a poopie?oh no......"]) #Choice chooses 1 object from the list
