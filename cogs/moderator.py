@@ -165,7 +165,7 @@ class Moderator(commands.Cog):
         await self.git_helper_webhook.send(username="Crajy Helper", embed=embed)
 
     @commands.command(name="query", aliases=["db"])
-    @deco.eval_safe
+    # @deco.eval_safe
     async def mongo_query(self, ctx, collection: str, operation: str, _filter: str='{}', _update: str='{}', *, kwargs=""):
         #parsing flags to be passed as kwargs. a flag should start with double dashes --
         #and the name of the kwarg to be used, with the value after an =. For eg; --upsert=True
