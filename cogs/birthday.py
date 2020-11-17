@@ -13,7 +13,7 @@ class Birthday(commands.Cog):
     async def bday(self, ctx, person: discord.Member=None):
         if person is None:
             person = ctx.author
-        date = self.bot.bday_collection.find_one({"user": person.id})
+        date = self.bot.bday_collection.find_one({"user": int(person.id)})
         await ctx.send(embed=discord.Embed(title=f"{person.nick}'s birthday", description=f"{date['date'].strftime('%d %B %Y')}", color=discord.Color.blurple()))
         
 
@@ -29,7 +29,7 @@ class Birthday(commands.Cog):
         reply = await self.bot.wait_for('message', check=check, timeout=30)
         date_vals = list(map(int, reply.content.split("-")))
 
-        self.bot.bday_collection.update_one({'user': person.id}, {'$set': {'date':datetime.datetime(date_vals[2], date_vals[1], date_vals[0])}}, upsert=True)
+        self.bot.bday_collection.update_one({'user': int(person.id)}, {'$set': {'date':datetime.datetime(date_vals[2], date_vals[1], date_vals[0])}}, upsert=True)
 
         await ctx.send(f"Added {person.nick}'s birthday to the database. He shall be wished 😔")
 

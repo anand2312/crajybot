@@ -245,8 +245,12 @@ class Moderator(commands.Cog):
     @commands.command(name="bday-id")
     async def bday_id(self, ctx):
         for i in self.bot.bday_collection.find():
-            obj = discord.utils.get(ctx.guild.members, name=i['user'].split("#")[0])
-            self.bot.bday_collection.update_one({'user':i['user']}, {'$set': {'user': obj.id}})
+            try:
+                obj = discord.utils.get(ctx.guild.members, name=i['user'].split("#")[0])
+                self.bot.bday_collection.update_one({'user':i['user']}, {'$set': {'user': obj.id}})
+            except:
+                continue
+            
             await ctx.send(f"Birthday collection updated for: {i['user']}")
     
 def setup(bot):
