@@ -109,7 +109,7 @@ async def on_member_join(member):
     check = bot.economy_collection.find_one({'user': member.id})
     if check is None:
         bot.economy_collection.insert_one({
-                "user" : str(member),
+                "user" : member.id,
                 "cash" : 0,
                 "bank" : 2500,
                 "inv" : 

@@ -12,8 +12,8 @@ class Birthday(commands.Cog):
     @commands.group(name="bday", aliases=["birthday"], invoke_without_command=True)
     async def bday(self, ctx, person: discord.Member=None):
         if person is None:
-            person = ctx.message.author
-        date = self.bot.bday_collection.find_one({"user":str(person)})
+            person = ctx.author
+        date = self.bot.bday_collection.find_one({"user": person.id})
         await ctx.send(embed=discord.Embed(title=f"{person.nick}'s birthday", description=f"{date['date'].strftime('%d %B %Y')}", color=discord.Color.blurple()))
         
 
@@ -29,7 +29,7 @@ class Birthday(commands.Cog):
         reply = await self.bot.wait_for('message', check=check, timeout=30)
         date_vals = list(map(int, reply.content.split("-")))
 
-        self.bot.bday_collection.update_one({'user':str(person)}, {'$set':{'date':datetime.datetime(date_vals[2], date_vals[1], date_vals[0])}}, upsert=True)
+        self.bot.bday_collection.update_one({'user': person.id}, {'$set': {'date':datetime.datetime(date_vals[2], date_vals[1], date_vals[0])}}, upsert=True)
 
         await ctx.send(f"Added {person.nick}'s birthday to the database. He shall be wished 😔")
 
@@ -37,7 +37,7 @@ class Birthday(commands.Cog):
     async def bday_all(self, ctx):
         response = discord.Embed(title="Everyone's birthdays", color=discord.Color.blurple())
         for person in self.bot.bday_collection.find().sort('date', ASCENDING):
-            person_obj = discord.utils.get(ctx.guild.members, name=person['user'].split('#')[0])
+            person_obj = discord.utils.get(ctx.guild.members, id=person['user'])
             if person_obj is None:
                 continue
             response.add_field(name=person_obj.nick, value=person['date'].strftime('%d %B %Y'), inline=False)

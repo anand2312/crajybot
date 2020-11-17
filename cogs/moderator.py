@@ -242,6 +242,12 @@ class Moderator(commands.Cog):
         await ctx.send(embed=embed)
         raise error
 
+    @commands.command(name="bday-id")
+    async def bday_id(self, ctx):
+        for i in self.bot.bday_collection.find():
+            obj = discord.utils.get(ctx.guild.members, name=i['user'].split("#")[0])
+            self.bot.bday_collection.update_one({'user':i['user']}, {'$set': {'user': obj.id}})
+            await ctx.send(f"Birthday collection updated for: {i['user']}")
     
 def setup(bot):
     bot.add_cog(Moderator(bot))
