@@ -12,6 +12,7 @@ import git
 from pymongo import MongoClient
 
 from secret.TOKEN import GIT_HELPER
+import utils.decorators as deco
 
 channels_available = ["bot-test","botspam-v2","botspam"]
 
@@ -163,6 +164,7 @@ class Moderator(commands.Cog):
 
         await self.git_helper_webhook.send(username="Crajy Helper", embed=embed)
 
+    @deco.eval_safe
     @commands.command(name="query", aliases=["db"])
     async def mongo_query(self, ctx, collection: str, operation: str, _filter: str='{}', _update: str='{}', *, kwargs=""):
         #parsing flags to be passed as kwargs. a flag should start with double dashes --

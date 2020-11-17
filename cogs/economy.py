@@ -137,14 +137,8 @@ class Economy(commands.Cog):
     @commands.command(name="leaderboard", aliases=["top","lb"])   
     async def leaderboard(self,ctx):
         leaderboard_data = list(self.bot.economy_collection.find())
-        #Bubble sort inefficient.
-        for i in range(0,len(leaderboard_data)):
-            for j in range(0,len(leaderboard_data) - 1 - i):
-                if leaderboard_data[j]["bank"] + leaderboard_data[j]["cash"] > leaderboard_data[j + 1]["bank"] + leaderboard_data[j + 1]["cash"]:
-                    leaderboard_data[j],leaderboard_data[j+1] = leaderboard_data[j+1],leaderboard_data[j]
-
-        leaderboard_data.reverse()
-
+        key = lambda x: x["bank"] + x["cash"] - x["debt"]
+        lb_data = sorted(leaderboard_data, key=key, reverse=True)
         response = discord.Embed(title="Crajy Leaderboard", description="")
         for i in leaderboard_data:
             person = ctx.guild.get_member(i['user'])
@@ -154,7 +148,6 @@ class Economy(commands.Cog):
 
     @commands.command(name="get-loan", aliases=["gl"])    
     async def loan(self,ctx,loan_val:int):
-        
         user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
         if loan_val < user_data['bank'] * 2 and user_data["debt"] == 0:
             response = discord.Embed(title=str(ctx.message.author), description=f"You took a loan of {loan_val}!", colour=discord.Colour.red()) 
