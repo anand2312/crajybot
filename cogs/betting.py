@@ -2,8 +2,6 @@ import discord
 from discord.ext import commands
 import random
 import asyncio
-from pymongo import MongoClient
-#do whatever imports you need; I've just done a few which I could think of
 
 class Betting(commands.Cog):
     def __init__(self, bot):

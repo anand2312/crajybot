@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands, tasks
 import disputils
 
-from pymongo import MongoClient, ASCENDING
+from pymongo import ASCENDING
 from aiohttp import ClientSession
 
 from typing import Optional, Union

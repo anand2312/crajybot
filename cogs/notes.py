@@ -1,7 +1,5 @@
 import discord
 from discord.ext import commands
-from pymongo import MongoClient
-
 
 class Notes(commands.Cog):
     def __init__(self, bot):

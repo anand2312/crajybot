@@ -1,8 +1,6 @@
 import discord
 from discord.ext import commands
 
-from pymongo import MongoClient
-
 from contextlib import suppress
 
 import typing
@@ -140,10 +138,10 @@ class Economy(commands.Cog):
         key = lambda x: x["bank"] + x["cash"] - x["debt"]
         lb_data = sorted(leaderboard_data, key=key, reverse=True)
         response = discord.Embed(title="Crajy Leaderboard", description="")
-        for i in leaderboard_data:
+        for i in lb_data:
             person = ctx.guild.get_member(i['user'])
             with suppress(AttributeError):
-                response.add_field(name=f"{leaderboard_data.index(i)+1}. {person.nick if person.nick is not None else person.name}", value=f"Balance {i['bank'] + i['cash']}", inline=False)
+                response.add_field(name=f"{lb_data.index(i)+1}. {person.nick if person.nick is not None else person.name}", value=f"Balance {i['bank'] + i['cash']}", inline=False)
         return await ctx.send(embed=response)
 
     @commands.command(name="get-loan", aliases=["gl"])    

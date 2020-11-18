@@ -9,8 +9,6 @@ import asyncio
 import typing
 import git
 
-from pymongo import MongoClient
-
 from secret.TOKEN import GIT_HELPER
 import utils.decorators as deco
 
