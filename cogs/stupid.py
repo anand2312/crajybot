@@ -68,7 +68,7 @@ class stupid(commands.Cog):
         else:
             querystring = {"fname":str(fname),"sname":str(sname)}
         async with ctx.channel.typing():
-            async with self.bot.session.get(love_url, headers = love_headers, params=querystring) as response:
+            async with self.bot.session.get(love_url, headers=love_headers, params=querystring) as response:
                 percent = await response.json()
                 percent = percent["percentage"]
                 result = await response.json()
