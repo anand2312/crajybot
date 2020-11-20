@@ -8,7 +8,7 @@ class Minecraft(commands.Cog):
         self.bot = bot
         self.running = False
 
-    @commands.has_permissions(administrator=True)
+    #@commands.has_permissions(administrator=True)
     @commands.cooldown(1, 600, commands.BucketType.guild)
     @commands.command(name="start-server", aliases=["startserver"])
     async def start_server(self, ctx):
@@ -20,7 +20,7 @@ class Minecraft(commands.Cog):
                 await ctx.send("Server startup sequence triggered.")
             self.running = True
 
-    @commands.has_permissions(administrator=True)
+    #@commands.has_permissions(administrator=True)
     @commands.cooldown(1, 600, commands.BucketType.guild)
     @commands.command(name="stop-server", aliases=["stopserver"])
     async def stop_server(self, ctx):
