@@ -27,7 +27,7 @@ class Minecraft(commands.Cog):
             cur_time = time.time()
             diff = (cur_time - self.init_time) // 60
             if diff < 6:          # applies a 6 minute cooldown on startup command after a shutdown
-                return await ctx.send(f"You're trying to shut the server down too quick. Time since shutdown sequence ~{diff} mins")
+                return await ctx.send(f"You're trying to start the server back up too quick. Time since last shutdown sequence ~{diff} mins")
         else:
             if not ctx.author.guild_permissions.administrator:
                 return await ctx.send("Sneaky.")
