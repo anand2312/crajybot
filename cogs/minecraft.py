@@ -23,13 +23,16 @@ class Minecraft(commands.Cog):
     async def start_server(self, ctx, override: str=False):
         if override != "--override":
             if self.running:
+                ctx.command.reset_cooldown(ctx)
                 return await ctx.send("Server already running! IP: 35.241.144.6")
             cur_time = time.time()
             diff = (cur_time - self.init_time) // 60
             if diff < 6:          # applies a 6 minute cooldown on startup command after a shutdown
+                ctx.command.reset_cooldown(ctx)
                 return await ctx.send(f"You're trying to start the server back up too quick. Time since last shutdown sequence ~{diff} mins")
         else:
             if not ctx.author.guild_permissions.administrator:
+                ctx.command.reset_cooldown(ctx)
                 return await ctx.send("Sneaky.")
 
         async with self.bot.session.get(START_LINK) as response:
@@ -46,20 +49,23 @@ class Minecraft(commands.Cog):
     async def stop_server(self, ctx, override: str=False):
         if override != "--override":
             if not self.running:
+                ctx.command.reset_cooldown(ctx)
                 return await ctx.send("Server is not running right now.")
             cur_time = time.time()
             diff = (cur_time - self.init_time) // 60
             if diff < 6:     # applies a 6 minute cooldown on shutdown command since start-up
+                ctx.command.reset_cooldown(ctx)
                 return await ctx.send(f"You're trying to shut the server down too quick. Time since start-up sequence ~{diff} mins")
         else:
-            cur_time = time.time()
-            diff = (cur_time - self.init_time) // 60
             if not ctx.author.guild_permissions.administrator:
+                ctx.command.reset_cooldown(ctx)
                 link = self.stupid_collection.find_one({'key':'no'})['output']
                 return await ctx.send(link)
 
         async with self.bot.session.get(STOP_LINK) as response:
             if response.status == 200:
+                cur_time = time.time()
+                diff = (cur_time - self.init_time) // 60
                 self.embed.description = f"Status Code 200. Server shutdown sequence triggered.\nServer uptime: {diff} minutes."
                 self.embed.color = discord.Color.red()
                 self.embed.timestamp = datetime.datetime.now(tz=OMAN_TZ)
