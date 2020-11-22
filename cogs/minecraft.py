@@ -70,7 +70,7 @@ class Minecraft(commands.Cog):
     @commands.command(name="uptime")
     async def uptime(self, ctx):
         diff = time.time() - self.init_time // 60
-        return await ctx.send(f"Uptime: {diff}) 
+        return await ctx.send(f"Uptime: {diff}") 
 
     @commands.command(name="server-variable-override")
     @commands.has_guild_permissions(administrator=True)
