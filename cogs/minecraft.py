@@ -59,7 +59,7 @@ class Minecraft(commands.Cog):
         else:
             if not ctx.author.guild_permissions.administrator:
                 ctx.command.reset_cooldown(ctx)
-                link = self.stupid_collection.find_one({'key':'no'})['output']
+                link = self.bot.stupid_collection.find_one({'key':'no'})['output']
                 return await ctx.send(link)
 
         async with self.bot.session.get(STOP_LINK) as response:
