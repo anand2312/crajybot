@@ -36,6 +36,7 @@ class Minecraft(commands.Cog):
             if response.status == 200:
                 self.embed.description = "Status Code 200! Server startup sequence triggered."
                 self.embed.color = discord.Color.green()
+                self.embed.timestamp = datetime.datetime.now(tz=OMAN_TZ)
                 await ctx.send(embed=self.embed)
             self.running = True
             self.init_time = time.time()
@@ -51,17 +52,25 @@ class Minecraft(commands.Cog):
             if diff < 6:     # applies a 6 minute cooldown on shutdown command since start-up
                 return await ctx.send(f"You're trying to shut the server down too quick. Time since start-up sequence ~{diff} mins")
         else:
+            cur_time = time.time()
+            diff = (cur_time - self.init_time) // 60
             if not ctx.author.guild_permissions.administrator:
                 link = self.stupid_collection.find_one({'key':'no'})['output']
                 return await ctx.send(link)
 
         async with self.bot.session.get(STOP_LINK) as response:
             if response.status == 200:
-                self.embed.description = "Status Code 200. Server shutdown sequence triggered."
+                self.embed.description = f"Status Code 200. Server shutdown sequence triggered.\nServer uptime: {diff} minutes."
                 self.embed.color = discord.Color.red()
+                self.embed.timestamp = datetime.datetime.now(tz=OMAN_TZ)
                 await ctx.send(embed=self.embed)
             self.running = False
             self.init_time = time.time()
+            
+    @commands.command(name="uptime")
+    async def uptime(self, ctx):
+        diff = time.time() - self.init_time // 60
+        return await ctx.send(f"Uptime: {diff}) 
 
     @commands.command(name="server-variable-override")
     @commands.has_guild_permissions(administrator=True)
