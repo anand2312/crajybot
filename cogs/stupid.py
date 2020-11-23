@@ -1,3 +1,4 @@
+"""Spme fun commands."""
 import discord
 from discord.ext import commands, tasks
 import disputils
@@ -32,18 +33,11 @@ love_headers = {
     'x-rapidapi-key': KEY
     }
 
-ddg_url = "https://duckduckgo-duckduckgo-zero-click-info.p.rapidapi.com/"
-
-ddg_headers =  {
-    'x-rapidapi-host': "duckduckgo-duckduckgo-zero-click-info.p.rapidapi.com",
-    'x-rapidapi-key': KEY
-    }
-
-
 class stupid(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+        # a loop that changes the name of a role, based on names saved in the database. Names are added with the `role-name` command
         self.role_name_loop.start()   
         self.qotd_cache_loop.start()
 
@@ -103,7 +97,7 @@ class stupid(commands.Cog):
         #await ctx.message.delete()
         await ctx.message.channel.send(out)
 
-    @commands.group()
+    @commands.group(aliases=['tag'], help="Tags.")
     async def wat(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send("bruh that isn't a thing.")
@@ -198,8 +192,8 @@ class stupid(commands.Cog):
 
         await ctx.send(out)
         
-    @commands.command(name="pins")
-    async def pins(self, ctx): #install disputils on VM
+    @commands.command(name="pins", help="Display the messages pinned in the bot database. Useful if your channel has already reached the 50 pin limit.")
+    async def pins(self, ctx): 
         data = self.bot.pins_collection.find()
         embeds = []
 
@@ -230,7 +224,7 @@ class stupid(commands.Cog):
         paginator = disputils.BotEmbedPaginator(ctx, embeds)
         await paginator.run()
 
-    @commands.command(name="fetch-pin", aliases=["fetchpin"])
+    @commands.command(name="fetch-pin", aliases=["fetchpin"], help="Return a pin based on the ID provided. WIP.")
     async def fetch_pin(self, ctx, identifier: Union[str, int]):
 
         if identifier.isalpha():
@@ -280,16 +274,16 @@ class stupid(commands.Cog):
         self.bot.role_names_collection.delete_one({'name': name})
         return await ctx.send(f"Removed `{name}` (if it exists in the database)")
 
-    @commands.command(name="quote", aliases=["qotd"])
+    @commands.command(name="quote", aliases=["qotd"], help="Displays a random quote.")
     async def qotd(self, ctx):
         await ctx.send(self.cached_qotd)
 
-    @commands.command(name="change-presence", aliases=["changepresence", "changestatus", "change-status"])
+    @commands.command(name="change-presence", aliases=["changepresence", "changestatus", "change-status"], help="Change the bot's status.")
     async def change_presence(self, ctx, activity: str, *, status: str):
         if activity.lower() not in ["playing", "watching", "listening", "streaming"]:
             return await ctx.send('Status has to be one of `"playing", "watching", "listening", "streaming"`')
         
-        if len(status) > 25:
+        if len(status) > 30:
             return await ctx.send("bro too long bro")
 
         if ctx.author.guild_permissions.administrator:
@@ -318,6 +312,9 @@ class stupid(commands.Cog):
 
     @tasks.loop(hours=1)
     async def qotd_cache_loop(self):
+        """The quotes.rest API has a very strict limit on number of requests that are given for free, so
+        instead of making requests everytime the command is called, this loop does the request once an hour and 
+        caches it for further use."""
         async with self.bot.session.get(r"http://quotes.rest/qod.json") as response:
             data = await response.json()
         self.cached_qotd = f"{data['contents']['quotes'][0]['quote']}\n~{data['contents']['quotes'][0]['author']}"
