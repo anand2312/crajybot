@@ -11,7 +11,7 @@ import asyncio
 import typing
 import git
 
-from secret.TOKEN import GIT_HELPER
+from secret.webhooks import GIT_HELPER
 import utils.decorators as deco
 
 channels_available = ["bot-test","botspam-v2","botspam"]

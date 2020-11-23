@@ -1,4 +1,4 @@
-"""Spme fun commands."""
+"""Some fun commands."""
 import discord
 from discord.ext import commands, tasks
 import disputils
@@ -16,7 +16,7 @@ from contextlib import suppress
 import itertools
 
 from secret.KEY import *       #rapidapi key
-from secret.TOKEN import BOTSPAM_HOOK, ANOTHERCHAT_HOOK
+from secret.webhooks import BOTSPAM_HOOK, ANOTHERCHAT_HOOK
 
 #API requests headers and URLs
 fancy_url = "https://ajith-fancy-text-v1.p.rapidapi.com/text"
