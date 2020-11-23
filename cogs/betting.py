@@ -9,7 +9,7 @@ class Betting(commands.Cog):
         self.bot = bot
 
     async def cog_check(self, ctx):
-        """"Restricts these commands to some specific channels. This is server specific, so change the list according to what you need.
+        """Restricts these commands to some specific channels. This is server specific, so change the list according to what you need.
         Or you can entirely remove this function."""
         return ctx.channel.name in ["botspam", "bot-test", "admin-botspam"]
 

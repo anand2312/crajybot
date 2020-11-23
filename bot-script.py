@@ -77,8 +77,12 @@ async def on_member_join(member):
 @bot.event
 async def on_command_error(ctx, error):
     embed = discord.Embed(title="Command errored", color=discord.Color.red())
-    embed.description = str(error)
-    return await ctx.send(embed=embed)
+    if isinstance(error, commands.CommandOnCooldown):
+        embed.description = f"Time remaining = {int(error.retry_after/60)} mins"
+        return await ctx.send(embed=embed)
+    else:
+        embed.description = str(error)
+        return await ctx.send(embed=embed)
 
 @bot.command(name='popi')
 async def popi(ctx):

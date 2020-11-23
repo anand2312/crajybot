@@ -1,3 +1,4 @@
+"""Economy commands. Pretty self explanatory."""
 import discord
 from discord.ext import commands
 
@@ -12,6 +13,8 @@ class Economy(commands.Cog):
         self.bot = bot
 
     async def cog_check(self, ctx):
+        """Restricts these commands to some specific channels. This is server specific, so change the list according to what you need.
+        Or you can entirely remove this function."""
         return ctx.channel.name in ["bot-test","botspam-v2","botspam"]
 
     def get_user_dict(self, ctx: discord.ext.commands.Context, user: typing.Union[discord.Member, str]) -> dict:
@@ -31,7 +34,9 @@ class Economy(commands.Cog):
             user_dict = self.bot.economy_collection.find_one({'user': ctx.author.id})
         return user_dict
 
-    @commands.command(name="withdraw", aliases=["with"])
+    @commands.command(name="withdraw",
+                      aliases=["with"],
+                      help="Withdraw money from your account.")
     async def withdraw(self, ctx, amount):
         try:
             amount = int(amount)
@@ -48,7 +53,9 @@ class Economy(commands.Cog):
                 response = discord.Embed(title = str(ctx.message.author), description = f"Withdrew {int(user_data['bank'])}", colour = discord.Color.green())
                 await ctx.message.channel.send(embed=response)
 
-    @commands.command(name="deposit", aliases=["dep"])
+    @commands.command(name="deposit",
+                      aliases=["dep"],
+                      help="Deposit money to your account.")
     async def deposit(self, ctx, amount):
             try:
                 amount = int(amount)
@@ -66,7 +73,9 @@ class Economy(commands.Cog):
                     response = discord.Embed(title = str(ctx.message.author), description = f"Deposited {int(user_data['cash'])}", colour = discord.Color.green())
                     await ctx.message.channel.send(embed=response)
                     
-    @commands.command(name='bal')
+    @commands.command(name='balance',
+                      aliases=["bal"],
+                      help="Displays your current bank balance.")
     async def balance(self, ctx, user: typing.Union[discord.Member, str]=None):
         if user is None: user = ctx.author
         user_dict = self.get_user_dict(ctx, user)
@@ -80,7 +89,8 @@ class Economy(commands.Cog):
 
         return await ctx.send(embed=response)
 
-    @commands.command(name='work')
+    @commands.command(name='work',
+                      help="Do work to earn some money.")
     @commands.cooldown(1, 3600, commands.BucketType.user)  
     async def work(self, ctx):
         rand_val = random.randint(50,200)
@@ -88,12 +98,8 @@ class Economy(commands.Cog):
         response = discord.Embed(title=str(ctx.message.author), description=f"You earned {rand_val}", colour=discord.Colour.green())
         return await ctx.message.channel.send(embed=response)
 
-    @work.error
-    async def work_error(self,ctx,error):             
-        if isinstance(error, commands.CommandOnCooldown):
-            await ctx.message.channel.send(f"Time remaining = {int(error.retry_after/60)} mins")
-
-    @commands.command(name='slut')
+    @commands.command(name='slut',
+                      help="Be a slut to earn that dough")
     @commands.cooldown(1, 3600, commands.BucketType.user)          
     async def slut(self, ctx):
         winning_odds=[1,2,3,4,5,6]
@@ -108,12 +114,8 @@ class Economy(commands.Cog):
             response = discord.Embed(title=str(ctx.message.author),description=f"You hooked up with a psychopath lost {rand_val}!",colour=discord.Colour.red())
         return await ctx.message.channel.send(embed=response)
     
-    @slut.error
-    async def slut_error(self,ctx,error):   
-        if isinstance(error, commands.CommandOnCooldown):
-            await ctx.message.channel.send(f"Time remaining = {int(error.retry_after/60)} mins")
-
-    @commands.command(name="crime")
+    @commands.command(name="crime",
+                      help="Commit a crime to earn money.")
     @commands.cooldown(1, 3600, commands.BucketType.user)
     async def crime(self, ctx):            
         winning_odds=[1,2,3,4]
@@ -127,13 +129,10 @@ class Economy(commands.Cog):
             response = discord.Embed(title=str(ctx.author), description=f"You got caught and were fined {rand_val}!", colour=discord.Colour.red())
         return await ctx.send(embed=response)
 
-    @crime.error
-    async def crime_error(self,ctx,error):            
-        if isinstance(error, commands.CommandOnCooldown):
-            await ctx.message.channel.send(f"Time remaining = {int(error.retry_after/60)} mins")
-
-    @commands.command(name="leaderboard", aliases=["top","lb"])   
-    async def leaderboard(self,ctx):
+    @commands.command(name="leaderboard", 
+                      aliases=["top","lb"],
+                      help="Economy leaderboard.")   
+    async def leaderboard(self, ctx):
         leaderboard_data = list(self.bot.economy_collection.find())
         key = lambda x: x["bank"] + x["cash"] - x["debt"]
         lb_data = sorted(leaderboard_data, key=key, reverse=True)
@@ -144,7 +143,10 @@ class Economy(commands.Cog):
                 response.add_field(name=f"{lb_data.index(i)+1}. {person.nick if person.nick is not None else person.name}", value=f"Balance {i['bank'] + i['cash']}", inline=False)
         return await ctx.send(embed=response)
 
-    @commands.command(name="get-loan", aliases=["gl"])    
+    @commands.command(name="get-loan", 
+                      aliases=["gl"],
+                      help="Take out a loan. Maximum amount you can take is twice your current bank balance."+
+                            r"5% interest is applied. 10% fine is applied if you don't repay the loan within 64800 second.")    
     async def loan(self,ctx,loan_val:int):
         user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
         if loan_val < user_data['bank'] * 2 and user_data["debt"] == 0:
@@ -178,7 +180,9 @@ class Economy(commands.Cog):
             await ctx.message.channel.send("You cannot take a loan greater than twice your current balance / you have an unpaid loan, repay it and try again.")
 
 
-    @commands.command(name="repay-loan", aliases=["rl"])
+    @commands.command(name="repay-loan", 
+                      aliases=["rl"],
+                      help="Repay your loan.")
     async def repay_loan(self, ctx):
         user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
         if user_data['debt'] > 0:
@@ -186,7 +190,7 @@ class Economy(commands.Cog):
                 user_data['cash'] -= user_data['debt']
                 user_data['debt'] = 0
                 self.bot.economy_collection.update_one({'user': ctx.author.id},{"$set": user_data})
-                response = discord.Embed(title=ctx.author.id, description=f"You've paid off your debt!", colour=discord.Color.green())
+                response = discord.Embed(title=ctx.author.id, description="You've paid off your debt!", colour=discord.Color.green())
                 return await ctx.send(embed=response)
             else:
                 return await ctx.send(f"You do not have enough balance to repay your debt.")
@@ -194,7 +198,9 @@ class Economy(commands.Cog):
         else:
             return await ctx.send(f"You do not have any debt")
 
-    @commands.command(name="inventory", aliases=["inv"])
+    @commands.command(name="inventory", 
+                      aliases=["inv"],
+                      help="View your inventory of items.")
     async def inventory(self, ctx, user: typing.Union[discord.Member, str]=None):
         if user is None: user = ctx.author
         user_data = self.get_user_dict(ctx, user)
@@ -203,7 +209,9 @@ class Economy(commands.Cog):
             response.add_field(name=k, value=user_data['inv'][k], inline=False)
         return await ctx.send(embed=response)
 
-    @commands.command(name='shop')
+    @commands.command(name='shop',
+                      aliases=["store"],
+                      help="View the store.")
     async def shop(self, ctx):
         shop_data = self.bot.store_collection.find()
         response = discord.Embed(title="Shop", description="All available items")
@@ -213,7 +221,8 @@ class Economy(commands.Cog):
 
         return await ctx.send(embed=response)
 
-    @commands.command(name="buy")                        #IMPORTANT!! - For items that should have unlimited stock, use stock value as None in store_data collection.
+    @commands.command(name="buy", 
+                      help="Buy an item from the shop.")                        #IMPORTANT!! - For items that should have unlimited stock, use stock value as None in store_data collection.
     async def buy(self, ctx, number: int, *, item: str):         
         store_data = self.bot.store_collection.find_one({'name': item.lower().capitalize()})
         user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
@@ -245,7 +254,8 @@ class Economy(commands.Cog):
         else:
             return await ctx.send(f"poopi you don't have enough moni {self.bot.get_emoji(703648812669075456)}")
 
-    @commands.command(name="sell")
+    @commands.command(name="sell",
+                      help="Sell an item for the current market price.")
     async def sell(self, ctx, n:int, item:str):
         store = self.bot.store_collection.find_one({'name': item.lower().capitalize()})
         sell_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
@@ -257,7 +267,9 @@ class Economy(commands.Cog):
         response = discord.Embed(title=f"{str(ctx.message.author)}", description=f"You sold {n} {item}s for {store['price'] * n}")
         return await ctx.send(embed=response)
 
-    @commands.command(name='givemoney')
+    @commands.command(name='givemoney',
+                      aliases=["donate"],
+                      help="Be a kind soul and give your friends some of your cash.")
     async def givemoney(self, ctx, person: typing.Union[discord.Member, str], amount: int):
         sender = self.bot.economy_collection.find_one({'user': ctx.author.id})
         reciever = self.get_user_dict(ctx, person)
@@ -279,7 +291,9 @@ class Economy(commands.Cog):
                 response = discord.Embed(title='Money Transfer: ', description=f"You don't have enough money on hand.")
         return await ctx.send(embed=response)
                                  
-    @commands.command(name="rob")
+    @commands.command(name="rob",
+                      aliases=["steal"],
+                      help="Rob your friends.")
     @commands.cooldown(1, 3600, commands.BucketType.user)
     async def rob(self, ctx, person: typing.Union[discord.Member, str]):
         robber = self.bot.economy_collection.find_one({'user': ctx.author.id})
@@ -329,6 +343,7 @@ class Economy(commands.Cog):
         ctx.command.reset_cooldown(ctx)
     
     @commands.command(name="use-item", aliases=["useitem"])
+    """WIP"""
     async def use_item(self, ctx, item):
         user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
         store_data = self.bot.store_collection.find_one({'name': item})
