@@ -1,3 +1,4 @@
+"""Betting games that depend on the currency from Economy cog."""
 import discord 
 from discord.ext import commands
 import random
@@ -8,9 +9,12 @@ class Betting(commands.Cog):
         self.bot = bot
 
     async def cog_check(self, ctx):
+        """"Restricts these commands to some specific channels. This is server specific, so change the list according to what you need.
+        Or you can entirely remove this function."""
         return ctx.channel.name in ["botspam", "bot-test", "admin-botspam"]
 
-    @commands.command(name = "roulette")
+    @commands.command(name="roulette",
+                      help="Starts a game of roulette.")
     async def roulette(self, ctx, amount:int, bet:str):
         user_dict = self.bot.economy_collection.find_one({'user': ctx.author.id})
 
@@ -91,15 +95,14 @@ class Betting(commands.Cog):
                     if win_number in roulette_table[bet]:
                         user_win = True
                         multiplier = 3
-                    
-                
+                         
             elif int(bet) in range(0,37):
                 win_number = random.randint(0,36)
                 user_win = False
                 user_dict['cash'] -= amount
                 self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": user_dict})
 
-                response1 = discord.Embed(title=str(ctx.message.author), description=f"You've placed a bet on {bet}.")
+                response1 = discord.Embed(title=str(ctx.author), description=f"You've placed a bet on {bet}.")
                 response1.set_footer(text=f"Please wait 10 seconds")
                 await ctx.send(embed=response1)
 
@@ -125,7 +128,9 @@ class Betting(commands.Cog):
             await ctx.send(f"bro what you trying? you don't have that much moni")
 
     
-    @commands.command(name = "reverse-russian-roulette", aliases = ["rrr"])
+    @commands.command(name="reverse-russian-roulette", 
+                      aliases=["rrr"],
+                      help="Starts a game of REVERSE Russian Roulette. Multiple people get shot, one person gets all the winnings. THIS COMMAND IS IN BETA.")
     async def russian_roulette(self, ctx, amount:int):
         response = discord.Embed(title="Russian Roulette", description=f"{str(ctx.message.author)} started a round of russian roulette for {amount}. Click on the reaction below in the next 15 seconds to join.")
         rr_message_init = await ctx.message.channel.send(embed=response)
@@ -168,8 +173,10 @@ class Betting(commands.Cog):
             self.bot.economy_collection.update_one(i, {"$set": rrr_data_full[num]})
             num += 1
         
-    @commands.command(name = "cock-fight", aliases = ["cf","cockfight"])
-    async def cockfight(self,ctx,amount:int):
+    @commands.command(name="cock-fight", 
+                      aliases=["cf","cockfight"],
+                      help="Starts a game of cock fight. User requires a chicken, to be bought from the shop.")
+    async def cockfight(self, ctx, amount:int):
         user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
         win = random.choice([True, False, False, False])
         if amount > 0 and amount <= user_data["cash"]:
