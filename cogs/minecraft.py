@@ -1,3 +1,20 @@
+"""Helper functions to help play minecraft with the homies.
+Note: These commands depend on resources from Google Cloud Platform
+    - 1 N1 VM on Compute Engine
+    - 2 Cloud Functions
+    - Extra Storage buckets for backing up world data
+
+The workflow is:
+    > start/stop server triggered from chat
+    > this makes a GET request to a URL - this URL is a trigger for the Cloud Function set up on GCP
+    > The Cloud Function triggers the VM to start up/shut down
+    > Saved startup/shutdown batch scripts run automatically, running the Minecraft server.
+
+Follow https://cloud.google.com/solutions/gaming/minecraft-server this tutorial to setup the VM, server and batch scripts.
+You can try using https://wideops.com/brick-by-brick-learn-gcp-by-setting-up-a-kid-controllable-minecraft-server/ this for the Cloud Functions.
+
+No further documentation will be provided for these commands."""
+
 import discord
 from discord.ext import commands
 
