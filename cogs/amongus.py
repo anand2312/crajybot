@@ -1,9 +1,10 @@
+"""Commands to help organize Among Us games."""
 import discord
 from discord.ext import commands
 import asyncio
 
 class AmongUs(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: discord.ext.commands.Bot):
         self.bot = bot
         self.status = False
         self.data = {"user": None, "code": None, "server": None}
@@ -11,6 +12,8 @@ class AmongUs(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        """Checks through chat and displays the current game room code, and server.
+        Responds whenever someone says 'code' or 'server' in chat."""
         if self.status is False or message.author==self.bot.user:
             return
         if "code" in message.content.lower() or "server" in message.content.lower():
@@ -18,16 +21,17 @@ class AmongUs(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
+        """Local error handler for this cog."""
         error = getattr(error, 'original', error)
         if isinstance(error, asyncio.TimeoutError):
             return await ctx.send("You took too long. Start the command again.")
-        
-        raise error
 
     @commands.group(name="among_us",
                     aliases=["amongus", "play", "among-us"],
-                    invoke_without_command=True)
+                    invoke_without_command=True,
+                    help="Command to save the room code and server when starting a new game.")
     async def among_us(self, ctx):
+        """Command to save the room code and server when starting a new game."""
         if self.status is True:
             return await ctx.send(f"{ctx.author.mention}, {self.data['user'].name} has already started a game.\nCode: ``{self.data['code']}``\nServer: ``{self.data['server']}``")
         #checks
@@ -52,8 +56,10 @@ class AmongUs(commands.Cog):
 
         await ctx.send(embed=self.embed)
 
-    @among_us.command(name="end")
+    @among_us.command(name="end",
+                      help="Command to end the game session, and have the bot stop responding to messages that contain 'code' or 'server'.")
     async def end(self, ctx):
+        """Command to end the game session, and have the bot stop responding to messages that contain 'code' or 'server'."""
         if self.status is False:
             return await ctx.send("What are you trying to end? No one is playing now.")
         
@@ -64,8 +70,10 @@ class AmongUs(commands.Cog):
 
             return await ctx.send("Game session ended ggwp") 
 
-    @among_us.command(name="update")
+    @among_us.command(name="update",
+                      help="Command to update the room code and/or server of the game.")
     async def update(self, ctx):
+        """Command to update the room code and/or server of the game."""
         if self.status is False:
             return await ctx.send("What are you trying to update? No one is playing now.")
 
