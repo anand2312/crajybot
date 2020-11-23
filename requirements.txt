@@ -1,0 +1,13 @@
+aiohttp==3.6.2
+akinator.py==4.0.1
+contextlib2==0.5.5
+discord-ext-menus==1.0.0a26+g84caae8
+discord.py==1.5.0
+disputils==0.1.3
+GitPython==3.1.9
+PyDictionary==2.0.1
+pymongo==3.10.1
+pytz==2018.9
+Random-Word==1.0.4
+requests==2.13.0
+yarl==1.4.2
