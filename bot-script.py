@@ -45,6 +45,7 @@ bot.role_names_collection = db["role"]
 @bot.event
 async def on_ready(): # sends this message when bot starts working in #bot-tests
     await bot.get_channel(BOT_ANNOUNCE_CHANNEL).send("Online!")
+    print("Bot Running!")
 
 @bot.event   
 async def on_message(message):
