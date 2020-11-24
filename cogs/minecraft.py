@@ -22,7 +22,7 @@ import datetime
 import time
 
 from secret.TOKEN import START_LINK, STOP_LINK
-from utils.timezone import OMAN_TZ
+from utils.timezone import BOT_TZ
 
 class Minecraft(commands.Cog):
     def __init__(self, bot):
@@ -56,7 +56,7 @@ class Minecraft(commands.Cog):
             if response.status == 200:
                 self.embed.description = "Status Code 200! Server startup sequence triggered."
                 self.embed.color = discord.Color.green()
-                self.embed.timestamp = datetime.datetime.now(tz=OMAN_TZ)
+                self.embed.timestamp = datetime.datetime.now(tz=BOT_TZ)
                 await ctx.send(embed=self.embed)
             self.running = True
             self.init_time = time.time()
@@ -85,7 +85,7 @@ class Minecraft(commands.Cog):
                 diff = (cur_time - self.init_time) // 60
                 self.embed.description = f"Status Code 200. Server shutdown sequence triggered.\nServer uptime: {diff} minutes."
                 self.embed.color = discord.Color.red()
-                self.embed.timestamp = datetime.datetime.now(tz=OMAN_TZ)
+                self.embed.timestamp = datetime.datetime.now(tz=BOT_TZ)
                 await ctx.send(embed=self.embed)
             self.running = False
             self.init_time = time.time()
