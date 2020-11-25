@@ -1,7 +1,9 @@
+"""BOT moderator commands. Not to be confused with server moderation commands, like muting or kicking.
+There are a gazillion bots out there that can do those functions perfectly well. These commands are for 
+control of the bot."""
 import discord 
 from discord.ext import commands
 
-import requests
 import datetime
 
 import random
@@ -9,7 +11,7 @@ import asyncio
 import typing
 import git
 
-from secret.TOKEN import GIT_HELPER
+from secret.webhooks import GIT_HELPER
 import utils.decorators as deco
 
 channels_available = ["bot-test","botspam-v2","botspam"]
@@ -20,9 +22,12 @@ class Moderator(commands.Cog):
         self.git_helper_webhook = discord.Webhook.partial(GIT_HELPER['id'], GIT_HELPER['token'], adapter=discord.AsyncWebhookAdapter(self.bot.session))
     
     async def cog_check(self, ctx):
+        """Restricts commands to administrators only"""
         return ctx.author.guild_permissions.administrator
 
-    @commands.group(name="change-money",aliases=["c-money","cm"])               
+    @commands.group(name="change-money",
+                    aliases=["c-money","cm"],
+                    help="Change a user's balance.")               
     async def change_money(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send("Invalid action.")
@@ -45,7 +50,8 @@ class Moderator(commands.Cog):
         response = discord.Embed(title = str(ctx.message.author.name), description = f"Set {amt} to {user}\'s {baltype}!" ,colour=discord.Colour.orange()) 
         await ctx.send(embed=response)
 
-    @commands.command(name="remove-user")
+    @commands.command(name="remove-user",
+                      help="Remove a user from the bot database.")
     async def remove_user(self, ctx, member: discord.Member):
         try:
             self.bot.economy_collection.delete_one({'user': member.id})
@@ -53,7 +59,9 @@ class Moderator(commands.Cog):
         except:
             await ctx.send("User not found")
 
-    @commands.group(name="change-inventory", aliases=["c-inv"])
+    @commands.group(name="change-inventory",
+                    aliases=["c-inv"],
+                    help="Edit a user's inventory.")
     async def change_inventory(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send("Invalid action.")
@@ -85,7 +93,8 @@ class Moderator(commands.Cog):
         response = discord.Embed(title=str(ctx.message.author.name), description=f"Set {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.orange())
         await ctx.send(content=None, embed=response)
 
-    @commands.group(name="edit-item", aliases=["edititem"])
+    @commands.group(name="edit-item", 
+                    aliases=["edititem"],help="Edit an item on the shop.")
     async def edit_item(self, ctx):
         if ctx.invoked_subcommand is None: return await ctx.send("Invalid action")
 
@@ -121,7 +130,7 @@ class Moderator(commands.Cog):
                 else:
                     return await ctx.send("Terminated.")
 
-    @commands.command(name="pin")
+    @commands.command(name="pin", help="Pins a message to the bot's database. Pins can be viewed with the `pins` command.")
     async def pin(self, ctx, id_: discord.Message, name_: str=None):
         old_data = self.bot.pins_collection.find().sort("_id", -1).limit(1)
         try:
@@ -143,7 +152,8 @@ class Moderator(commands.Cog):
         reply_embed.set_footer(text=f"Pinned by {ctx.author.name}", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=reply_embed)
 
-    @commands.command(name="server-update", aliases=["git-pull", "gitpull", "serverupdate"])
+    @commands.command(name="server-update",
+                      aliases=["git-pull", "gitpull", "serverupdate"],help="Run a `git pull` command on the VM the bot runs on. Used to update changes to the bot after commiting to a repository.")
     async def server_update(self, ctx):
         try:
             out = git.cmd.Git().pull(r"https://github.com/AbsoluteMadlad12/CrajyBot-private", "master")
@@ -162,7 +172,7 @@ class Moderator(commands.Cog):
 
         await self.git_helper_webhook.send(username="Crajy Helper", embed=embed)
 
-    @commands.command(name="query", aliases=["db"])
+    @commands.command(name="query", aliases=["db"], help="Query the database. Don't mess with this if you don't know what it is doing.")
     # @deco.eval_safe
     async def mongo_query(self, ctx, collection: str, operation: str, _filter: str='{}', _update: str='{}', *, kwargs=""):
         #parsing flags to be passed as kwargs. a flag should start with double dashes --
@@ -239,17 +249,6 @@ class Moderator(commands.Cog):
         embed.description = str(error)
         await ctx.send(embed=embed)
         raise error
-
-    @commands.command(name="bday-id")
-    async def bday_id(self, ctx):
-        for i in self.bot.bday_collection.find():
-            try:
-                obj = discord.utils.get(ctx.guild.members, name=i['user'].split("#")[0])
-                self.bot.bday_collection.update_one({'user':i['user']}, {'$set': {'user': obj.id}})
-            except:
-                continue
-            
-            await ctx.send(f"Birthday collection updated for: {i['user']}")
     
 def setup(bot):
     bot.add_cog(Moderator(bot))

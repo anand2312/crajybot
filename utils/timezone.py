@@ -1,3 +1,3 @@
 import pytz
 
-OMAN_TZ = pytz.timezone("Asia/Dubai")
+BOT_TZ = pytz.timezone("Asia/Dubai")

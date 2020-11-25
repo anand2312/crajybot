@@ -1,8 +1,3 @@
-"""
-Horoscopebot
-insert further documentation here, insert documentation near new functions or variables you make as well.
-
-"""
 import os
 import random
 
@@ -17,9 +12,9 @@ from pymongo import MongoClient
 
 from random import choice
 from secret.TOKEN import TOKEN
+from secret.constants import *
 from utils.help_class import HelpCommand
-from utils.timezone import OMAN_TZ
-#bot which controls everything; subclass of Client
+from utils.timezone import BOT_TZ
 
 intents = discord.Intents.default()
 intents.members = True 
@@ -28,11 +23,13 @@ bot = commands.Bot(command_prefix='.',
                    help_command=HelpCommand(),
                    intents=intents)
 
-bot.session = ClientSession()   #aiohttp clientsession
+bot.session = ClientSession()
  
-bot.mongo = MongoClient("mongodb://localhost:27017/")   #mongodb database
+bot.mongo = MongoClient(DB_CONNECTION_STRING)  
 db = bot.mongo["bot-data"]
 
+# all collections being used are made into attributes of commands.Bot so that they can be accessed easily from any cog.
+# remove any of these that you won't use. accordingly don't load the cogs that use them either.
 bot.economy_collection = db["econ_data"]
 bot.store_collection = db["store_data"]
 bot.games_leaderboard = db["games"]
@@ -41,23 +38,21 @@ bot.notes_collection = db["notes"]
 bot.bday_collection = db["bday"]
 bot.pins_collection = db["pins"]
 bot.role_names_collection = db["role"]
-
-channels_available = ["bot-test","botspam-v2","botspam"] #Channels where the bot works
-chat_money_channels = ['another-chat']
  
 @bot.event
-async def on_ready(): #sends this message when bot starts working in #bot-tests
-    await bot.get_channel(703141348131471440).send("its popi time!!")
+async def on_ready(): # sends this message when bot starts working in #bot-tests
+    await bot.get_channel(BOT_ANNOUNCE_CHANNEL).send("Online!")
+    print("Bot Running!")
 
 @bot.event   
 async def on_message(message):
-    #chat money
+    #chat money. 
     if message.author.bot: return
-    if str(message.channel) in chat_money_channels:
+    if message.channel.id in CHAT_MONEY_CHANNELS:
         bot.economy_collection.update_one({"user":message.author.id}, {"$inc": {"cash": 10}})
     await bot.process_commands(message)
 
-@bot.event    #to be tested!
+@bot.event    #adds a new user to the bot database
 async def on_member_join(member):
     check = bot.economy_collection.find_one({'user': member.id})
     if check is None:
@@ -77,18 +72,22 @@ async def on_member_join(member):
 @bot.event
 async def on_command_error(ctx, error):
     embed = discord.Embed(title="Command errored", color=discord.Color.red())
-    embed.description = str(error)
-    return await ctx.send(embed=embed)
+    if isinstance(error, commands.CommandOnCooldown):
+        embed.description = f"Time remaining = {int(error.retry_after/60)} mins"
+        return await ctx.send(embed=embed)
+    else:
+        embed.description = str(error)
+        return await ctx.send(embed=embed)
 
-@bot.command(name='popi')
+@bot.command(name='popi')   #bot ping command
 async def popi(ctx):
     reply = random.choice(["poopi really do be poopie though",f"{ctx.author.mention} is a poopie?oh no......"]) #Choice chooses 1 object from the list
     response = discord.Embed(title='popi',description=reply)
     response.set_footer(text=f"Ping- {bot.latency * 1000} ms")
     return await ctx.send(embed=response)
 
-@bot.command()
-@commands.has_any_role("Bot Dev")
+@bot.command()      
+@commands.has_any_role(*BOT_COMMANDER_ROLES)
 async def load(ctx, extension):
     try:
         bot.load_extension(f"cogs.{extension}")
@@ -98,21 +97,20 @@ async def load(ctx, extension):
     await ctx.send(embed=response)
 
 @bot.command()
-@commands.has_any_role("Bot Dev")
+@commands.has_any_role(*BOT_COMMANDER_ROLES)
 async def unload(ctx, extension):
     bot.unload_extension(f"cogs.{extension}")
     response = discord.Embed(title="Cog Unloaded", description=extension, colour=discord.Color.red())
     await ctx.send(embed=response)
 
 #TESTING AUTO PRICE CHANGE OF STOCK
-@tasks.loop(seconds =  10800)
+@tasks.loop(hours=3)
 async def stock_price():
     rand_sign = random.choice(["+","-"])
     if rand_sign == "+": rand_val = random.randint(1,6)
     else: rand_val = -random.randint(1,6)
     stock_data = bot.store_collection.find_one({'name':'Stock'})
     new_price = stock_data['price'] + rand_val
-
     bot.store_collection.update_one({'name': 'Stock'}, {"$inc": {"price": rand_val}})
     await message_channel.send(f"Stock price : {new_price}")
 
@@ -120,25 +118,13 @@ async def stock_price():
 async def stock_price_before():
     global message_channel
     await bot.wait_until_ready()
-    message_channel = bot.get_channel(704911379341115433)
-
-@tasks.loop(seconds=600)
-async def color_loop():
-    role = guild.get_role(740456742684459041)
-    colors = [discord.Color.green(), discord.Color.red(), discord.Color.blurple(), discord.Color.blue(), discord.Color.teal(), discord.Colour.magenta()]
-    await role.edit(colour=random.choice(colors))
-
-@color_loop.before_loop
-async def colorloop_before():
-    global guild
-    await bot.wait_until_ready()
-    guild = bot.get_guild(298871492924669954)
+    message_channel = bot.get_channel(BOT_ANNOUNCE_CHANNEL)
 
 @tasks.loop(hours=24)
 async def birthday_loop():
     data = bot.bday_collection.find()
     for person in data:
-        if person['date'].strftime("%d-%B") == datetime.datetime.now(OMAN_TZ).strftime('%d-%B'):
+        if person['date'].strftime("%d-%B") == datetime.datetime.now(BOT_TZ).strftime('%d-%B'):
             person_obj = discord.utils.get(guild.members, name=person['user'].split("#")[0])
             await wishchannel.send(f"It's {person_obj.mention}'s birthday today! @here")
 
@@ -147,18 +133,20 @@ async def birthdayloop_before():
     global guild
     global wishchannel
     await bot.wait_until_ready()
-    guild = bot.get_guild(298871492924669954)
-    wishchannel = guild.get_channel(392576275761332226)
+    guild = bot.get_guild(GUILD_ID)
+    wishchannel = guild.get_channel(GENERAL_CHAT)
 
 #loading cogs
-
-for filename in os.listdir('./cogs'):
-    if filename.endswith('.py'):
-        bot.load_extension(f'cogs.{filename[:-3]}')
-
+if DEFAULT_COGS == []:
+    for filename in os.listdir('./cogs'):
+        if filename.endswith('.py'):
+            bot.load_extension(f'cogs.{filename[:-3]}')
+else:
+    for cog in DEFAULT_COGS:
+        bot.load_extension(f'cogs.{cog}')
 
 birthday_loop.start()
-color_loop.start()
 stock_price.start()
 
-bot.run(TOKEN)
+if __name__ == "__main__":
+    bot.run(TOKEN)

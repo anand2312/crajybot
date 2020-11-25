@@ -1,3 +1,4 @@
+"""Some commands to store user notes."""
 import discord
 from discord.ext import commands
 

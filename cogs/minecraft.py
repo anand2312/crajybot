@@ -1,3 +1,20 @@
+"""Helper functions to help play minecraft with the homies.
+Note: These commands depend on resources from Google Cloud Platform
+    - 1 N1 VM on Compute Engine
+    - 2 Cloud Functions
+    - Extra Storage buckets for backing up world data
+
+The workflow is:
+    > start/stop server triggered from chat
+    > this makes a GET request to a URL - this URL is a trigger for the Cloud Function set up on GCP
+    > The Cloud Function triggers the VM to start up/shut down
+    > Saved startup/shutdown batch scripts run automatically, running the Minecraft server.
+
+Follow https://cloud.google.com/solutions/gaming/minecraft-server this tutorial to setup the VM, server and batch scripts.
+You can try using https://wideops.com/brick-by-brick-learn-gcp-by-setting-up-a-kid-controllable-minecraft-server/ this for the Cloud Functions.
+
+No further documentation will be provided for these commands."""
+
 import discord
 from discord.ext import commands
 
@@ -5,7 +22,7 @@ import datetime
 import time
 
 from secret.TOKEN import START_LINK, STOP_LINK
-from utils.timezone import OMAN_TZ
+from utils.timezone import BOT_TZ
 
 class Minecraft(commands.Cog):
     def __init__(self, bot):
@@ -39,7 +56,7 @@ class Minecraft(commands.Cog):
             if response.status == 200:
                 self.embed.description = "Status Code 200! Server startup sequence triggered."
                 self.embed.color = discord.Color.green()
-                self.embed.timestamp = datetime.datetime.now(tz=OMAN_TZ)
+                self.embed.timestamp = datetime.datetime.now(tz=BOT_TZ)
                 await ctx.send(embed=self.embed)
             self.running = True
             self.init_time = time.time()
@@ -68,7 +85,7 @@ class Minecraft(commands.Cog):
                 diff = (cur_time - self.init_time) // 60
                 self.embed.description = f"Status Code 200. Server shutdown sequence triggered.\nServer uptime: {diff} minutes."
                 self.embed.color = discord.Color.red()
-                self.embed.timestamp = datetime.datetime.now(tz=OMAN_TZ)
+                self.embed.timestamp = datetime.datetime.now(tz=BOT_TZ)
                 await ctx.send(embed=self.embed)
             self.running = False
             self.init_time = time.time()

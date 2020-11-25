@@ -1,3 +1,4 @@
+"""Games command - word guess game, tictactoe, and akinator."""
 import discord
 from discord.ext import commands
 
@@ -14,7 +15,7 @@ from PyDictionary import PyDictionary
 from akinator.async_aki import Akinator
 
 
-d = PyDictionary()
+d = PyDictionary()    # needed for the word guess game's random word generator.
 r = RandomWords()
 
 class Games(commands.Cog):
@@ -78,6 +79,7 @@ class Games(commands.Cog):
                 await main_message.edit(embed=main_message_embed)
 
         main_message_embed.description = f"{players[next_player]} destroyed {players[player]}!\n Good Game!"
+        self.bot.games_leaderboard.update_one({"user":players[next_player].id}, {"$inc":{"wins":1}}, upsert=True)
         main_message_embed.color = discord.Color.green()
         await main_message.edit(embed=main_message_embed)
         tictactoe.reset_board()
@@ -106,7 +108,8 @@ class Games(commands.Cog):
             tictactoe.reset_board()
             return await ctx.send(embed=message_embed)
 
-    @commands.command(name="guess")
+    @commands.command(name="guess",
+                      help="Start a word guess game.")
     async def guess(self, ctx):
         await ctx.send(f"{ctx.author.mention}, check your DMs!")
         #wait_for checks
@@ -141,7 +144,7 @@ class Games(commands.Cog):
                 except asyncio.TimeoutError:
                     return await ctx.send(f"Time up! No one guessed the word. The word was **{answer_val}**")
         
-                self.bot.games_leaderboard.update_one({"user":str(reply.author)}, {"$inc":{"wins":1}}, upsert=True)
+                self.bot.games_leaderboard.update_one({"user":reply.author.id}, {"$inc":{"wins":1}}, upsert=True)
                 return await ctx.send(f"{reply.author.mention} got it right! The word was **{reply.content}**")
 
             else:
@@ -160,11 +163,13 @@ class Games(commands.Cog):
         except asyncio.TimeoutError:
             return await ctx.send(f"Time up! No one guessed the word. The word was **{answer_val}**")
         
-        self.bot.games_leaderboard.update_one({"user":str(reply.author)}, {"$inc":{"wins":1}}, upsert=True)
+        self.bot.games_leaderboard.update_one({"user":reply.author.id}, {"$inc": {"wins":1}}, upsert=True)
         return await ctx.send(f"{reply.author.mention} got it right! The word was **{reply.content}**")
 
 
-    @commands.command(name="akinator", aliases=["aki"])
+    @commands.command(name="akinator", 
+                      aliases=["aki"],
+                      help="Start a game of Akinator.")
     async def akinator_game(self, ctx):
         
         aki = Akinator()
@@ -229,13 +234,17 @@ class Games(commands.Cog):
         return await ctx.send(content=None, embed=final_embed)
 
 
-    @commands.command(name="games-leaderboard", aliases=["g-lb", "glb", "g-top", "gtop", "games-top"])
+    @commands.command(name="games-leaderboard", 
+                      aliases=["g-lb", "glb", "g-top", "gtop", "games-top"],
+                      help="Retrieve the games leaderboard.")
     async def games_top(self, ctx):
         out = ""
         for i, j in enumerate(self.bot.games_leaderboard.find({"$query":{}, "$orderby":{"wins":-1}})):
-            out += f"{i+1}. {j['user']}  **{j['wins']}** wins\n"
-        await ctx.send(out)
+            member_obj = discord.utils.get(ctx.guild.members, id=j['user'])
+            out += f"{i+1}. {member_obj.name}  **{j['wins']}** wins\n"
+        embed = discord.Embed(title="Games leaderboard", color=discord.Color.blurple())
+        embed.description = out
+        await ctx.send(embed=embed)
     
-
 def setup(bot):
     bot.add_cog(Games(bot))
