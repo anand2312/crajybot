@@ -15,7 +15,7 @@ import pytz
 from contextlib import suppress
 import itertools
 
-from secrets.constants import GUILD_ID, ROLE_NAME
+from secret.constants import GUILD_ID, ROLE_NAME
 from secret.KEY import *      
 
 try:

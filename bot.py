@@ -1,8 +1,3 @@
-"""
-Horoscopebot
-insert further documentation here, insert documentation near new functions or variables you make as well.
-
-"""
 import os
 import random
 
@@ -28,11 +23,13 @@ bot = commands.Bot(command_prefix='.',
                    help_command=HelpCommand(),
                    intents=intents)
 
-bot.session = ClientSession()   #aiohttp clientsession
+bot.session = ClientSession()
  
-bot.mongo = MongoClient("mongodb://localhost:27017/")   #mongodb database
+bot.mongo = MongoClient(DB_CONNECTION_STRING)  
 db = bot.mongo["bot-data"]
 
+# all collections being used are made into attributes of commands.Bot so that they can be accessed easily from any cog.
+# remove any of these that you won't use. accordingly don't load the cogs that use them either.
 bot.economy_collection = db["econ_data"]
 bot.store_collection = db["store_data"]
 bot.games_leaderboard = db["games"]
@@ -140,11 +137,16 @@ async def birthdayloop_before():
     wishchannel = guild.get_channel(GENERAL_CHAT)
 
 #loading cogs
-for filename in os.listdir('./cogs'):
-    if filename.endswith('.py'):
-        bot.load_extension(f'cogs.{filename[:-3]}')
+if DEFAULT_COGS == []:
+    for filename in os.listdir('./cogs'):
+        if filename.endswith('.py'):
+            bot.load_extension(f'cogs.{filename[:-3]}')
+else:
+    for cog in DEFAULT_COGS:
+        bot.load_extension(f'cogs.{cog}')
 
 birthday_loop.start()
 stock_price.start()
 
-bot.run(TOKEN)
+if __name__ == "__main__":
+    bot.run(TOKEN)

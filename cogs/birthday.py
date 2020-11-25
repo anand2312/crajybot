@@ -10,7 +10,7 @@ class Birthday(commands.Cog):
 
     @commands.group(name="bday", 
                     aliases=["birthday"],
-                    help="Retrieve a birthday date. Could be your own if no user is specified, or a specified user." 
+                    help="Retrieve a birthday date. Could be your own if no user is specified, or a specified user.", 
                     invoke_without_command=True)
     async def bday(self, ctx, person: discord.Member=None):
         if person is None:

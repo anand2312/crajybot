@@ -343,8 +343,8 @@ class Economy(commands.Cog):
         ctx.command.reset_cooldown(ctx)
     
     @commands.command(name="use-item", aliases=["useitem"])
-    """WIP"""
     async def use_item(self, ctx, item):
+        # WIP
         user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
         store_data = self.bot.store_collection.find_one({'name': item})
         role_get = store_data['role']

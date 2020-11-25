@@ -59,7 +59,7 @@ class Menu:
             except IndexError:
                 print("Invalid choice.")
             self.bullshit()
-            if self.continue_prompt is True:
+            if self.continue_prompt:
                 go_on = input("Do you want to continue? (y/n)")
             else:
                 go_on = "n"
