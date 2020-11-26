@@ -113,14 +113,14 @@ class stupid(commands.Cog):
 
     @wat.command(name="add", aliases=["-a"])
     async def add_to_wat(self, ctx, key, *, output):
-        self.bot.stupid_collection.insert_one({"key":key, "output":output})
+        await self.bot.stupid_collection.insert_one({"key":key, "output":output})
         await ctx.send("Added")
 
     @wat.command(name="remove", aliases=["-r"])
     @commands.has_any_role('admin','Bot Dev')
     async def remove_from_wat(self, ctx, key):
         try:
-            self.bot.stupid_collection.delete_one({"key":key})
+            await self.bot.stupid_collection.delete_one({"key":key})
             await ctx.send(f"Removed {key}")
         except:
             await ctx.send(f"{key} doesn't exist")
@@ -128,7 +128,7 @@ class stupid(commands.Cog):
     @wat.command(name="edit-output", aliases=["edit-out"])
     async def edit_wat_output(self, ctx, key, *, output):
         try:
-            self.bot.stupid_collection.update_one({'key':key},{"$set":{"output":output}})
+            await self.bot.stupid_collection.update_one({'key':key},{"$set":{"output":output}})
             await ctx.send("Updated output.")
         except:
             await ctx.send("Key doesn't exist")
@@ -136,14 +136,15 @@ class stupid(commands.Cog):
     @wat.command(name="edit-key", aliases=["edit-name"])
     async def edit_wat_key(self, ctx, key, new_key):
         try:
-            self.bot.stupid_collection.update_one({'key':key},{"$set":{"key":new_key}})
+            await self.bot.stupid_collection.update_one({'key':key},{"$set":{"key":new_key}})
             await ctx.send("Updated name.")
         except:
             await ctx.send("Key doesn't exist")    
 
     @wat.command(name="use", aliases=["-u"])
     async def use(self, ctx, *, key):
-        data = self.bot.stupid_collection.find_one({"key": key})["output"]
+        existing = await self.bot.stupid_collection.find_one({"key": key})
+        data = existing["output"]
         if data is not None:
             if ctx.channel.name == "another-chat":
                 await self.anotherchat_webhook.send(data, username=ctx.author.nick, avatar_url=ctx.author.avatar_url)
@@ -157,7 +158,7 @@ class stupid(commands.Cog):
     @wat.command(name="list", aliases=["-l"])
     async def list_(self, ctx):
         out = ""
-        for i in self.bot.stupid_collection.find():
+        async for i in self.bot.stupid_collection.find():
             out += i["key"] + "\n"
         out += f"**Total**: {i}"
         await ctx.send(out)
@@ -166,7 +167,7 @@ class stupid(commands.Cog):
     async def wat_search(self, ctx, key):
         check = 0
         embed = discord.Embed(title="Search Results", color=discord.Color.blurple())
-        for i in self.bot.stupid_collection.find():
+        async for i in self.bot.stupid_collection.find():
             if key.lower() in i["key"].lower():
                 embed.add_field(name=i['key'], value=i['output'], inline=False)
                 check += 1
@@ -203,7 +204,7 @@ class stupid(commands.Cog):
         
     @commands.command(name="pins", help="Display the messages pinned in the bot database. Useful if your channel has already reached the 50 pin limit.")
     async def pins(self, ctx): 
-        data = self.bot.pins_collection.find()
+        data = await self.bot.pins_collection.find()
         embeds = []
 
         counter = 1
@@ -237,9 +238,9 @@ class stupid(commands.Cog):
     async def fetch_pin(self, ctx, identifier: Union[str, int]):
 
         if identifier.isalpha():
-            data = self.bot.pins_collection.find_one({"name": identifier})
+            data = await self.bot.pins_collection.find_one({"name": identifier})
         elif identifier.isdigit():
-            data = self.bot.pins_collection.find_one({"_id": int(identifier)})
+            data = await self.bot.pins_collection.find_one({"_id": int(identifier)})
 
         embed = discord.Embed(title=f"Pin **{data['_id']}**", url=data["message_jump_url"], color=discord.Color.blurple())
         text = f"**{data['message_synopsis']}**\n  _by {data['message_author']} on {data['date']}_"
@@ -255,21 +256,21 @@ class stupid(commands.Cog):
         if ctx.author.guild_permissions.administrator:
             pass
         else:
-            data = self.bot.economy_collection.find_one({'user': ctx.author.id})
+            data = await self.bot.economy_collection.find_one({'user': ctx.author.id})
             if data['inv']['role name'] >= 1:
                 data['inv']['role name'] -= 1
-                self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": data})
+                await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": data})
             else:
                 return await ctx.send("Buy the `role name` item!")
 
-        self.bot.role_names_collection.insert_one({'name': name, 'by': ctx.author.name})
+        await self.bot.role_names_collection.insert_one({'name': name, 'by': ctx.author.name})
 
         embed = discord.Embed(title="Added!", description=f"`{name}` was added to the database. It will be picked randomly.", color=discord.Color.green(), url=r"https://www.youtube.com/watch?v=DLzxrzFCyOs")
         return await ctx.send(embed=embed)
 
     @role_name.command(name="list", aliases=["all"])
     async def role_name_list(self, ctx):
-        data = self.bot.role_names_collection.find()
+        data = await self.bot.role_names_collection.find()
         embed = discord.Embed(title="Role names", color=discord.Color.green())
         val = ""
         for i in data:
@@ -280,7 +281,7 @@ class stupid(commands.Cog):
     @role_name.command(name="remove", aliases=["delete"])
     @commands.has_guild_permissions(administrator=True)
     async def role_name_remove(self, ctx, name: str):
-        self.bot.role_names_collection.delete_one({'name': name})
+        await self.bot.role_names_collection.delete_one({'name': name})
         return await ctx.send(f"Removed `{name}` (if it exists in the database)")
 
     @commands.command(name="quote", aliases=["qotd"], help="Displays a random quote.")
@@ -298,10 +299,10 @@ class stupid(commands.Cog):
         if ctx.author.guild_permissions.administrator:
             pass
         else:
-            data = self.bot.economy_collection.find_one({'user': ctx.author.id})
+            data = await self.bot.economy_collection.find_one({'user': ctx.author.id})
             if data['inv']['bot status'] >= 1:
                 data['inv']['bot status'] -= 1
-                self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": data})
+                await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": data})
             else:
                 return await ctx.send("Buy the `bot status` item!")
 
@@ -337,7 +338,8 @@ class stupid(commands.Cog):
     async def role_name_loop(self):
         guild = self.bot.get_guild(GUILD_ID)
         role = guild.get_role(ROLE_NAME)
-        data = list(self.bot.role_names_collection.find())
+        existing = await self.bot.role_names_collection.find()
+        data = list(existing)
         new_name_data = random.choice(data)
         await role.edit(name=new_name_data['name'])
 

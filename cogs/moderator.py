@@ -34,19 +34,19 @@ class Moderator(commands.Cog):
 
     @change_money.command(name="add")
     async def add_money(self, ctx, baltype: str, user: discord.Member, amt: int):
-        self.bot.economy_collection.update_one({'user': user.id},{"$inc": {baltype:amt}})
+        await self.bot.economy_collection.update_one({'user': user.id},{"$inc": {baltype:amt}})
         response = discord.Embed(title=str(ctx.message.author.name), description=f"Added {amt} to {user}\'s {baltype}!" ,colour=discord.Colour.green())
         await ctx.send(embed=response) 
 
     @change_money.command(name="remove")
     async def remove_money(self, ctx, baltype: str, user: discord.Member, amt: int):
-        self.bot.economy_collection.update_one({'user': user.id}, {"$inc": {baltype:-amt}})
+        await self.bot.economy_collection.update_one({'user': user.id}, {"$inc": {baltype:-amt}})
         response = discord.Embed(title=str(ctx.author.name), description=f"Removed {amt} from {user}\'s {baltype}!" ,colour=discord.Colour.red())
         await ctx.send(embed=response)
 
     @change_money.command(name="set")
     async def set_money(self, ctx, baltype: str, user: discord.Member, amt: int):
-        self.bot.economy_collection.update_one({'user': user.id}, {"$set": {baltype: amt}})
+        await self.bot.economy_collection.update_one({'user': user.id}, {"$set": {baltype: amt}})
         response = discord.Embed(title = str(ctx.message.author.name), description = f"Set {amt} to {user}\'s {baltype}!" ,colour=discord.Colour.orange()) 
         await ctx.send(embed=response)
 
@@ -54,7 +54,7 @@ class Moderator(commands.Cog):
                       help="Remove a user from the bot database.")
     async def remove_user(self, ctx, member: discord.Member):
         try:
-            self.bot.economy_collection.delete_one({'user': member.id})
+            await self.bot.economy_collection.delete_one({'user': member.id})
             await member.send(f"haha popi you got deleted from the bot database")
         except:
             await ctx.send("User not found")
@@ -68,28 +68,28 @@ class Moderator(commands.Cog):
 
     @change_inventory.command(name="add")
     async def add_inv(self, ctx, item: str, user: discord.Member, amt: int):
-        user_data = self.bot.economy_collection.find_one({'user': user.id})
+        user_data = await self.bot.economy_collection.find_one({'user': user.id})
         item = item.lower()
         user_data["inv"][item] += amt
-        self.bot.economy_collection.update_one({'user': user.id},{"$set": user_data})
+        await self.bot.economy_collection.update_one({'user': user.id},{"$set": user_data})
         response = discord.Embed(title=str(ctx.author.name), description=f"Added {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.green())
         await ctx.send(embed=response)
 
     @change_inventory.command(name="remove")
     async def remove_inv(self, ctx, item: str, user: discord.Member, amt: int):
-        user_data = self.bot.economy_collection.find_one({'user': user.id})
+        user_data = await self.bot.economy_collection.find_one({'user': user.id})
         item = item.lower()
         user_data["inv"][item] -= amt
-        self.bot.economy_collection.update_one({'user': user.id},{"$set": user_data})
+        await self.bot.economy_collection.update_one({'user': user.id},{"$set": user_data})
         response = discord.Embed(title=str(ctx.message.author.name), description=f"Removed {amt} {item}(s) from {user}\'s inventory!",colour=discord.Colour.red())
         await ctx.send(embed=response)
 
     @change_inventory.command(name="set")
     async def set_inv(self, ctx, item: str, user: discord.Member, amt: int):
-        user_data = self.bot.economy_collection.find_one({'user': user.id})
+        user_data = await self.bot.economy_collection.find_one({'user': user.id})
         item = item.lower()
         user_data["inv"][item] = amt
-        self.bot.economy_collection.update_one({'user': user.id},{"$set": user_data})
+        await self.bot.economy_collection.update_one({'user': user.id},{"$set": user_data})
         response = discord.Embed(title=str(ctx.message.author.name), description=f"Set {amt} {item}(s) to {user}\'s inventory!",colour=discord.Colour.orange())
         await ctx.send(content=None, embed=response)
 
@@ -100,19 +100,19 @@ class Moderator(commands.Cog):
 
     @edit_item.command(name="price")
     async def edit_item_price(self, ctx, item: str, price: int):
-        self.bot.store_collection.update_one({'name':item.lower().capitalize()}, {"$set": {"price": price}})
+        await self.bot.store_collection.update_one({'name':item.lower().capitalize()}, {"$set": {"price": price}})
         await ctx.send("Price changed")
 
     @edit_item.command(name="change-stock")
     async def change_stock(self, ctx, item: str, n: int):
-        self.bot.store_collection.update_one({'name': item.lower().capitalize()}, {"$set": {'stock': n}})     
+        await self.bot.store_collection.update_one({'name': item.lower().capitalize()}, {"$set": {'stock': n}})     
         response = discord.Embed(title = str(ctx.message.author.name), description=f"Updated stock of {item}")
         return await ctx.send(embed=response)
 
     @commands.command(name="clear-pin", aliases=["clearpins", "clear-pins"])
     async def remove_pins(self, ctx, id_: typing.Union[int, str]):
         if isinstance(id_, int):
-            x = self.bot.pins_collection.delete_one({"_id":id_})
+            x = await self.bot.pins_collection.delete_one({"_id":id_})
             if x.deleted_count > 0:
                 return await ctx.send(f"Deleted pin with ID {id_}")
             else:
@@ -125,14 +125,14 @@ class Moderator(commands.Cog):
                 await ctx.send("Are you sure you want to clear all pins?")
                 reply = await self.bot.wait_for('message', check=check, timeout=10)
                 if reply.content.lower() in ["yes", "y"]:
-                    self.bot.pins_collection.delete_many({})
+                    await self.bot.pins_collection.delete_many({})
                     return await ctx.send("Cleared all pins")
                 else:
                     return await ctx.send("Terminated.")
 
     @commands.command(name="pin", help="Pins a message to the bot's database. Pins can be viewed with the `pins` command.")
     async def pin(self, ctx, id_: discord.Message, name_: str=None):
-        old_data = self.bot.pins_collection.find().sort("_id", -1).limit(1)
+        old_data = await self.bot.pins_collection.find().sort("_id", -1).limit(1)
         try:
             last_pin = old_data[0]['_id']
         except IndexError:
@@ -144,7 +144,7 @@ class Moderator(commands.Cog):
             date = datetime.date.today().strftime('%B %d, %Y'),
             name = name_)
 
-        self.bot.pins_collection.insert_one(document)
+        await self.bot.pins_collection.insert_one(document)
 
         await id_.add_reaction("📌")
         reply_embed = discord.Embed(title=f"Pinned!", description=f"_{document['message_synopsis'][:10]+'...'}_\n with ID {last_pin+1}", color=discord.Color.green())
@@ -221,26 +221,26 @@ class Moderator(commands.Cog):
         embed = discord.Embed(title="Database Query", color=discord.Color.green())
 
         if operation == "find":
-            data = collection.find(_filter)
+            data = await collection.find(_filter)
             out = ""
             for i in data:
                 out += str(i) + "\n"
-            embed.description = f"```sql\n{out}\n```"
+            embed.description = f"```{out}```"
             return await ctx.send(embed=embed)
         elif operation == "find_one":
-            data = collection.find_one(_filter)
-            embed.description = f"```sql\n{data}\n```"
+            data = await collection.find_one(_filter)
+            embed.description = f"```{data}```"
             return await ctx.send(embed=embed)
         elif operation == "update":
-            data = collection.update_many(_filter, _update, **kwarg_dict)
+            data = await collection.update_many(_filter, _update, **kwarg_dict)
             matched = data.matched_count
             updated = data.modified_count
-            embed.description = f"```sql\nQuery OK; {{matched: {matched}, updated: {updated}}}\n```"
+            embed.description = f"```Query OK; {{matched: {matched}, updated: {updated}}}```"
             return await ctx.send(embed=embed)
         elif operation == "delete":
-            data = collection.delete_many(_filter, **kwarg_dict)
+            data = await collection.delete_many(_filter, **kwarg_dict)
             deleted = data.deleted_count
-            embed.description = f"```sql\nQuery OK; {{deleted: {deleted}}}\n```"
+            embed.description = f"```Query OK; {{deleted: {deleted}}}```"
             return await ctx.send(embed=embed)
     
     @mongo_query.error
