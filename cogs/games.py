@@ -79,7 +79,7 @@ class Games(commands.Cog):
                 await main_message.edit(embed=main_message_embed)
 
         main_message_embed.description = f"{players[next_player]} destroyed {players[player]}!\n Good Game!"
-        self.bot.games_leaderboard.update_one({"user":players[next_player].id}, {"$inc":{"wins":1}}, upsert=True)
+        await self.bot.games_leaderboard.update_one({"user":players[next_player].id}, {"$inc":{"wins":1}}, upsert=True)
         main_message_embed.color = discord.Color.green()
         await main_message.edit(embed=main_message_embed)
         tictactoe.reset_board()
@@ -144,7 +144,7 @@ class Games(commands.Cog):
                 except asyncio.TimeoutError:
                     return await ctx.send(f"Time up! No one guessed the word. The word was **{answer_val}**")
         
-                self.bot.games_leaderboard.update_one({"user":reply.author.id}, {"$inc":{"wins":1}}, upsert=True)
+                await self.bot.games_leaderboard.update_one({"user":reply.author.id}, {"$inc":{"wins":1}}, upsert=True)
                 return await ctx.send(f"{reply.author.mention} got it right! The word was **{reply.content}**")
 
             else:
@@ -163,7 +163,7 @@ class Games(commands.Cog):
         except asyncio.TimeoutError:
             return await ctx.send(f"Time up! No one guessed the word. The word was **{answer_val}**")
         
-        self.bot.games_leaderboard.update_one({"user":reply.author.id}, {"$inc": {"wins":1}}, upsert=True)
+        await self.bot.games_leaderboard.update_one({"user":reply.author.id}, {"$inc": {"wins":1}}, upsert=True)
         return await ctx.send(f"{reply.author.mention} got it right! The word was **{reply.content}**")
 
 
@@ -239,7 +239,8 @@ class Games(commands.Cog):
                       help="Retrieve the games leaderboard.")
     async def games_top(self, ctx):
         out = ""
-        for i, j in enumerate(self.bot.games_leaderboard.find({"$query":{}, "$orderby":{"wins":-1}})):
+        existing = await self.bot.games_leaderboard.find({"$query":{}, "$orderby":{"wins":-1}})
+        async for i, j in enumerate(existing):
             member_obj = discord.utils.get(ctx.guild.members, id=j['user'])
             out += f"{i+1}. {member_obj.name}  **{j['wins']}** wins\n"
         embed = discord.Embed(title="Games leaderboard", color=discord.Color.blurple())

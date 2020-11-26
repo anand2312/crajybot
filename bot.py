@@ -1,4 +1,5 @@
 import os
+import logging
 import random
 
 import datetime
@@ -8,13 +9,19 @@ from discord.ext import commands, tasks, menus
 
 import asyncio
 from aiohttp import ClientSession
-from pymongo import MongoClient
+import motor.motor_asyncio as motor
 
 from random import choice
 from secret.TOKEN import TOKEN
 from secret.constants import *
 from utils.help_class import HelpCommand
 from utils.timezone import BOT_TZ
+
+logger = logging.getLogger('discord')
+logger.setLevel(logging.DEBUG)
+handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+logger.addHandler(handler)
 
 intents = discord.Intents.default()
 intents.members = True 
@@ -25,7 +32,7 @@ bot = commands.Bot(command_prefix='.',
 
 bot.session = ClientSession()
  
-bot.mongo = MongoClient(DB_CONNECTION_STRING)  
+bot.mongo = motor.AsyncIOMotorClient(DB_CONNECTION_STRING)  
 db = bot.mongo["bot-data"]
 
 # all collections being used are made into attributes of commands.Bot so that they can be accessed easily from any cog.
@@ -39,8 +46,8 @@ bot.bday_collection = db["bday"]
 bot.pins_collection = db["pins"]
 bot.role_names_collection = db["role"]
 
-bot.__version__ = "1.0"
- 
+bot.__version__ = "2.0a"
+
 @bot.event
 async def on_ready(): # sends this message when bot starts working in #bot-tests
     await bot.get_channel(BOT_ANNOUNCE_CHANNEL).send("Online!")
@@ -51,14 +58,14 @@ async def on_message(message):
     #chat money. 
     if message.author.bot: return
     if message.channel.id in CHAT_MONEY_CHANNELS:
-        bot.economy_collection.update_one({"user":message.author.id}, {"$inc": {"cash": 10}})
+        await bot.economy_collection.update_one({"user":message.author.id}, {"$inc": {"cash": 10}})
     await bot.process_commands(message)
 
 @bot.event    #adds a new user to the bot database
 async def on_member_join(member):
-    check = bot.economy_collection.find_one({'user': member.id})
+    check = await bot.economy_collection.find_one({'user': member.id})
     if check is None:
-        bot.economy_collection.insert_one({
+        await bot.economy_collection.insert_one({
                 "user" : member.id,
                 "cash" : 0,
                 "bank" : 2500,
@@ -76,9 +83,11 @@ async def on_command_error(ctx, error):
     embed = discord.Embed(title="Command errored", color=discord.Color.red())
     if isinstance(error, commands.CommandOnCooldown):
         embed.description = f"Time remaining = {int(error.retry_after/60)} mins"
+        raise error
         return await ctx.send(embed=embed)
     else:
         embed.description = str(error)
+        raise error
         return await ctx.send(embed=embed)
 
 @bot.command(name='popi')   #bot ping command
@@ -111,9 +120,9 @@ async def stock_price():
     rand_sign = random.choice(["+","-"])
     if rand_sign == "+": rand_val = random.randint(1,6)
     else: rand_val = -random.randint(1,6)
-    stock_data = bot.store_collection.find_one({'name':'Stock'})
+    stock_data = await bot.store_collection.find_one({'name':'Stock'})
     new_price = stock_data['price'] + rand_val
-    bot.store_collection.update_one({'name': 'Stock'}, {"$inc": {"price": rand_val}})
+    await bot.store_collection.update_one({'name': 'Stock'}, {"$inc": {"price": rand_val}})
     await message_channel.send(f"Stock price : {new_price}")
 
 @stock_price.before_loop
@@ -124,7 +133,7 @@ async def stock_price_before():
 
 @tasks.loop(hours=24)
 async def birthday_loop():
-    data = bot.bday_collection.find()
+    data = await bot.bday_collection.find()
     for person in data:
         if person['date'].strftime("%d-%B") == datetime.datetime.now(BOT_TZ).strftime('%d-%B'):
             person_obj = discord.utils.get(guild.members, name=person['user'].split("#")[0])
