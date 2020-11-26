@@ -2,3 +2,4 @@ cogs/__pycache__/
 *.json
 __pycache__/
 secret/*
+discord.log
