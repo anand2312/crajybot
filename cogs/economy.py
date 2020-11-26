@@ -17,7 +17,7 @@ class Economy(commands.Cog):
         Or you can entirely remove this function."""
         return ctx.channel.name in ["bot-test","botspam-v2","botspam"]
 
-    def get_user_dict(self, ctx: discord.ext.commands.Context, user: typing.Union[discord.Member, str]) -> dict:
+    async def get_user_dict(self, ctx: discord.ext.commands.Context, user: typing.Union[discord.Member, str]) -> dict:
         """Helper function to get user data from database"""
         if user is not None:
             if isinstance(user, discord.Member): 
@@ -79,7 +79,7 @@ class Economy(commands.Cog):
                       help="Displays your current bank balance.")
     async def balance(self, ctx, user: typing.Union[discord.Member, str]=None):
         if user is None: user = ctx.author
-        user_dict = self.get_user_dict(ctx, user)
+        user_dict = await self.get_user_dict(ctx, user)
 
         networth = (user_dict['cash'] + user_dict['bank']) - user_dict['debt']
         response = discord.Embed(title=str(user), description="Balance is:")
@@ -134,7 +134,7 @@ class Economy(commands.Cog):
                       aliases=["top","lb"],
                       help="Economy leaderboard.")   
     async def leaderboard(self, ctx):
-        leaderboard_data = list(await self.bot.economy_collection.find())
+        leaderboard_data = await self.bot.economy_collection.find().to_list(length=None)
         key = lambda x: x["bank"] + x["cash"] - x["debt"]
         lb_data = sorted(leaderboard_data, key=key, reverse=True)
         response = discord.Embed(title="Crajy Leaderboard", description="")
@@ -204,7 +204,7 @@ class Economy(commands.Cog):
                       help="View your inventory of items.")
     async def inventory(self, ctx, user: typing.Union[discord.Member, str]=None):
         if user is None: user = ctx.author
-        user_data = self.get_user_dict(ctx, user)
+        user_data = await self.get_user_dict(ctx, user)
         response = discord.Embed(title=str(user), description="Inventory")
         for k in user_data['inv']:
             response.add_field(name=k, value=user_data['inv'][k], inline=False)
@@ -273,7 +273,7 @@ class Economy(commands.Cog):
                       help="Be a kind soul and give your friends some of your cash.")
     async def givemoney(self, ctx, person: typing.Union[discord.Member, str], amount: int):
         sender = await self.bot.economy_collection.find_one({'user': ctx.author.id})
-        reciever = self.get_user_dict(ctx, person)
+        reciever = await self.get_user_dict(ctx, person)
 
         if isinstance(person, str):
             person = [member for member in ctx.guild.members if member.name.lower()==person.lower() or member.nick.lower()==person.lower()][0]
@@ -298,7 +298,7 @@ class Economy(commands.Cog):
     @commands.cooldown(1, 3600, commands.BucketType.user)
     async def rob(self, ctx, person: typing.Union[discord.Member, str]):
         robber = await self.bot.economy_collection.find_one({'user': ctx.author.id})
-        victim = self.get_user_dict(ctx, person)
+        victim = await self.get_user_dict(ctx, person)
 
         if isinstance(person, str):
             try:

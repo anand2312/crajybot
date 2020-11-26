@@ -338,8 +338,8 @@ class stupid(commands.Cog):
     async def role_name_loop(self):
         guild = self.bot.get_guild(GUILD_ID)
         role = guild.get_role(ROLE_NAME)
-        existing = await self.bot.role_names_collection.find()
-        data = list(existing)
+        existing = self.bot.role_names_collection.find()
+        data = await existing.to_list(length=None)
         new_name_data = random.choice(data)
         await role.edit(name=new_name_data['name'])
 
