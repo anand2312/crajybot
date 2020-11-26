@@ -156,8 +156,8 @@ else:
     for cog in DEFAULT_COGS:
         bot.load_extension(f'cogs.{cog}')
 
-#birthday_loop.start()
-#stock_price.start()
+birthday_loop.start()
+stock_price.start()
 
 if __name__ == "__main__":
     bot.run(TOKEN)
