@@ -45,6 +45,8 @@ bot.notes_collection = db["notes"]
 bot.bday_collection = db["bday"]
 bot.pins_collection = db["pins"]
 bot.role_names_collection = db["role"]
+
+bot.__version__ = "2.0a"
  
 @bot.event
 async def on_ready(): # sends this message when bot starts working in #bot-tests
