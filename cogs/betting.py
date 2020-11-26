@@ -16,7 +16,7 @@ class Betting(commands.Cog):
     @commands.command(name="roulette",
                       help="Starts a game of roulette.")
     async def roulette(self, ctx, amount:int, bet:str):
-        user_dict = self.bot.economy_collection.find_one({'user': ctx.author.id})
+        user_dict = await self.bot.economy_collection.find_one({'user': ctx.author.id})
 
         if amount <= user_dict['cash'] and user_dict['cash'] > 0:
 
@@ -38,7 +38,7 @@ class Betting(commands.Cog):
             if bet in roulette_table.keys():
                 win_number = random.randint(0,36)
                 user_dict['cash'] -= amount
-                self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": user_dict})
+                await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": user_dict})
                 response1 = discord.Embed(title=str(ctx.message.author), description=f"You've placed a bet on {bet}.")
                 response1.set_footer(text=f"Please wait 10 seconds")
                 await ctx.send(embed=response1)
@@ -100,7 +100,7 @@ class Betting(commands.Cog):
                 win_number = random.randint(0,36)
                 user_win = False
                 user_dict['cash'] -= amount
-                self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": user_dict})
+                await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": user_dict})
 
                 response1 = discord.Embed(title=str(ctx.author), description=f"You've placed a bet on {bet}.")
                 response1.set_footer(text=f"Please wait 10 seconds")
@@ -117,7 +117,7 @@ class Betting(commands.Cog):
 
             if user_win is True:
                 response2 = discord.Embed(title=f"Roulette Results {str(ctx.message.author)}", description=f"You won {multiplier * amount}!", colour=discord.Color.green())
-                self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$inc": {'cash': multiplier * amount}})
+                await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$inc": {'cash': multiplier * amount}})
                 await ctx.send(f"The ball fell on {win_number}")
                 await ctx.send(embed=response2)
             else:
@@ -142,7 +142,7 @@ class Betting(commands.Cog):
         users_list = await rr_message.reactions[0].users().flatten()
         users_list.pop(0)
 
-        rrr_cursor = self.bot.economy_collection.find({'user': {"$in":[i.id for i in users_list]}})
+        rrr_cursor = await self.bot.economy_collection.find({'user': {"$in":[i.id for i in users_list]}})
         rrr_data_full = []
         for i in rrr_cursor: rrr_data_full.append(i)
         rrr_matching_key = list(rrr_data_full)    #this will be used in the final update_money statement to match who all has to be updated
@@ -169,7 +169,7 @@ class Betting(commands.Cog):
                     if user_dict["user"] == winner["user"]:
                         user_dict["cash"] += (len(users_list) * amount)
         num = 0
-        for i in self.bot.economy_collection.find({'user': {"$in": rrr_matching_key}}):
+        async for i in self.bot.economy_collection.find({'user': {"$in": rrr_matching_key}}):
             self.bot.economy_collection.update_one(i, {"$set": rrr_data_full[num]})
             num += 1
         
@@ -177,7 +177,7 @@ class Betting(commands.Cog):
                       aliases=["cf","cockfight"],
                       help="Starts a game of cock fight. User requires a chicken, to be bought from the shop.")
     async def cockfight(self, ctx, amount:int):
-        user_data = self.bot.economy_collection.find_one({'user': ctx.author.id})
+        user_data = await self.bot.economy_collection.find_one({'user': ctx.author.id})
         win = random.choice([True, False, False, False])
         if amount > 0 and amount <= user_data["cash"]:
             if user_data["inv"]["chicken"] > 0:
@@ -192,7 +192,7 @@ class Betting(commands.Cog):
                 await ctx.message.channel.send("You don't have enough cocks. Buy one!")
         else:
             await ctx.message.channel.send("Invalid bet.")
-        self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set":user_data})
+        await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set":user_data})
         return await ctx.send(embed=response)
 
 def setup(bot):
