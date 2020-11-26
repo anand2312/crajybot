@@ -49,6 +49,9 @@ and pick the `setup` option.
 ### Hosting
 You can host the bot virtually anywhere.
 We've used [GCP](https://cloud.google.com/), and it works *very* well. The lowest end VM can comfortably run the bot.
- 
+
+### Disclaimer
+We are in no way responsible if something goes wrong with your server. Use this code at your own risk.
+
 ### Support
 Contact me on Discord - Ares#7286.
