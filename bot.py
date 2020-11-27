@@ -83,12 +83,11 @@ async def on_command_error(ctx, error):
     embed = discord.Embed(title="Command errored", color=discord.Color.red())
     if isinstance(error, commands.CommandOnCooldown):
         embed.description = f"Time remaining = {int(error.retry_after/60)} mins"
-        raise error
         return await ctx.send(embed=embed)
     else:
         embed.description = str(error)
+        await ctx.send(embed=embed)
         raise error
-        return await ctx.send(embed=embed)
 
 @bot.command(name='popi')   #bot ping command
 async def popi(ctx):

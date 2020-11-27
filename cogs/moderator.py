@@ -5,13 +5,14 @@ import discord
 from discord.ext import commands
 
 import datetime
+import textwrap
 
 import random
 import asyncio
 import typing
 import git
 
-from secret.webhooks import GIT_HELPER
+from secret.webhooks import *
 import utils.decorators as deco
 
 channels_available = ["bot-test","botspam-v2","botspam"]
@@ -20,7 +21,9 @@ class Moderator(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.git_helper_webhook = discord.Webhook.partial(GIT_HELPER['id'], GIT_HELPER['token'], adapter=discord.AsyncWebhookAdapter(self.bot.session))
-    
+        self.another_chat_webhook = discord.Webhook.partial(ANOTHERCHAT_HOOK['id'], ANOTHERCHAT_HOOK['token'], adapter=discord.AsyncWebhookAdapter(self.bot.session))
+        self.botspam_webhook = discord.Webhook.partial(BOTSPAM_HOOK['id'], BOTSPAM_HOOK['token'], adapter=discord.AsyncWebhookAdapter(self.bot.session))
+        self.env = {}
     async def cog_check(self, ctx):
         """Restricts commands to administrators only"""
         return ctx.author.guild_permissions.administrator
@@ -250,5 +253,27 @@ class Moderator(commands.Cog):
         await ctx.send(embed=embed)
         raise error
     
+    @commands.is_owner()
+    @commands.command(name="internal-eval", aliases=["int-eval"])
+    async def internal_eval(self, ctx, *, code: str):
+        code = code.strip("`")
+        code = code.lstrip("py")
+        real_code = f"""
+async def func():
+    {textwrap.indent(code, "    ")}
+self.env['func'] = func"""
+        env = {
+            'message': ctx.message,
+            'ctx': ctx,
+            'discord': discord,
+            'self': self
+        }
+
+        eval(compile(real_code, "bruh", "exec"), env)
+
+        await self.env['func']()
+
+        await ctx.message.add_reaction('✅')
+
 def setup(bot):
     bot.add_cog(Moderator(bot))
