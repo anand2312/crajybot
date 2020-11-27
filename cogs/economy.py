@@ -214,10 +214,10 @@ class Economy(commands.Cog):
                       aliases=["store"],
                       help="View the store.")
     async def shop(self, ctx):
-        shop_data = await self.bot.store_collection.find()
+        shop_data = self.bot.store_collection.find()
         response = discord.Embed(title="Shop", description="All available items")
 
-        for i in shop_data:
+        async for i in shop_data:
             response.add_field(name=i['name'], value=f"Price : {i['price']} | Remaining Stock : {i['stock']}", inline=False)
 
         return await ctx.send(embed=response)
