@@ -224,9 +224,9 @@ class Moderator(commands.Cog):
         embed = discord.Embed(title="Database Query", color=discord.Color.green())
 
         if operation == "find":
-            data = await collection.find(_filter)
+            data = collection.find(_filter)
             out = ""
-            for i in data:
+            async for i in data:
                 out += str(i) + "\n"
             embed.description = f"```{out}```"
             return await ctx.send(embed=embed)
