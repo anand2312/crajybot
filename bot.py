@@ -132,8 +132,8 @@ async def stock_price_before():
 
 @tasks.loop(hours=24)
 async def birthday_loop():
-    data = await bot.bday_collection.find()
-    for person in data:
+    data = bot.bday_collection.find()
+    async for person in bot.bday_collection.find():
         if person['date'].strftime("%d-%B") == datetime.datetime.now(BOT_TZ).strftime('%d-%B'):
             person_obj = discord.utils.get(guild.members, name=person['user'].split("#")[0])
             await wishchannel.send(f"It's {person_obj.mention}'s birthday today! @here")
