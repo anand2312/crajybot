@@ -266,7 +266,8 @@ self.env['func'] = func"""
             'message': ctx.message,
             'ctx': ctx,
             'discord': discord,
-            'self': self
+            'self': self,
+            'asyncio': asyncio
         }
 
         eval(compile(real_code, "bruh", "exec"), env)
