@@ -3,6 +3,6 @@ updates:
   - package-ecosystem: "pip" # See documentation for possible values
     directory: "/" # Location of package manifests
     allow:
-      - dependancy-name: "discord.py"
+      - dependency-name: "discord.py"
     schedule:
       interval: "weekly"
