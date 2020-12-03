@@ -112,6 +112,12 @@ class Moderator(commands.Cog):
         response = discord.Embed(title = str(ctx.message.author.name), description=f"Updated stock of {item}")
         return await ctx.send(embed=response)
 
+    @commands.command(name="versions", aliases=['ver'])
+    async def versions(self, ctx):
+        embed = discord.Embed(title="Versions", description=f"[discord.py version: {discord.__version__}](https://github.com/Rapptz/discord.py)\n[Bot version: {self.bot.__version__}](https://github.com/anand2312/CrajyBot-private)")
+        embed.set_thumbnail(url=ctx.guild.icon_url)
+        return await ctx.send(embed=embed)
+
     @commands.command(name="clear-pin", aliases=["clearpins", "clear-pins"])
     async def remove_pins(self, ctx, id_: typing.Union[int, str]):
         if isinstance(id_, int):

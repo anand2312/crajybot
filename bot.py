@@ -46,7 +46,7 @@ bot.bday_collection = db["bday"]
 bot.pins_collection = db["pins"]
 bot.role_names_collection = db["role"]
 
-bot.__version__ = "2.0a"
+bot.__version__ = "2.0"
 
 @bot.event
 async def on_ready(): # sends this message when bot starts working in #bot-tests
@@ -151,6 +151,7 @@ if DEFAULT_COGS == []:
     for filename in os.listdir('./cogs'):
         if filename.endswith('.py'):
             bot.load_extension(f'cogs.{filename[:-3]}')
+    bot.load_extension('jishaku')
 else:
     for cog in DEFAULT_COGS:
         bot.load_extension(f'cogs.{cog}')
