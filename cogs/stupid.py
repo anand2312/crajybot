@@ -204,7 +204,7 @@ class stupid(commands.Cog):
         
     @commands.command(name="pins", help="Display the messages pinned in the bot database. Useful if your channel has already reached the 50 pin limit.")
     async def pins(self, ctx): 
-        data = await self.bot.pins_collection.find()
+        data = self.bot.pins_collection.find()
         embeds = []
 
         counter = 1
@@ -213,7 +213,7 @@ class stupid(commands.Cog):
         embed.set_thumbnail(url=ctx.guild.icon_url)
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
 
-        for pin in data:
+        async for pin in data:
             if counter % 5 != 0:
                 embed.add_field(name=f"{pin['message_synopsis']}",
                                 value=f"[_~{pin['message_author']}_, on {pin['date']}]({pin['message_jump_url']})\nPin ID:{pin['_id']}", 
