@@ -141,7 +141,7 @@ class Moderator(commands.Cog):
 
     @commands.command(name="pin", help="Pins a message to the bot's database. Pins can be viewed with the `pins` command.")
     async def pin(self, ctx, id_: discord.Message, name_: str=None):
-        old_data = await self.bot.pins_collection.find().sort("_id", -1).limit(1)
+        old_data = await self.bot.pins_collection.find().sort("_id", -1).limit(1).to_list(length=None)
         try:
             last_pin = old_data[0]['_id']
         except IndexError:
