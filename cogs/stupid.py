@@ -214,7 +214,10 @@ class stupid(commands.Cog):
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
 
         async for pin in data:
-            author = discord.utils.get(ctx.guild.members, id=pin['message_author']).name or pin['message_author']
+            try:
+                author = discord.utils.get(ctx.guild.members, id=pin['message_author']).name
+            except AttributeError:
+                author = pin['message_author']
             if counter % 5 != 0:
                 embed.add_field(name=f"{pin['message_synopsis']}",
                                 value=f"[_~{author}_, on {pin['date']}]({pin['message_jump_url']})\nPin ID:{pin['_id']}", 
