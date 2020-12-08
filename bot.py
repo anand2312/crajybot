@@ -84,6 +84,9 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
         embed.description = f"Time remaining = {int(error.retry_after/60)} mins"
         return await ctx.send(embed=embed)
+    elif isinstance(error, commands.CommandNotFound):
+        if ctx.message.content.startswith(".."):
+            pass
     else:
         embed.description = str(error)
         await ctx.send(embed=embed)
