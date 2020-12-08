@@ -87,6 +87,10 @@ async def on_command_error(ctx, error):
     elif isinstance(error, commands.CommandNotFound):
         if ctx.message.content.startswith(".."):
             pass
+        else:
+            embed.description = str(error)
+            await ctx.send(embed=embed)
+            raise error
     else:
         embed.description = str(error)
         await ctx.send(embed=embed)
