@@ -41,7 +41,7 @@ class Metrics(commands.Cog):
     async def stop_metrics(self, ctx):
         self.metrics_dump.stop()
 
-        if len(self.cache) != 0:
+        if len(self.author_cache) != 0 or len(self.channel_cache) != 0:
             self.last_stored_time = datetime.datetime.now()
             insert_doc = {"datetime": self.last_stored_time, "author_counts": self.author_cache, "channel_counts": self.channel_cache}
             await self.metrics_collection.insert_one(insert_doc)
