@@ -189,7 +189,8 @@ class Moderator(commands.Cog):
             stupid=self.bot.stupid_collection,
             bday=self.bot.bday_collection,
             pins=self.bot.pins_collection,
-            role=self.bot.role_names_collection
+            role=self.bot.role_names_collection,
+            metrics=self.bot.metrics_collection
         )
 
         # parsing collection on which operation has to be run
@@ -206,7 +207,8 @@ class Moderator(commands.Cog):
         "4. Stupid\n"
         "5. Bday\n"
         "6. Pins\n"
-        "7. Role"
+        "7. Role\n"
+        "8. Metrics"
         )
 
 
