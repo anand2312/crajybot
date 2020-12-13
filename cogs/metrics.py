@@ -1,5 +1,6 @@
 """A cog that keeps track of certain chat metrics.
 Stores data in it's own collection on MongoDB."""
+import discord
 from discord.ext import commands, tasks
 import datetime
 from collections import defaultdict
