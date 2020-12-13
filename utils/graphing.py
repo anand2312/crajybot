@@ -19,7 +19,7 @@ class InstantaneousMetrics:
     """Represents all the data for the metrics stored for a particular datetime object. I like attribute lookup xD."""
     time: datetime.datetime
     author_counts: dict
-    channel_count: dict
+    channel_counts: dict
     
     def total_count(self) -> int:
         return sum(self.counts.values())
