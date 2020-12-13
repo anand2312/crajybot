@@ -18,7 +18,8 @@ DIR_PATH = Path(f"utils/plots")
 class InstantaneousMetrics:
     """Represents all the data for the metrics stored for a particular datetime object. I like attribute lookup xD."""
     time: datetime.datetime
-    counts: dict
+    author_counts: dict
+    channel_count: dict
     
     def total_count(self) -> int:
         return sum(self.counts.values())
@@ -33,8 +34,8 @@ ImageEmbed = namedtuple("ImageEmbed", "file embed")
 
 def parse_data(db_response: dict) -> InstantaneousMetrics:
     """Convert the mongodb response dictionary into the dataclass instance.
-    The dictionary is in the form `{datetime: <time inserted>, counts: <dict containing message count for each user>}`."""
-    return InstantaneousMetrics(time=db_response["datetime"], counts=db_response["counts"])
+    The dictionary is in the form `{datetime: <time inserted>, author_counts: <dict containing message count for each user>, channel_counts: >dict containing message counts for each channel>}`."""
+    return InstantaneousMetrics(time=db_response["datetime"], author_counts=db_response["author_counts"], channel_counts=db_response["channel_counts"])
 
 
 def graph_hourly_message_count(data: Sequence[InstantaneousMetrics]) -> ImageEmbed:
