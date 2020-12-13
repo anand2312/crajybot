@@ -58,7 +58,7 @@ class Metrics(commands.Cog):
     async def metrics_hours(self, ctx, amt: int = 5):
         delta = datetime.datetime.now() - datetime.timedelta(hours=amt)
         raw_data = await self.metrics_collection.find({"datetime": {"$gte": delta}}).to_list(length=amt)
-        parsed = list(map(graphing.parse_pata, raw_data))
+        parsed = list(map(graphing.parse_data, raw_data))
         async with ctx.channel.typing():
             embed = graphing.graph_hourly_message_count(parsed)
             return await ctx.send(embed=embed)

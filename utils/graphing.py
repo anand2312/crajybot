@@ -46,6 +46,9 @@ def graph_hourly_message_count(data: Sequence[InstantaneousMetrics]) -> discord.
         return make_discord_embed(file_name)
     else:
         fig, ax = plt.subplots()
+        ax.set_title("Messages sent, hourly")
+        ax.set_xlabel("Time")
+        ax.set_ylabel("Messages")
         # x-axis time, y-axis message message count
         x_array = np.array([x.clean_hours_repr() for x in data])
         y_array = np.array([y.total_count() for y in data])
