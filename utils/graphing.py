@@ -40,7 +40,7 @@ def graph_hourly_message_count(data: Sequence[InstantaneousMetrics]) -> discord.
     first, last = data[0].time.strftime("%H"), data[-1].time.strftime("%H")
     file_name = f"{date}-{first}-{last}.png"
 
-    file_path = DIR_PATH + Path(file_name)
+    file_path = DIR_PATH / file_name
 
     if file_path.exists():
         return make_discord_embed(file_name)
