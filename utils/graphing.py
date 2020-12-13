@@ -11,7 +11,7 @@ from pathlib import Path
 
 import discord
 
-DIR_PATH = Path(f"/utils/plots")
+DIR_PATH = Path(f"utils/plots")
 
 @dataclass
 class InstantaneousMetrics:
