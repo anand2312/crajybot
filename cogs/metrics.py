@@ -55,9 +55,12 @@ class Metrics(commands.Cog):
         return await ctx.send(embed=embed)
 
     @metrics.command(name="hours", aliases=["h", "hour", "hourly"])
-    async def metrics_hours(self, ctx, amt: int = 5):
-        delta = datetime.datetime.now() - datetime.timedelta(hours=amt)
-        raw_data = await self.metrics_collection.find({"datetime": {"$gte": delta}}).to_list(length=amt)
+    async def metrics_hours(self, ctx, amt: int = 5=None):
+        if amt is not None:
+            delta = datetime.datetime.now() - datetime.timedelta(hours=amt)
+            raw_data = await self.metrics_collection.find({"datetime": {"$gte": delta}}).to_list(length=amt)
+        else:
+            raw_data = await self.metrics_collection.find().to_list(length=amt)
         parsed = list(map(graphing.parse_data, raw_data))
         async with ctx.channel.typing():
             file_, embed = graphing.graph_hourly_message_count(parsed)
