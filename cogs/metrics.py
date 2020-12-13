@@ -55,7 +55,7 @@ class Metrics(commands.Cog):
         return await ctx.send(embed=embed)
 
     @metrics.command(name="hours", aliases=["h", "hour", "hourly"])
-    async def metrics_hours(self, ctx, amt: int = 5=None):
+    async def metrics_hours(self, ctx, amt: int=None):
         if amt is not None:
             delta = datetime.datetime.now() - datetime.timedelta(hours=amt)
             raw_data = await self.metrics_collection.find({"datetime": {"$gte": delta}}).to_list(length=amt)
