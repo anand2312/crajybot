@@ -22,7 +22,7 @@ class InstantaneousMetrics:
     channel_counts: dict
     
     def total_count(self) -> int:
-        return sum(self.counts.values())
+        return sum(self.author_counts.values())
 
     def clean_hours_repr(self) -> str:
         return self.time.strftime("%H:%M")    # returns in 00:00 format
