@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands, tasks
 import datetime
 from collections import defaultdict
+from contextlib import suppress
 
 from utils import graphing
 
@@ -13,7 +14,8 @@ class Metrics(commands.Cog):
         db = self.bot.mongo["bot-data"]
         self.cached_message_count = 0
         self.loaded_time = datetime.datetime.now()
-        self.cache = defaultdict(lambda: 0)
+        self.author_cache = defaultdict(lambda: 0)
+        self.channel_cache = defaultdict(lambda: 0)
         self.last_stored_time = None
         self.bot.metrics_collection = self.metrics_collection = db["metrics"]
 
@@ -21,7 +23,8 @@ class Metrics(commands.Cog):
     async def on_message(self, message):
         if message.author.bot:
             return
-        self.cache[str(message.author.id)] += 1
+        self.author_cache[str(message.author.id)] += 1
+        self.channel_cache[str(message.channel.id)] += 1
         self.cached_message_count += 1
 
     @commands.has_guild_permissions(administrator=True)
@@ -29,8 +32,9 @@ class Metrics(commands.Cog):
     async def start_metrics(self, ctx):
         self.metrics_dump.start()
         await ctx.message.add_reaction("✅")
-        embed = discord.Embed(title="Metrics Tracking: Started!", description=f"Time: {self.last_stored_time}", color=discord.Color.green())
-        return await ctx.send(embed=embed)
+        with suppress(AttributeError):
+            embed = discord.Embed(title="Metrics Tracking: Started!", description=f"Time: {self.last_stored_time}", color=discord.Color.green())
+            return await ctx.send(embed=embed)
 
     @commands.has_guild_permissions(administrator=True)
     @commands.command(name="stop-metrics")
@@ -39,10 +43,11 @@ class Metrics(commands.Cog):
 
         if len(self.cache) != 0:
             self.last_stored_time = datetime.datetime.now()
-            insert_doc = {"datetime": self.last_stored_time, "counts": self.cache}
+            insert_doc = {"datetime": self.last_stored_time, "author_counts": self.author_cache, "channel_counts": self.channel_cache}
             await self.metrics_collection.insert_one(insert_doc)
-            self.cache = defaultdict(lambda: 0)
-            self.cached_message_count += 1
+            self.author_cache = defaultdict(lambda: 0)
+            self.channel_cache = defaultdict(lambda: 0)
+            self.cached_message_count = 0
         
         embed = discord.Embed(title="Metrics Tracking: Stopped", description=f"Time: {self.last_stored_time}", color=discord.Color.red())
         return await ctx.send(embed=embed)
@@ -71,11 +76,12 @@ class Metrics(commands.Cog):
         # add new data hourly to the db and then reset counts and cache
         self.last_stored_time = datetime.datetime.now()
 
-        if len(self.cache) != 0:
-            insert_doc = {"datetime": self.last_stored_time, "counts": self.cache}
+        if len(self.author_cache) != 0 or len(self.channel_cache) != 0:
+            insert_doc = {"datetime": self.last_stored_time, "author_counts": self.author_cache, "channel_counts": self.channel_cache}
             await self.metrics_collection.insert_one(insert_doc)
 
-        self.cache = defaultdict(lambda: 0)
+        self.author_cache = defaultdict(lambda: 0)
+        self.channel_cache = defaultdict(lambda: 0)
         self.cached_message_count = 0
 
     @tasks.loop(hours=24)
