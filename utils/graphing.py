@@ -32,7 +32,7 @@ class InstantaneousMetrics:
 def parse_data(db_response: dict) -> InstantaneousMetrics:
     """Convert the mongodb response dictionary into the dataclass instance.
     The dictionary is in the form `{datetime: <time inserted>, counts: <dict containing message count for each user>}`."""
-    return InstantaneousMetrics(time=db_response["datetime"], counts=db_response[""])
+    return InstantaneousMetrics(time=db_response["datetime"], counts=db_response["counts"])
 
 
 def graph_hourly_message_count(data: Sequence[InstantaneousMetrics]) -> discord.Embed:
