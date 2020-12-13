@@ -54,7 +54,7 @@ def graph_hourly_message_count(data: Sequence[InstantaneousMetrics]) -> discord.
         y_array = np.array([y.total_count() for y in data])
 
         ax.plot(x_array, y_array)
-        fig.savefig(f"/utils/plots/{file_name}.png")     # saves file with name <date>-<first plotted hour>-<last plotted hour>
+        fig.savefig(f"/utils/plots/{file_name}", bbox_inchex="tight")     # saves file with name <date>-<first plotted hour>-<last plotted hour>
         plt.close(fig)
         return make_discord_embed(file_name)
 
