@@ -60,7 +60,7 @@ def graph_hourly_message_count(data: Sequence[InstantaneousMetrics]) -> discord.
 
 
 def make_discord_embed(file_name: str) -> discord.Embed:
-        file_for_discord = discord.File(DIR_PATH, filename=file_name)
+        file_for_discord = discord.File(DIR_PATH / file_name, filename=file_name)
         embed = discord.Embed()
         embed.set_image(url=f"attachment://{file_name}")
         return embed
