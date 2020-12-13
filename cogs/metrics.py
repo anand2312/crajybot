@@ -30,7 +30,7 @@ class Metrics(commands.Cog):
         self.metrics_dump.start()
         await ctx.message.add_reaction("✅")
         embed = discord.Embed(title="Metrics Tracking: Started!", description=f"Time: {self.last_stored_time}", color=discord.Color.green())
-        await ctx.send(embed=embed)
+        return await ctx.send(embed=embed)
 
     @commands.has_guild_permissions(administrator=True)
     @commands.command(name="stop-metrics")
@@ -45,7 +45,8 @@ class Metrics(commands.Cog):
             self.cached_message_count += 1
         
         embed = discord.Embed(title="Metrics Tracking: Stopped", description=f"Time: {self.last_stored_time}", color=discord.Color.red())
-
+        return await ctx.send(embed=embed)
+    
     @commands.group(name="metrics", aliases=["stats", "statistics"], invoke_without_command=True)
     async def metrics(self, ctx):
         embed = discord.Embed(title="Metrics", 
@@ -56,7 +57,7 @@ class Metrics(commands.Cog):
     @metrics.command(name="hours", aliases=["h", "hour", "hourly"])
     async def metrics_hours(self, ctx, amt: int = 5):
         delta = datetime.datetime.now() - datetime.timedelta(hours=amt)
-        raw_data = await self.metrics_collection.find({"$gte": {"datetime": delta}}).to_list(length=amt)
+        raw_data = await self.metrics_collection.find({"datetime": {"$gte": delta}}).to_list(length=amt)
         parsed = list(map(graphing.parse_pata, raw_data))
         async with ctx.channel.typing():
             embed = graphing.graph_hourly_message_count(parsed)
