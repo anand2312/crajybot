@@ -21,7 +21,7 @@ class Metrics(commands.Cog):
     async def on_message(self, message):
         if message.author.bot:
             return
-        self.cache[message.author.id] += 1
+        self.cache[str(message.author.id)] += 1
         self.cached_message_count += 1
 
     @commands.has_guild_permissions(administrator=True)
