@@ -49,7 +49,7 @@ class Metrics(commands.Cog):
     @commands.group(name="metrics", aliases=["stats", "statistics"], invoke_without_command=True)
     async def metrics(self, ctx):
         embed = discord.Embed(title="Metrics", 
-                              description=f"Been tracking since: {self.loaded_time.strftime("%H:%M, %d %B, %Y")}\nLast data dump: {self.last_stored_time.strftime("%H:%M")}", 
+                              description=f"Been tracking since: {self.loaded_time.strftime('%H:%M, %d %B, %Y')}\nLast data dump: {self.last_stored_time.strftime('%H:%M')}", 
                               color=discord.Color.green())
         return await ctx.send(embed=embed)
 
