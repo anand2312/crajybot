@@ -30,7 +30,7 @@ class InstantaneousMetrics:
     def clean_date_repr(self) -> str:
         return self.time.strftime("%d/%m/%Y")
 
-ImageEmbed = namedtuple("ImageEmbed", "file embed")
+ImageEmbed = namedtuple("ImageEmbed", "file embed")     # return datatype for the make_discord_embed function.  `send` coroutine (channel.send) requires the discord.File object generated too to send the image file.
 
 def parse_data(db_response: dict) -> InstantaneousMetrics:
     """Convert the mongodb response dictionary into the dataclass instance.
@@ -39,11 +39,11 @@ def parse_data(db_response: dict) -> InstantaneousMetrics:
 
 
 def graph_hourly_message_count(data: Sequence[InstantaneousMetrics]) -> ImageEmbed:
-    date = data[0].time.strftime("%d%m%Y")
-    first, last = data[0].time.strftime("%H"), data[-1].time.strftime("%H")
+    date = data[0].time.strftime("%d%m%Y")       
+    first, last = data[0].time.strftime("%H"), data[-1].time.strftime("%H")      # first, last, and date are used while making the file name before saving. This can be improved upon, to further decrease generating duplicate images.
     file_name = f"{date}-{first}-{last}.png"
 
-    file_path = DIR_PATH / file_name
+    file_path = DIR_PATH / file_name     # creates the path for the image file to be generated. Path objects aren't added like normal strings with a +, they are extended using /.
 
     if file_path.exists():
         return make_discord_embed(file_name)
@@ -63,6 +63,7 @@ def graph_hourly_message_count(data: Sequence[InstantaneousMetrics]) -> ImageEmb
 
 
 def make_discord_embed(file_name: str) -> ImageEmbed:
+        """Creates the discord.File and discord.Embed objects that will be used in the cog code to send to the channel. These two objects are packaged together in an instance of the ImageEmbed namedtuple."""
         file_for_discord = discord.File(DIR_PATH / file_name, filename=file_name)
         embed = discord.Embed()
         embed.set_image(url=f"attachment://{file_name}")
