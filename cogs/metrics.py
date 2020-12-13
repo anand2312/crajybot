@@ -5,6 +5,8 @@ from discord.ext import commands, tasks
 import datetime
 from collections import defaultdict
 
+from utils import graphing
+
 class Metrics(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -37,12 +39,28 @@ class Metrics(commands.Cog):
 
         if len(self.cache) != 0:
             self.last_stored_time = datetime.datetime.now()
-            insert_doc = {"datetime": self.last_stored_time, counts: self.cache}
+            insert_doc = {"datetime": self.last_stored_time, "counts": self.cache}
             await self.metrics_collection.insert_one(insert_doc)
             self.cache = defaultdict(lambda: 0)
             self.cached_message_count += 1
         
         embed = discord.Embed(title="Metrics Tracking: Stopped", description=f"Time: {self.last_stored_time}", color=discord.Color.red())
+
+    @commands.group(name="metrics", aliases=["stats", "statistics"], invoke_without_command=True)
+    async def metrics(self, ctx):
+        embed = discord.Embed(title="Metrics", 
+                              description=f"Been tracking since: {self.loaded_time.strftime("%H:%M, %d %B, %Y")}\nLast data dump: {self.last_stored_time.strftime("%H:%M")}", 
+                              color=discord.Color.green())
+        return await ctx.send(embed=embed)
+
+    @metrics.command(name="hours", aliases=["h", "hour", "hourly"])
+    async def metrics_hours(self, ctx, amt: int = 5):
+        delta = datetime.datetime.now() - datetime.timedelta(hours=amt)
+        raw_data = await self.metrics_collection.find({"$gte": {"datetime": delta}}).to_list(length=amt)
+        parsed = list(map(graphing.parse_pata, raw_data))
+        async with ctx.channel.typing():
+            embed = graphing.graph_hourly_message_count(parsed)
+            return await ctx.send(embed=embed)
 
     @tasks.loop(hours=1)
     async def metrics_dump(self):
@@ -50,7 +68,7 @@ class Metrics(commands.Cog):
         self.last_stored_time = datetime.datetime.now()
 
         if len(self.cache) != 0:
-            insert_doc = {"datetime": self.last_stored_time, counts: self.cache}
+            insert_doc = {"datetime": self.last_stored_time, "counts": self.cache}
             await self.metrics_collection.insert_one(insert_doc)
 
         self.cache = defaultdict(lambda: 0)
