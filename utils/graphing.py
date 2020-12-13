@@ -7,6 +7,7 @@ import numpy as np
 import datetime
 from typing import Sequence
 from dataclasses import dataclass
+from collections import namedtuple
 from pathlib import Path
 
 import discord
@@ -28,6 +29,7 @@ class InstantaneousMetrics:
     def clean_date_repr(self) -> str:
         return self.time.strftime("%d/%m/%Y")
 
+ImageEmbed = namedtuple("ImageEmbed", "file embed")
 
 def parse_data(db_response: dict) -> InstantaneousMetrics:
     """Convert the mongodb response dictionary into the dataclass instance.
@@ -35,7 +37,7 @@ def parse_data(db_response: dict) -> InstantaneousMetrics:
     return InstantaneousMetrics(time=db_response["datetime"], counts=db_response["counts"])
 
 
-def graph_hourly_message_count(data: Sequence[InstantaneousMetrics]) -> discord.Embed:
+def graph_hourly_message_count(data: Sequence[InstantaneousMetrics]) -> ImageEmbed:
     date = data[0].time.strftime("%d%m%Y")
     first, last = data[0].time.strftime("%H"), data[-1].time.strftime("%H")
     file_name = f"{date}-{first}-{last}.png"
@@ -59,8 +61,8 @@ def graph_hourly_message_count(data: Sequence[InstantaneousMetrics]) -> discord.
         return make_discord_embed(file_name)
 
 
-def make_discord_embed(file_name: str) -> discord.Embed:
+def make_discord_embed(file_name: str) -> ImageEmbed:
         file_for_discord = discord.File(DIR_PATH / file_name, filename=file_name)
         embed = discord.Embed()
         embed.set_image(url=f"attachment://{file_name}")
-        return embed
+        return ImageEmbed(file_for_discord, embed)
