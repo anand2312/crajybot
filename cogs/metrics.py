@@ -37,7 +37,8 @@ class Metrics(commands.Cog):
 
         if len(self.cache) != 0:
             self.last_stored_time = datetime.datetime.now()
-            await self.metrics_collection.insert_one({self.last_stored_time: self.cache})
+            insert_doc = {"datetime": self.last_stored_time, counts: self.cache}
+            await self.metrics_collection.insert_one(insert_doc)
             self.cache = defaultdict(lambda: 0)
             self.cached_message_count += 1
         
@@ -49,7 +50,8 @@ class Metrics(commands.Cog):
         self.last_stored_time = datetime.datetime.now()
 
         if len(self.cache) != 0:
-            await self.metrics_collection.insert_one({self.last_stored_time: self.cache})
+            insert_doc = {"datetime": self.last_stored_time, counts: self.cache}
+            await self.metrics_collection.insert_one(insert_doc)
 
         self.cache = defaultdict(lambda: 0)
         self.cached_message_count = 0
