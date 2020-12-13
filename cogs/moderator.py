@@ -112,6 +112,12 @@ class Moderator(commands.Cog):
         response = discord.Embed(title = str(ctx.message.author.name), description=f"Updated stock of {item}")
         return await ctx.send(embed=response)
 
+    @commands.command(name="versions", aliases=['ver'])
+    async def versions(self, ctx):
+        embed = discord.Embed(title="Versions", description=f"[discord.py version: {discord.__version__}](https://github.com/Rapptz/discord.py)\n[Bot version: {self.bot.__version__}](https://github.com/anand2312/CrajyBot-private)")
+        embed.set_thumbnail(url=ctx.guild.icon_url)
+        return await ctx.send(embed=embed)
+
     @commands.command(name="clear-pin", aliases=["clearpins", "clear-pins"])
     async def remove_pins(self, ctx, id_: typing.Union[int, str]):
         if isinstance(id_, int):
@@ -135,7 +141,7 @@ class Moderator(commands.Cog):
 
     @commands.command(name="pin", help="Pins a message to the bot's database. Pins can be viewed with the `pins` command.")
     async def pin(self, ctx, id_: discord.Message, name_: str=None):
-        old_data = await self.bot.pins_collection.find().sort("_id", -1).limit(1)
+        old_data = await self.bot.pins_collection.find().sort("_id", -1).limit(1).to_list(length=None)
         try:
             last_pin = old_data[0]['_id']
         except IndexError:
@@ -226,9 +232,9 @@ class Moderator(commands.Cog):
         embed = discord.Embed(title="Database Query", color=discord.Color.green())
 
         if operation == "find":
-            data = await collection.find(_filter)
+            data = collection.find(_filter)
             out = ""
-            for i in data:
+            async for i in data:
                 out += str(i) + "\n"
             embed.description = f"```{out}```"
             return await ctx.send(embed=embed)
@@ -268,7 +274,8 @@ self.env['func'] = func"""
             'message': ctx.message,
             'ctx': ctx,
             'discord': discord,
-            'self': self
+            'self': self,
+            'asyncio': asyncio
         }
 
         eval(compile(real_code, "bruh", "exec"), env)
