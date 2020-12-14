@@ -63,7 +63,7 @@ def _make_graph(title: str, *, xlabel: str, ylabel: str ,x_axis: np.array, y_axi
 
     # a bytes buffer to which the generated graph image will be stored, instead of saving every graph image.
     buffer = io.BytesIO()
-    fig.savefig(buffer, format="png" bbox_inchex="tight")     # saves file with name <date>-<first plotted hour>-<last plotted hour>
+    fig.savefig(buffer, format="png", bbox_inchex="tight")     # saves file with name <date>-<first plotted hour>-<last plotted hour>
     plt.close(fig)
 
     return buffer
