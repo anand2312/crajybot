@@ -1,7 +1,7 @@
 import matplotlib
 matplotlib.use("Agg")
 
-import matplotlib.pyplot as plt
+import matplotlib.figure import Figure
 import numpy as np
 
 import datetime
@@ -55,22 +55,25 @@ def graph_hourly_message_count(data: Sequence[InstantaneousMetrics]) -> ImageEmb
 
 def _make_graph(title: str, *, xlabel: str, ylabel: str ,x_axis: np.array, y_axis: np.array) -> io.BytesIO:
     """A general graphing function that is called by all other functions."""
-    fig, ax = plt.subplots()
+    fig, = Figure()
+    ax = fig.subplots()
+
+    ax.plot(x_axis, y_axis)
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
-    ax.plot(x_axis, y_axis)
 
     # a bytes buffer to which the generated graph image will be stored, instead of saving every graph image.
     buffer = io.BytesIO()
     fig.savefig(buffer, format="png", bbox_inchex="tight")     # saves file with name <date>-<first plotted hour>-<last plotted hour>
     plt.close(fig)
-
+    buffer.seek(0)
+    
     return buffer
 
 def make_discord_embed(image_buffer: io.BytesIO) -> ImageEmbed:
     """Converts the BytesIO buffer into a discord.File object that can be sent to any channel."""
-    file_for_discord = discord.File(image_buffer, filename="metrics-crajybot.png")
+    file_for_discord = discord.File(fp=image_buffer, filename="metrics-crajybot.png")
     embed = discord.Embed()
     embed.set_image(url="attachment://metrics-crajybot.png")
     return ImageEmbed(file_for_discord, embed)
