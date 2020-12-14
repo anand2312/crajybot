@@ -31,7 +31,7 @@ class InstantaneousMetrics:
         return self.channel_counts[channel]
 
     def clean_hours_repr(self) -> str:
-        return self.time.strftime("%H:%M")    # returns in 00:00 format
+        return self.time.strftime("%H")    # returns in 00 format
 
     def clean_date_repr(self) -> str:
         return self.time.strftime("%d/%m/%Y")
