@@ -1,7 +1,7 @@
 import matplotlib
 matplotlib.use("Agg")
 
-import matplotlib.figure import Figure
+from matplotlib.figure import Figure
 import numpy as np
 
 import datetime
@@ -68,7 +68,7 @@ def _make_graph(title: str, *, xlabel: str, ylabel: str ,x_axis: np.array, y_axi
     fig.savefig(buffer, format="png", bbox_inchex="tight")     # saves file with name <date>-<first plotted hour>-<last plotted hour>
     plt.close(fig)
     buffer.seek(0)
-    
+
     return buffer
 
 def make_discord_embed(image_buffer: io.BytesIO) -> ImageEmbed:
