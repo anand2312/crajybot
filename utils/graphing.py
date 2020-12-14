@@ -70,7 +70,7 @@ def _make_graph(title: str, *, xlabel: str, ylabel: str ,x_axis: np.array, y_axi
 
 def make_discord_embed(image_buffer: io.BytesIO) -> ImageEmbed:
     """Converts the BytesIO buffer into a discord.File object that can be sent to any channel."""
-    file_for_discord = discord.File(image_buffer, filename="metrics-crajybot")
+    file_for_discord = discord.File(image_buffer, filename="metrics-crajybot.png")
     embed = discord.Embed()
-    embed.set_image(url="attachment://metrics-crajybot")
+    embed.set_image(url="attachment://metrics-crajybot.png")
     return ImageEmbed(file_for_discord, embed)
