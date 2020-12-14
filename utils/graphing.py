@@ -53,7 +53,7 @@ def graph_hourly_message_count(data: Sequence[InstantaneousMetrics]) -> ImageEmb
     return make_discord_embed(buffer)
 
 
-def _make_graph(title: str, *, xlabel: str, ylabel: str. ,x_axis: np.array, y_axis: np.array) -> io.BytesIO:
+def _make_graph(title: str, *, xlabel: str, ylabel: str ,x_axis: np.array, y_axis: np.array) -> io.BytesIO:
     """A general graphing function that is called by all other functions."""
     fig, ax = plt.subplots()
     ax.set_title(title)
