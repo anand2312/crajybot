@@ -15,7 +15,7 @@ class Metrics(commands.Cog):
         self.bot = bot
         db = self.bot.mongo["bot-data"]
         self.cached_message_count = 0
-        self.loaded_time = datetime.datetime.now(tzinfo=timezone.BOT_TZ)
+        self.loaded_time = datetime.datetime.now(tz=timezone.BOT_TZ)
         self.author_cache = defaultdict(lambda: 0)
         self.channel_cache = defaultdict(lambda: 0)
         self.last_stored_time = None
@@ -44,7 +44,7 @@ class Metrics(commands.Cog):
         self.metrics_dump.stop()
 
         if len(self.author_cache) != 0 or len(self.channel_cache) != 0:
-            self.last_stored_time = datetime.datetime.now(tzinfo=timezone.BOT_TZ)
+            self.last_stored_time = datetime.datetime.now(tz=timezone.BOT_TZ)
             insert_doc = {"datetime": self.last_stored_time, "author_counts": self.author_cache, "channel_counts": self.channel_cache}
             await self.metrics_collection.insert_one(insert_doc)
             self.author_cache = defaultdict(lambda: 0)
@@ -64,7 +64,7 @@ class Metrics(commands.Cog):
     @metrics.command(name="hours", aliases=["h", "hour", "hourly"])
     async def metrics_hours(self, ctx, amt: int=None):
         if amt is not None:
-            delta = datetime.datetime.now(tzinfo=timezone.BOT_TZ) - datetime.timedelta(hours=amt)
+            delta = datetime.datetime.now(tz=timezone.BOT_TZ) - datetime.timedelta(hours=amt)
             raw_data = await self.metrics_collection.find({"datetime": {"$gte": delta}}).to_list(length=amt)
         else:
             raw_data = await self.metrics_collection.find().to_list(length=amt)
@@ -76,7 +76,7 @@ class Metrics(commands.Cog):
     @tasks.loop(hours=1)
     async def metrics_dump(self):
         # add new data hourly to the db and then reset counts and cache
-        self.last_stored_time = datetime.datetime.now(tzinfo=timezone.BOT_TZ)
+        self.last_stored_time = datetime.datetime.now(tz=timezone.BOT_TZ)
 
         if len(self.author_cache) != 0 or len(self.channel_cache) != 0:
             insert_doc = {"datetime": self.last_stored_time, "author_counts": self.author_cache, "channel_counts": self.channel_cache}
