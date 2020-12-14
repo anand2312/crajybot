@@ -1,6 +1,8 @@
 """BOT moderator commands. Not to be confused with server moderation commands, like muting or kicking.
 There are a gazillion bots out there that can do those functions perfectly well. These commands are for 
 control of the bot."""
+import sys
+
 import discord 
 from discord.ext import commands
 
@@ -283,6 +285,16 @@ self.env['func'] = func"""
         await self.env['func']()
 
         await ctx.message.add_reaction('✅')
+
+    @commands.command(name="reload-module", aliases=["reloadm"])
+    async def unload_module(self, ctx, module: str):
+        removes = []
+        for name in sys.modules:
+            if name.startswith(module):
+                removes.append(name)
+        for name in removes:
+            sys.modules.pop(name)
+        return await ctx.send(f"Reloaded {module}")
 
 def setup(bot):
     bot.add_cog(Moderator(bot))
