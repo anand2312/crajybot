@@ -3,6 +3,7 @@ Stores data in it's own collection on MongoDB."""
 import discord
 from discord.ext import commands, tasks
 import datetime
+from bson.codec_options import CodecOptions
 from collections import defaultdict
 from contextlib import suppress
 
@@ -14,12 +15,15 @@ class Metrics(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         db = self.bot.mongo["bot-data"]
-        self.cached_message_count = 0
+        self.bot.metrics_collection = db["metrics"]    # will return in UTC
+        self.metrics_collection = self.bot.metrics_collection.with_options(codec_options=CodecOptions(tz_aware=True, tzinfo=timezone.BOT_TZ))
+
         self.loaded_time = datetime.datetime.now(tz=timezone.BOT_TZ)
+        self.last_stored_time = None
+
         self.author_cache = defaultdict(lambda: 0)
         self.channel_cache = defaultdict(lambda: 0)
-        self.last_stored_time = None
-        self.bot.metrics_collection = self.metrics_collection = db["metrics"]
+        self.cached_message_count = 0
 
     @commands.Cog.listener()
     async def on_message(self, message):
