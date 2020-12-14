@@ -6,13 +6,14 @@ import datetime
 from collections import defaultdict
 
 from utils import graphing
+from utils import timezone
 
 class Metrics(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         db = self.bot.mongo["bot-data"]
         self.cached_message_count = 0
-        self.loaded_time = datetime.datetime.now()
+        self.loaded_time = datetime.datetime.now(tzinfo=timezone.BOT_TZ)
         self.cache = defaultdict(lambda: 0)
         self.last_stored_time = None
         self.bot.metrics_collection = self.metrics_collection = db["metrics"]
@@ -38,7 +39,7 @@ class Metrics(commands.Cog):
         self.metrics_dump.stop()
 
         if len(self.cache) != 0:
-            self.last_stored_time = datetime.datetime.now()
+            self.last_stored_time = datetime.datetime.now(tzinfo=timezone.BOT_TZ)
             insert_doc = {"datetime": self.last_stored_time, "counts": self.cache}
             await self.metrics_collection.insert_one(insert_doc)
             self.cache = defaultdict(lambda: 0)
@@ -56,7 +57,7 @@ class Metrics(commands.Cog):
 
     @metrics.command(name="hours", aliases=["h", "hour", "hourly"])
     async def metrics_hours(self, ctx, amt: int = 5):
-        delta = datetime.datetime.now() - datetime.timedelta(hours=amt)
+        delta = datetime.datetime.now(tzinfo=timezone.BOT_TZ) - datetime.timedelta(hours=amt)
         raw_data = await self.metrics_collection.find({"datetime": {"$gte": delta}}).to_list(length=amt)
         parsed = list(map(graphing.parse_pata, raw_data))
         async with ctx.channel.typing():
@@ -66,7 +67,7 @@ class Metrics(commands.Cog):
     @tasks.loop(hours=1)
     async def metrics_dump(self):
         # add new data hourly to the db and then reset counts and cache
-        self.last_stored_time = datetime.datetime.now()
+        self.last_stored_time = datetime.datetime.now(tzinfo=timezone.BOT_TZ)
 
         if len(self.cache) != 0:
             insert_doc = {"datetime": self.last_stored_time, "counts": self.cache}
@@ -77,6 +78,7 @@ class Metrics(commands.Cog):
 
     @tasks.loop(hours=24)
     async def metrics_clear(self):
+        # to clear out old data from the database
         pass
 
 def setup(bot):
