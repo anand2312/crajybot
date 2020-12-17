@@ -10,4 +10,5 @@ pytz==2018.9
 Random-Word==1.0.4
 yarl==1.4.2
 matplotlib==3.3.3
-numpy==1.19.0
+numpy==1.19.4
+jishaku==1.19.0
