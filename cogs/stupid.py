@@ -43,6 +43,8 @@ class stupid(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+        self.pin_cache = set()
+        self.pin_vote_threshold = 4
         # a loop that changes the name of a role, based on names saved in the database. Names are added with the `role-name` command
         self.role_name_loop.start()   
         self.qotd_cache_loop.start()
@@ -54,6 +56,19 @@ class stupid(commands.Cog):
             pass
 
         self.cached_qotd = None
+
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
+        if str(reaction) == "📌":
+            if reaction.message in self.pin_cache:
+                if reaction.count >= self.pin_vote_threshold:
+                    mod = self.bot.get_cog("Moderator")
+                    ctx = await self.bot.get_context(reaction.message)
+                    setattr(ctx, "author", self.bot.user)
+                    await mod.pin(ctx, id_=reaction.message)
+                    self.pin_cache.remove(reaction.message)
+            else:
+                self.pin_cache.add(reaction.message)
         
     @commands.command(name="fancy", aliases=["f"])
     async def fancy(self, ctx, *, message):
@@ -280,6 +295,11 @@ class stupid(commands.Cog):
 
         paginator = disputils.BotEmbedPaginator(ctx, embeds)
         await paginator.run()
+
+    @commands.has_guild_permissions(administrator=True)
+    async def change_vote_threshold(self, ctx, arg: int):
+        self.pin_vote_threshold = arg
+        await ctx.message.add_reaction("✅")
 
     @commands.command(name="fetch-pin", aliases=["fetchpin"], help="Return a pin based on the ID provided. WIP.")
     async def fetch_pin(self, ctx, identifier: Union[str, int]):
