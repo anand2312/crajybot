@@ -297,6 +297,7 @@ class stupid(commands.Cog):
         await paginator.run()
 
     @commands.has_guild_permissions(administrator=True)
+    @commands.command(name="change-vote-threshold")
     async def change_vote_threshold(self, ctx, arg: int):
         self.pin_vote_threshold = arg
         await ctx.message.add_reaction("✅")
