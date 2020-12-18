@@ -61,12 +61,12 @@ class stupid(commands.Cog):
     async def on_reaction_add(self, reaction, user):
         if str(reaction) == "📌":
             if reaction.message in self.pin_cache:
-                if reaction.count >= self.pin_vote_threshold:
+                if reaction.count == self.pin_vote_threshold:
                     mod = self.bot.get_cog("Moderator")
                     ctx = await self.bot.get_context(reaction.message)
                     setattr(ctx, "author", self.bot.user)
-                    await mod.pin(ctx, id_=reaction.message)
                     self.pin_cache.remove(reaction.message)
+                    return await mod.pin(ctx, id_=reaction.message)
             else:
                 self.pin_cache.add(reaction.message)
         
