@@ -93,7 +93,7 @@ class stupid(commands.Cog):
             converted.append(res_string)
         joined = "\n".join(converted)
         out = f"{number} {init_cur} is:\n{joined}"
-        return await message.channel.send(out)
+        return await message.reply(out)
                 
     async def on_reaction_add(self, reaction, user):
         if str(reaction) == "📌" and user != self.bot.user:
