@@ -54,6 +54,38 @@ class stupid(commands.Cog):
             pass
 
         self.cached_qotd = None
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        currencies = {"usd", "omr", "inr", "eur"}
+        message_string = message.content.lower().replace("euro", "eur")
+        message_string = message_string.replace("rial", "omr")
+        message_string = message_string.replace("rupees", "inr")
+        message_string = message_string.replace("rs", "inr")
+
+        converted = []
+        splitted = message_string.split()
+
+        for index, word in enumerate(splitted):
+            if word in currencies:
+                init_cur = word
+                number = int(splitted[index-1])
+                break
+        
+        url = f"https://free.currconv.com/api/v7/convert?apiKey={CURRENCY_KEY}&q={init_cur}_OMR,{init_cur}_INR,{init_cur}_USD,{init_cur}_EUR"
+        async with self.bot.session.get(url) as resp:
+            data = await resp.json()
+            rates = {}
+            for key, value in data["results"].items():
+                if value["val"] != 1:
+                    rates[key] = value["val"]
+
+        for key, value in rates.items():
+            res_string = f"{key[4:]} {value * number}"
+            converted.append(res_string)
+
+        return await message.channel.send("\n".join(converted))
+                
         
     @commands.command(name="fancy", aliases=["f"])
     async def fancy(self, ctx, *, message):
