@@ -142,7 +142,7 @@ async def birthday_loop():
     data = bot.bday_collection.find()
     async for person in bot.bday_collection.find():
         if person['date'].strftime("%d-%B") == datetime.datetime.now(BOT_TZ).strftime('%d-%B'):
-            person_obj = discord.utils.get(guild.members, name=person['user'].split("#")[0])
+            person_obj = discord.utils.get(guild.members, id=person['user'])
             await wishchannel.send(f"It's {person_obj.mention}'s birthday today! @here")
 
 @birthday_loop.before_loop
