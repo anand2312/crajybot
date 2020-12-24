@@ -59,6 +59,7 @@ class stupid(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        if message.author.bot: return
         currencies = {"usd", "omr", "inr", "eur"}
         message_string = message.content.lower().replace("euro", "eur")
         message_string = message_string.replace("rial", "omr")
@@ -74,19 +75,25 @@ class stupid(commands.Cog):
                 number = int(splitted[index-1])
                 break
         
-        url = f"https://free.currconv.com/api/v7/convert?apiKey={CURRENCY_KEY}&q={init_cur}_OMR,{init_cur}_INR,{init_cur}_USD,{init_cur}_EUR"
-        async with self.bot.session.get(url) as resp:
-            data = await resp.json()
+        url1 = f"https://free.currconv.com/api/v7/convert?apiKey={CURRENCY_KEY}&q={init_cur}_OMR,{init_cur}_INR"
+        url2 = f"https://free.currconv.com/api/v7/convert?apiKey={CURRENCY_KEY}&q={init_cur}_USD,{init_cur}_EUR"
+        async with self.bot.session.get(url1) as resp1, self.bot.session.get(url2) as resp2:
+            data1 = await resp1.json()
+            data2 = await resp2.json()
             rates = {}
-            for key, value in data["results"].items():
+            for key, value in data1["results"].items():
+                if value["val"] != 1:
+                    rates[key] = value["val"]
+            for key, value in data2["results"].items():
                 if value["val"] != 1:
                     rates[key] = value["val"]
 
         for key, value in rates.items():
             res_string = f"{key[4:]} {value * number}"
             converted.append(res_string)
-
-        return await message.channel.send("\n".join(converted))
+        joined = "\n".join(converted)
+        out = f"{number} {init_cur} is:\n{joined}"
+        return await message.channel.send(out)
                 
     async def on_reaction_add(self, reaction, user):
         if str(reaction) == "📌" and user != self.bot.user:
