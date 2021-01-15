@@ -20,7 +20,7 @@ class CrajySlashCommands(commands.Cog):
                             options=[utils.manage_commands.create_option(
                                 name="name", 
                                 description="Which tag to bring.",
-                                option_type="STRING",
+                                option_type=3,
                                 required=True)])
     async def slash_wat(self, ctx: SlashContext, name: str):
         existing = await self.bot.stupid_collection.find_one({"key": name})
