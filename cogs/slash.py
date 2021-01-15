@@ -7,10 +7,10 @@ class CrajySlashCommands(commands.Cog):
             bot.slash = SlashCommand(bot, auto_register=True, override_type=True)
 
         self.bot = bot
-        self.bot.slash.get_cog_commands(self
+        self.bot.slash.get_cog_commands(self)
         
     @cog_ext.cog_subcommand(base="wat", name="use")
-    async def group_say(self, ctx: SlashContext, text: str):
+    async def slash_wat(self, ctx: SlashContext, text: str):
         existing = await self.bot.stupid_collection.find_one({"key": text})
         await ctx.send(content=existing["output"])
 
