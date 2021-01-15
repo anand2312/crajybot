@@ -9,6 +9,9 @@ class CrajySlashCommands(commands.Cog):
         self.bot = bot
         self.bot.slash.get_cog_commands(self)
         
+    def cog_unload(self):
+        self.bot.slash.remove_cog_commands(self)
+        
     @cog_ext.cog_subcommand(base="wat", name="use", guild_ids=[298871492924669954])
     async def slash_wat(self, ctx: SlashContext, text: str):
         existing = await self.bot.stupid_collection.find_one({"key": text})
