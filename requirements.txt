@@ -13,3 +13,4 @@ matplotlib==3.3.3
 numpy==1.19.4
 jishaku==1.19.0
 discord-py-slash-command-1.0.8.5
+asyncpg==0.21.0
