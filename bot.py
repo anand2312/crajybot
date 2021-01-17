@@ -14,8 +14,8 @@ import motor.motor_asyncio as motor
 from random import choice
 from secret.TOKEN import TOKEN
 from secret.constants import *
-from utils.help_class import HelpCommand
 from utils.timezone import BOT_TZ
+from internal.help_class import HelpCommand
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
