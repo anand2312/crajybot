@@ -227,48 +227,6 @@ class stupid(commands.Cog):
         for i in emojis:
             await id_.add_reaction(i)
         await ctx.message.delete()
-
-    @wat.command(name="slash-add", aliases=["-sa"])
-    async def wat_slash_add(self, ctx, key: str, value: str):
-        with open("utils/slash_commands.json", "r") as f:
-            existing = json.load(f)
-
-        if len(existing["commands"]) >= 50:
-            raise Exception("There are already 50 /wat commands. Remove one of them before adding more.")
-
-        update_function = {"name": key, "value": key}
-        existing["commands"].append(update_function)
-
-        update_data = {key: value}
-
-        json = {
-            "name": "wat",
-            "description": "Some of the best .wat commands, but now they look sick.",
-            "options": [
-                {
-                    "name": "use",
-                    "description": "Which tag to bring.",
-                    "type": 3,
-                    "required": True,
-                    "choices": existing["commands"]
-                },
-            ]
-        }
-        headers = {"Authorization": f"Bot {TOKEN}"}
-        with open("utils/slash_commands.json", "w") as f:
-            json.dump(existing, f)
-
-        guild_url = f"https://discord.com/api/v8/applications/{APPLICATION_ID}/guilds/{GUILD_ID}/commands"
-
-        # update the command in the application
-        async with ctx.channel.typing():
-            async with self.bot.session.post(guild_url, json=json, headers=headers) as resp:
-                await ctx.send(await resp.text())
-            async with self.bot.session.post(SLASH_COMMANDS_URL, json=json) as resp:
-                if resp.status == 200:
-                    return await ctx.send(f"**{key}** added!")
-                else:
-                    return await ctx.send("Internal error occurred.")
     
     @commands.command(name="emojify", aliases=['e'])
     async def emojify(self, ctx, *, message):
