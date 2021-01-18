@@ -26,7 +26,15 @@ class EmbedResource(enum.Enum):
     CHECK_EMOJI = "<:check:800771830116909066>"
     XMARK_EMOJI = "<:xmark:800773561093849119>"
 
+
+class __ListEmbedSource(menus.ListPageSource):
+    def __init__(self, data):
+        super().__init__(data, per_page=1)
+
+    async def format_page(self, menu, entries):
+        return entries[menu.current_page + 1]
+
 def quick_embed_paginate(embeds: list) -> menus.MenuPages:
     """Does the two step process of making ListPageSource, and making MenuPages in one function."""
-    source = menus.ListPageSource(embeds, per_page=1)
+    source = __ListEmbedSource(embeds)
     return menus.MenuPages(source=source, clear_reactions_after=True)
