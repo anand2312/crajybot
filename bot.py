@@ -37,7 +37,7 @@ async def stock_price():
 
     embed = CrajyEmbed(title="Stock Price Updated!", embed_type=emb_type)
     embed.description = f"New price: {new}"
-    embed.quick_set_footer()
+    embed.quick_set_author(bot.user)
     await message_channel.send(embed=embed)
 
 @stock_price.before_loop
