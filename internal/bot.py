@@ -36,7 +36,7 @@ class CrajyBot(commands.Bot):
             self.chat_money_cache[message.author.id] += 1
         await self.process_commands(message)
 
-    async def on_member_join(member):
+    async def on_member_join(self, member):
         """When a new member joins, add them to the database and greet them in DMs."""
         await self.register_new_member(member)
         embed = CrajyEmbed(embed_type=EmbedType.SUCCESS, title="Hi! Welcome to Crajy!")
@@ -44,11 +44,11 @@ class CrajyBot(commands.Bot):
         embed.quick_set_footer(self.user)
         await member.send(embed=embed)
 
-    async def on_member_remove(member):
+    async def on_member_remove(self, member):
         """When a member leaves, quietly remove them from the database."""
         await self.delete_member(member)
 
-    async def on_command_error(ctx, error):
+    async def on_command_error(self, ctx, error):
         """Global error handler."""
         embed = CrajyEmbed(embed_type=EmbedType.FAIL, title="Command Errored.")
         embed.quick_set_footer(self.user)
@@ -82,14 +82,14 @@ class CrajyBot(commands.Bot):
             await ctx.trigger_typing()
         await self.invoke(ctx)
 
-    async def register_new_member(member):
+    async def register_new_member(self, member):
         async with self.db_pool.acquire() as connection:
             async with connection.transaction():
                 await connection.execute("INSERT INTO economy VALUES($1)", member.id)
                 await connection.execute("INSERT INTO user_details VALUES($1)", member.id)
                 await connection.execute("INSERT INTO inventories VALUES($1)", member.id)
         
-    async def delete_member(member):
+    async def delete_member(self, member):
         async with self.db_pool.acquire() as connection:
             async with connection.transaction():
                 await connection.execute("DELETE FROM economy WHERE user_id=$1", member.id)
