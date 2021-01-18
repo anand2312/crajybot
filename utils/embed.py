@@ -28,5 +28,5 @@ class EmbedResource(enum.Enum):
 
 def quick_embed_paginate(embeds: list) -> menus.MenuPages:
     """Does the two step process of making ListPageSource, and making MenuPages in one function."""
-    source = menus.ListPageSource(embeds)
+    source = menus.ListPageSource(embeds, per_page=1)
     return menus.MenuPages(source=source, clear_reactions_after=True)
