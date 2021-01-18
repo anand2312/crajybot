@@ -14,6 +14,7 @@ from internal.enumerations import Table, EmbedType
 
 intents = discord.Intents.default()
 intents.members = True 
+intents.messages = True
 bot = CrajyBot(command_prefix=commands.when_mentioned_or("."),
                activity=discord.Activity(type=discord.ActivityType.watching, name="thug_sgt"),
                intents=intents,
