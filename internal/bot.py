@@ -6,9 +6,9 @@ from aiohttp import ClientSession
 import asyncpg
 
 from utils.embed import CrajyEmbed
-from utils.enumerations import EmbedType
 
 from internal.help_class import HelpCommand
+from internal.enumerations import EmbedType
 from internal.context import CrajyContext
 
 from secret.constants import *
@@ -17,11 +17,11 @@ from secret.constants import *
 class CrajyBot(commands.Bot):
     """Subclass of commands.Bot with some attributes set."""
     def __init__(self, *args, **kwargs):
-        self.db_pool = self.loop.run_until_complete(asyncpg.create_pool(DB_CONNECTION_STRING))
+        super().__init__(*args, help_command=HelpCommand(), **kwargs)
         self.http_session = ClientSession()
         self.chat_money_cache = defaultdict(lambda: 0)
         self.__version__ = "3.0a"
-        super().__init__(*args, help_command=HelpCommand(), **kwargs)
+        self.db_pool = self.loop.run_until_complete(asyncpg.create_pool(DB_CONNECTION_STRING))
 
     async def on_ready():
         embed = CrajyEmbed(embed_type=EmbedType.BOT, description="Ready!")
