@@ -19,7 +19,7 @@ class CrajyContext(commands.Context):
         except:
             pass
 
-    async def x_mark(self,target_message: discord.Message = None):
+    async def x_mark(self, target_message: discord.Message = None):
         if target_message is None:
             target_message = self.message
         try:
@@ -30,6 +30,8 @@ class CrajyContext(commands.Context):
     async def get_confirmation(self, target_message=None):
         """Asks the user for confirmation via reaction. `message` represents the initial message where the question is asked and reactions are added.
         Returns :: bool."""
+        if target_message is None:
+            target_message = self.message
         await self.check_mark(target_message)
         await self.x_mark(target_message)
 
@@ -37,13 +39,16 @@ class CrajyContext(commands.Context):
             if str(reaction.emoji) in (EmbedResource.CHECK_EMOJI.value, EmbedResource.XMARK_EMOJI.value) and member == self.author:
                 return True
 
-        with contextlib.suppress(asyncio.TimeoutError):
+        try:
             reaction, _ = await self.bot.wait_for("reaction_add", check=check, timeout=30)
+            await target_message.clear_reactions()
             if str(reaction.emoji) == EmbedResource.CHECK_EMOJI.value:
                 return True
             else:
                 return False
-        return False    # for the case where it times out
+        except asyncio.TimeoutError:
+            await target_message.clear_reactions()
+            return False   
 
     async def get_user_data(self, *, member: discord.Member = None, table: Table) -> dict:
         """Returns `user`s data from the `table` specified.
