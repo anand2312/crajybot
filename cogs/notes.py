@@ -33,7 +33,7 @@ class Notes(commands.Cog):
         if note_id is None:
             data = await self.bot.db_pool.fetch("SELECT note_id, raw_note FROM notes WHERE user_id=$1", ctx.author.id)
         else:
-            data = await self.bot.db_pool.fetch("SELECT note_id, raw_note FROM notes WHERE user_id=$1 AND note_id IN $2", ctx.author.id, note_id)
+            data = await self.bot.db_pool.fetch("SELECT note_id, raw_note FROM notes WHERE user_id=$1 AND note_id IN ($2::array)", ctx.author.id, note_id)
         if not data:     # if no records
             embed = em.CrajyEmbed(title="Fetched Notes", embed_type=EmbedType.WARNING)
             embed.quick_set_author(self.bot.user)
@@ -61,7 +61,7 @@ class Notes(commands.Cog):
         confirm_embed.description = "Are you sure you want to clear your notes?"
         confirm_embed.quick_set_author(ctx.author)
         confirm_embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
-        ask = await ctx.send(embed=confirm_embed)
+        ask = await ctx.maybe_reply(embed=confirm_embed, mention_author=True)
 
         decision = await ctx.get_confirmation(ask)
 

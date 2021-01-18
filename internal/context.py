@@ -37,7 +37,7 @@ class CrajyContext(commands.Context):
             if str(reaction.emoji) in (EmbedResource.CHECK_EMOJI.value, EmbedResource.XMARK_EMOJI.value) and member == self.author:
                 return True
 
-        with suppress(asyncio.TimeoutError):
+        with contextlib.suppress(asyncio.TimeoutError):
             reaction, _ = await self.bot.wait_for("reaction_add", check=check, timeout=30)
             if str(reaction.emoji) == EmbedResource.CHECK_EMOJI.value:
                 return True
