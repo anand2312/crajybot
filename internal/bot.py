@@ -23,12 +23,12 @@ class CrajyBot(commands.Bot):
         self.__version__ = "3.0a"
         self.db_pool = self.loop.run_until_complete(asyncpg.create_pool(DB_CONNECTION_STRING))
 
-    async def on_ready():
+    async def on_ready(self):
         embed = CrajyEmbed(embed_type=EmbedType.BOT, description="Ready!")
         embed.quick_set_author(self.user)
         await self.get_channel(BOT_ANNOUNCE_CHANNEL).send(embed=embed)
 
-    async def on_message(message):
+    async def on_message(self, message):
         """Cache the message counts before adding cash to users balance in the database."""
         if message.author.bot:
             return  
