@@ -3,6 +3,7 @@ from collections import defaultdict
 from discord.ext import commands
 
 from aiohttp import ClientSession
+import asyncpg
 
 from utils.embed import CrajyEmbed
 from utils.enumerations import EmbedType
@@ -10,15 +11,16 @@ from utils.enumerations import EmbedType
 from internal.help_class import HelpCommand
 from internal.context import CrajyContext
 
+from secret.constants import *
+
 
 class CrajyBot(commands.Bot):
     """Subclass of commands.Bot with some attributes set."""
     def __init__(self, *args, **kwargs):
-        self.db_pool = kwargs.get("db")     # instance of a connection pool has to be passed in while instantiating.
+        self.db_pool = self.loop.run_until_complete(asyncpg.create_pool(DB_CONNECTION_STRING)))
         self.http_session = ClientSession()
         self.chat_money_cache = defaultdict(lambda: 0)
         self.__version__ = "3.0a"
-        kwargs.pop("db")
         super().__init__(*args, help_command=HelpCommand(), **kwargs)
 
     async def on_ready():
