@@ -20,7 +20,7 @@ class Notes(commands.Cog):
                         "DMs with the bot as well.")
     async def notes_create(self, ctx, *, content):
         note_id = await self.bot.db_pool.fetchval("INSERT INTO notes(user_id, raw_note) VALUES($1, $2) RETURNING note_id", ctx.author.id, content)
-        embed = em.CrajyEmbed(title="Note Creation", embed_type=EmbedType.SUCCESS)
+        embed = em.CrajyEmbed(title=f"Note Creation: ID {note_id}", embed_type=EmbedType.SUCCESS)
         embed.quick_set_author(ctx.author)
         embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
         embed.description = f"Added to your notes! Use `.notes return` to get all your stored notes."
