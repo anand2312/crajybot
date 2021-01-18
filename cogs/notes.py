@@ -39,6 +39,7 @@ class Notes(commands.Cog):
             embed.quick_set_author(self.bot.user)
             embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
             embed.description = "You have no notes stored. Add a note with `.notes create`."
+            await ctx.check_mark()
             return await ctx.author.send(embed=embed)
         
         embeds = []
@@ -51,6 +52,7 @@ class Notes(commands.Cog):
 
         pages = em.quick_embed_paginate(embeds)
         author_dm_channel = await ctx.author.create_dm()
+        await ctx.check_mark()
         await pages.start(ctx, channel=author_dm_channel)
 
     @notes.command(name="pop",
