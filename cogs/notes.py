@@ -50,7 +50,8 @@ class Notes(commands.Cog):
             embeds.append(e)
 
         pages = em.quick_embed_paginate(embeds)
-        await pages.start(ctx, channel=ctx.author)
+        author_dm_channel = await ctx.author.create_dm()
+        await pages.start(ctx, channel=author_dm_channel)
 
     @notes.command(name="pop",
                    aliases=["-p"],
