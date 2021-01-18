@@ -2,7 +2,7 @@
 import discord
 from discord.ext import commands, menus
 
-from utils import embed
+from utils import embed as em
 from internal.enumerations import EmbedType
 
 
@@ -20,9 +20,9 @@ class Notes(commands.Cog):
                         "DMs with the bot as well.")
     async def notes_create(self, ctx, *, content):
         note_id = await self.bot.db_pool.fetchval("INSERT INTO notes(user_id, raw_note) VALUES($1, $2) RETURNING note_id", ctx.author.id, content)
-        embed = embed.CrajyEmbed(title="Note Creation", embed_type=EmbedType.SUCCESS)
+        embed = em.CrajyEmbed(title="Note Creation", embed_type=EmbedType.SUCCESS)
         embed.quick_set_author(ctx.author)
-        embed.set_thumbnail(url=embed.EmbedResource.NOTES.value)
+        embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
         embed.description = f"Added to your notes! Use `.notes return` to get all your stored notes."
         await ctx.maybe_reply(embed=embed)
 
@@ -35,18 +35,18 @@ class Notes(commands.Cog):
         else:
             data = await self.bot.db_pool.fetch("SELECT note_id, raw_note FROM notes WHERE user_id=$1 AND note_id IN $2", ctx.author.id, note_id)
         if not data:     # if no records
-            embed = embed.CrajyEmbed(title="Fetched Notes", embed_type=EmbedType.WARNING)
+            embed = em.CrajyEmbed(title="Fetched Notes", embed_type=EmbedType.WARNING)
             embed.quick_set_author(self.bot.user)
-            embed.set_thumbnail(url=embed.EmbedResource.NOTES.value)
+            embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
             embed.description = "You have no notes stored. Add a note with `.notes create`."
             return await ctx.author.send(embed=embed)
         
         embeds = []
         for row in data:
-            e = embed.CrajyEmbed(title=f"Note: ID {row['note_id']}", embed_type=embed.EmbedType.SUCCESS)
+            e = em.CrajyEmbed(title=f"Note: ID {row['note_id']}", embed_type=EmbedType.SUCCESS)
             e.description = row['raw_note']
             e.quick_set_author(ctx.author)
-            e.set_thumbnail(url=embed.EmbedResource.NOTES.value)
+            e.set_thumbnail(url=em.EmbedResource.NOTES.value)
             embeds.append(e)
 
         pages = embed.quick_embed_paginate(embeds)
@@ -56,10 +56,10 @@ class Notes(commands.Cog):
                    aliases=["-p"],
                    help="Deletes notes from the database; deletes all notes or the specific note you asked for.")
     async def notes_pop(self, ctx, note_id: commands.Greedy[int] = None):
-        confirm_embed = embed.CrajyEmbed(title="Clearing all notes", embed_type=embed.EmbedType.WARNING)
+        confirm_embed = em.CrajyEmbed(title="Clearing all notes", embed_type=EmbedType.WARNING)
         confirm_embed.description = "Are you sure you want to clear your notes?"
         confirm_embed.quick_set_author(ctx.author)
-        confirm_embed.set_thumbnail(url=embed.EmbedResource.NOTES.value)
+        confirm_embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
         ask = await ctx.send(embed=embed)
 
         decision = await ctx.get_confirmation(ask)
@@ -69,14 +69,14 @@ class Notes(commands.Cog):
                 await self.bot.db_pool.execute("DELETE FROM notes WHERE user_id=$1", ctx.author.id)
             else:
                 await self.bot.db_pool.execute("DELETE FROM notes WHERE user_id=$1 AND note_id IN $2", ctx.author.id, note_id)
-            out = CrajyEmbed(title="Deleted Notes", embed_type=embed.EmbedType.SUCCESS)
+            out = CrajyEmbed(title="Deleted Notes", embed_type=EmbedType.SUCCESS)
             out.description = "Deleted notes."
         else:
-            out = CrajyEmbed(title="Operation aborted", embed_type=embed.EmbedType.FAIL)
+            out = CrajyEmbed(title="Operation aborted", embed_type=EmbedType.FAIL)
             out.description = "All your notes are safe."
 
         out.quick_set_author(ctx.author)
-        out.set_thumbnail(url=embed.EmbedResource.NOTES.value)
+        out.set_thumbnail(url=em.EmbedResource.NOTES.value)
         return await ctx.edit(embed=out)
 
 def setup(bot):

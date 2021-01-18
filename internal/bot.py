@@ -65,8 +65,8 @@ class CrajyBot(commands.Bot):
         else:
             embed.title = "Unexpected error occurred."
             embed.description = str(error)
-            return await ctx.send(embed=embed)
             raise error
+            return await ctx.send(embed=embed)
 
     async def get_context(self, message, *, cls=None):
         """Overriding get_context to use custom context."""
