@@ -376,10 +376,10 @@ class stupid(commands.Cog):
 
     @role_name.command(name="list", aliases=["all"])
     async def role_name_list(self, ctx):
-        data = await self.bot.role_names_collection.find()
+        data = self.bot.role_names_collection.find()
         embed = discord.Embed(title="Role names", color=discord.Color.green())
         val = ""
-        for i in data:
+        async for i in data:
             val += i['name'] + "\n"
         embed.description = val
         return await ctx.send(embed=embed)
