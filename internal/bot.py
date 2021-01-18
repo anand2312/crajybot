@@ -17,7 +17,7 @@ from secret.constants import *
 class CrajyBot(commands.Bot):
     """Subclass of commands.Bot with some attributes set."""
     def __init__(self, *args, **kwargs):
-        self.db_pool = self.loop.run_until_complete(asyncpg.create_pool(DB_CONNECTION_STRING)))
+        self.db_pool = self.loop.run_until_complete(asyncpg.create_pool(DB_CONNECTION_STRING))
         self.http_session = ClientSession()
         self.chat_money_cache = defaultdict(lambda: 0)
         self.__version__ = "3.0a"

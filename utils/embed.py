@@ -1,7 +1,7 @@
 import discord
 from discord.ext import menus
 import datetime
-import enum
+from intenal.enumerations import EmbedType
 
 
 class CrajyEmbed(discord.Embed):
