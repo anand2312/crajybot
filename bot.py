@@ -29,7 +29,6 @@ async def chat_money_tracker(message):
 
     if message.channel.id in CHAT_MONEY_CHANNELS:
         bot.chat_money_cache[message.author.id] += 1
-    await self.process_commands(message)
 
 @tasks.loop(hours=3)
 async def stock_price():
