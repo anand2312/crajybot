@@ -49,7 +49,7 @@ class Notes(commands.Cog):
             e.set_thumbnail(url=em.EmbedResource.NOTES.value)
             embeds.append(e)
 
-        pages = embed.quick_embed_paginate(embeds)
+        pages = em.quick_embed_paginate(embeds)
         await pages.start(ctx)
 
     @notes.command(name="pop",
