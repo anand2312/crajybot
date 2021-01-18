@@ -50,7 +50,7 @@ class Notes(commands.Cog):
             embeds.append(e)
 
         pages = em.quick_embed_paginate(embeds)
-        await pages.start(ctx)
+        await pages.start(ctx, channel=ctx.author)
 
     @notes.command(name="pop",
                    aliases=["-p"],
@@ -60,7 +60,7 @@ class Notes(commands.Cog):
         confirm_embed.description = "Are you sure you want to clear your notes?"
         confirm_embed.quick_set_author(ctx.author)
         confirm_embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
-        ask = await ctx.send(embed=embed)
+        ask = await ctx.send(embed=confirm_embed)
 
         decision = await ctx.get_confirmation(ask)
 

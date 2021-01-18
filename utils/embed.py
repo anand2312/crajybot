@@ -31,8 +31,8 @@ class __ListEmbedSource(menus.ListPageSource):
     def __init__(self, data):
         super().__init__(data, per_page=1)
 
-    async def format_page(self, menu, entries):
-        return entries[menu.current_page + 1]
+    async def format_page(self, menu, page):
+        return page
 
 def quick_embed_paginate(embeds: list) -> menus.MenuPages:
     """Does the two step process of making ListPageSource, and making MenuPages in one function."""

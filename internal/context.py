@@ -11,13 +11,17 @@ class CrajyContext(commands.Context):
         - maybe_reply: replies to a message if there's a message between invocation message and reply
         - DB interaction; to easily get data from the db; the context has methods built to fetch the ctx.author's data.
     """
-    async def check_mark(self):
+    async def check_mark(self, message: discord.Message = None):
+        if message is None:
+            message = self.message
         try:
             await self.message.add_reaction(EmbedResource.CHECK_EMOJI.value)
         except:
             pass
 
-    async def x_mark(self):
+    async def x_mark(self, message: discord.Message = None):
+        if message is None:
+            message = self.message
         try:
             await self.message.add_reaction(EmbedResource.XMARK_EMOJI.value)
         except:
@@ -26,8 +30,8 @@ class CrajyContext(commands.Context):
     async def get_confirmation(self, message):
         """Asks the user for confirmation via reaction. `message` represents the initial message where the question is asked and reactions are added.
         Returns :: bool."""
-        await message.check_mark()
-        await message.x_mark()
+        await self.check_mark(message)
+        await self.x_mark(message)
 
         def check(reaction, member):
             if str(reaction.emoji) in (EmbedResource.CHECK_EMOJI.value, EmbedResource.XMARK_EMOJI.value) and member == self.author:
