@@ -1,9 +1,12 @@
 import discord
+from discord.ext import menus
 import datetime
+import enum
 
 
 class CrajyEmbed(discord.Embed):
     def __init__(self, embed_type: EmbedType, **kwargs) -> None:
+        """Both quick_set_author and footer modify the existing Embed object, and not return a new one."""
         super().__init__(**kwargs)
         self.colour = embed_type.value
         self.timestamp = datetime.datetime.utcnow()
@@ -14,3 +17,15 @@ class CrajyEmbed(discord.Embed):
     def quick_set_footer(embed_type: EmbedType) -> None:
         # implement different footers for different embed types.
         self.set_footer(text="CrajyBot", icon_url=r"https://cdn.discordapp.com/avatars/709407268487037019/51903d2d3f56530e0cd3d405c6420d16.webp?size=1024")
+
+
+class EmbedResource(enum.Enum):
+    """URLs and emojis to be used in embeds."""
+    NOTES = r"https://media.discordapp.net/attachments/612638234782072882/800744704434110514/notes.png?width=384&height=384"
+    CHECK_EMOJI = "<:check:800771830116909066>"
+    XMARK_EMOJI = "<:xmark:800773561093849119>"
+
+def quick_embed_paginate(embeds: list) -> menus.MenuPages:
+    """Does the two step process of making ListPageSource, and making MenuPages in one function."""
+    source = menus.ListPageSource(embeds)
+    return menus.MenuPages(source=source, clear_reactions_after=True)
