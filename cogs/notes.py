@@ -78,7 +78,7 @@ class Notes(commands.Cog):
 
         out.quick_set_author(ctx.author)
         out.set_thumbnail(url=em.EmbedResource.NOTES.value)
-        return await ctx.edit(embed=out)
+        return await ask.edit(embed=out)
 
 def setup(bot):
     bot.add_cog(Notes(bot))

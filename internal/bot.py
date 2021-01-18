@@ -28,14 +28,6 @@ class CrajyBot(commands.Bot):
         embed.quick_set_author(self.user)
         await self.get_channel(BOT_ANNOUNCE_CHANNEL).send(embed=embed)
 
-    async def on_message(self, message):
-        """Cache the message counts before adding cash to users balance in the database."""
-        if message.author.bot:
-            return  
-        if message.channel.id in CHAT_MONEY_CHANNELS:
-            self.chat_money_cache[message.author.id] += 1
-        await self.process_commands(message)
-
     async def on_member_join(self, member):
         """When a new member joins, add them to the database and greet them in DMs."""
         await self.register_new_member(member)

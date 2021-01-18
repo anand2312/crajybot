@@ -21,6 +21,15 @@ bot = CrajyBot(command_prefix=commands.when_mentioned_or("."),
 
 bot.task_loops = dict()    # add all task loops, across cogs to this.
 
+@bot.listen("on_message")
+async def chat_money_tracker(message):
+    if message.author.bot:
+        return
+
+    if message.channel.id in CHAT_MONEY_CHANNELS:
+        bot.chat_money_cache[message.author.id] += 1
+    await self.process_commands(message)
+
 @tasks.loop(hours=3)
 async def stock_price():
     message_channel = bot.get_channel(BOT_ANNOUNCE_CHANNEL)
