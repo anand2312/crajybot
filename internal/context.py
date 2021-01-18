@@ -27,7 +27,7 @@ class CrajyContext(commands.Context):
         except:
             pass
 
-    async def get_confirmation(self, message):
+    async def get_confirmation(self, message=None):
         """Asks the user for confirmation via reaction. `message` represents the initial message where the question is asked and reactions are added.
         Returns :: bool."""
         await self.check_mark(message)
