@@ -60,4 +60,4 @@ class CrajyContext(commands.Context):
         with contextlib.suppress(discord.HTTPException):
             if getattr(self.channel,"last_message", False) != self.message:
                 return await self.reply(content, mention_author=mention_author, **kwargs)
-        await self.send(content, **kwargs)
+        return await self.send(content, **kwargs)
