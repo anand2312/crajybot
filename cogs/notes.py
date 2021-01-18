@@ -70,10 +70,10 @@ class Notes(commands.Cog):
                 await self.bot.db_pool.execute("DELETE FROM notes WHERE user_id=$1", ctx.author.id)
             else:
                 await self.bot.db_pool.execute("DELETE FROM notes WHERE user_id=$1 AND note_id IN $2", ctx.author.id, note_id)
-            out = CrajyEmbed(title="Deleted Notes", embed_type=EmbedType.SUCCESS)
+            out = em.CrajyEmbed(title="Deleted Notes", embed_type=EmbedType.SUCCESS)
             out.description = "Deleted notes."
         else:
-            out = CrajyEmbed(title="Operation aborted", embed_type=EmbedType.FAIL)
+            out = em.CrajyEmbed(title="Operation aborted", embed_type=EmbedType.FAIL)
             out.description = "All your notes are safe."
 
         out.quick_set_author(ctx.author)
