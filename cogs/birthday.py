@@ -18,7 +18,7 @@ class Birthday(commands.Cog):
         if person is None:
             person = ctx.author
         date = await self.bot.db_pool.fetchval("SELECT bday FROM user_details WHERE user_id=$1", person.id)
-        embed = em.CrajyEmbed(title=f"{person.nick}'s birthday", description=date.strftime('%d %B %Y'), embed_type=enums.EmbedType.INFO)
+        embed = em.CrajyEmbed(title=f"{person.display_name}'s birthday", description=date.strftime('%d %B %Y'), embed_type=enums.EmbedType.INFO)
         embed.set_thumbnail(url=em.EmbedResource.BDAY.value)
         embed.quick_set_author(person)
         
