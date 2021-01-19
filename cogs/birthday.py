@@ -52,7 +52,7 @@ class Birthday(commands.Cog):
         date_vals =[int(i) for i in reply.content.split("-")]
         kwargs = ("day", "month", "year")
 
-        await self.bot.db_pool.execute("UPDATE user_details SET bday=$1 WHERE user_id=$2", datetime.date(**dict(zip(kwargs, date_vals))), person.id)
+        await self.bot.db_pool.execute("INSERT INTO user_details(bday, user_id) VALUES($1, $2) ON CONFLICT (user_id) DO UPDATE SET bday=$1", datetime.date(**dict(zip(kwargs, date_vals))), person.id)
         
         out = em.CrajyEmbed(title=f"Birthday Set!", embed_type=enums.EmbedType.SUCCESS)
         out.description = f"{person.display_name}'s birthday is saved. They shall be wished."
