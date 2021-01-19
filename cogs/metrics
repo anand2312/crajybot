@@ -1,5 +1,7 @@
 """A cog that keeps track of certain chat metrics.
 Stores data in it's own collection on MongoDB."""
+# the file extension has been removed to not load this cog automatically.
+# this is an incomplete command section, which i have no plan of completing as of now.
 import discord
 from discord.ext import commands, tasks
 import datetime

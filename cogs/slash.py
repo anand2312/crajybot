@@ -21,8 +21,8 @@ class CrajySlashCommands(commands.Cog):
                             option_type=3,
                             required=True)])
     async def slash_wat(self, ctx: SlashContext, use: str):
-        existing = await self.bot.stupid_collection.find_one({"key": use})
-        await ctx.send(content=existing["output"])
+        existing = await self.bot.db_pool.fetchval("SELECT tag_content FROM tags WHERE LOWER(tag_name)=$1", use)
+        await ctx.send(content=existing)
 
 def setup(bot):
     bot.add_cog(CrajySlashCommands(bot))

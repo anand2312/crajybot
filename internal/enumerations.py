@@ -17,6 +17,6 @@ class Table(enum.Enum):
     INVENTORIES = ("id", "stock", "chicken", "heist tools")    # actual name in table is `heist`
     NOTES = ("id", "raw_text")
     SHOP = ("item_id", "item_name", "stock", "price")
-    PINS = ("pin_id", "synopsis", "jump_url", "author", "date", "name")
+    PINS = ("pin_id", "synopsis", "jump_url", "author", "pin_date", "name")
     TAGS = ("tag_name", "tag_content", "tag_author")
     ROLE_NAMES = ("name_id", "role_name", "author")
