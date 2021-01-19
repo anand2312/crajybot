@@ -23,6 +23,7 @@ class CrajyEmbed(discord.Embed):
 class EmbedResource(enum.Enum):
     """URLs and emojis to be used in embeds."""
     NOTES = r"https://media.discordapp.net/attachments/612638234782072882/800744704434110514/notes.png?width=384&height=384"
+    BDAY = r"https://media.discordapp.net/attachments/612638234782072882/800965411130179584/fhnpyxb3ywi21-removebg-preview.png?width=508&height=277"
     CHECK_EMOJI = "<:check:800771830116909066>"
     XMARK_EMOJI = "<:xmark:800773561093849119>"
 
