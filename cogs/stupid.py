@@ -153,12 +153,6 @@ class Stupid(commands.Cog):
                 out += i.upper()
                 curr_func = "lower"
         await ctx.maybe_reply(out)
-
-    @wat.command(name="react")
-    async def react(self, ctx, id_: discord.Message, *emojis):
-        for i in emojis:
-            await id_.add_reaction(i)
-        await ctx.message.delete()
     
     @commands.command(name="emojify", aliases=['e'])
     async def emojify(self, ctx, *, message):

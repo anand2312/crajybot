@@ -88,7 +88,6 @@ class Tags(commands.Cog):
             page.set_thumbnail(url=em.EmbedResource.TAG.value)
             page.quick_set_author(ctx.author)
             embeds.append(page)
-        print(embeds)
         pages = em.quick_embed_paginate(embeds)
         await pages.start(ctx)
 
