@@ -47,7 +47,7 @@ class CrajyBot(commands.Bot):
         embed.quick_set_footer(self.user)
 
         if isinstance(error, commands.CommandOnCooldown):
-            embed.description = F"{ctx.author.nick}, you have to wait {int(error.retry_after/60)} minutes before using this command again."
+            embed.description = F"{ctx.author.display_name}, you have to wait {int(error.retry_after/60)} minutes before using this command again."
             return await ctx.send(embed=embed)
         elif isinstance(error, commands.CommandNotFound):
             if ctx.message.content.startswith(".."):
