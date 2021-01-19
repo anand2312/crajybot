@@ -111,3 +111,7 @@ class Tags(commands.Cog):
         
         pages = em.quick_embed_paginate(embeds)
         await pages.start(ctx)
+
+
+def setup(bot):
+    bot.add_cog(Tags(bot))
