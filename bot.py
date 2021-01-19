@@ -42,7 +42,7 @@ async def stock_price():
         rand_val = -random.randint(1,6)
         emb_type = EmbedType.FAIL
 
-    new = await bot.db_pool.fetchval(f"UPDATE shop SET price=price + $1 WHERE item_name=$2 RETURNING price", rand_val, "Stock")
+    new = await bot.db_pool.fetchval(f"UPDATE shop SET price=price + $1 WHERE item_name='stock' RETURNING price", rand_val)
 
     embed = CrajyEmbed(title="Stock Price Updated!", embed_type=emb_type)
     embed.description = f"New price: {new}"
