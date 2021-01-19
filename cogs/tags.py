@@ -84,7 +84,7 @@ class Tags(commands.Cog):
         chunked_tags = mitertools.chunked(all_tags, 6)
         embeds = []
         for chunk in chunked_tags:
-            page = em.CrajyEmbed(title="All Tags.", description="\n".join(chunk) embed_type=enums.EmbedType.BOT)
+            page = em.CrajyEmbed(title="All Tags.", description="\n".join(chunk), embed_type=enums.EmbedType.BOT)
             page.set_thumbnail(url=em.EmbedResource.TAG.value)
             page.quick_set_author(ctx.author)
             embeds.append(page)
