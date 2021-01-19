@@ -15,9 +15,11 @@ class Birthday(commands.Cog):
                     help="Retrieve a birthday date. Could be your own if no user is specified, or a specified user.", 
                     invoke_without_command=True)
     async def bday(self, ctx, person: discord.Member = None):
+        if person is None:
+            person = ctx.author
         date = await self.bot.db_pool.fetchval("SELECT bday FROM user_details WHERE user_id=$1", person.id)
         embed = em.CrajyEmbed(title=f"{person.nick}'s birthday", description=date.strftime('%d %B %Y'), embed_type=enums.EmbedType.INFO)
-        embed.set_thumbnail(em.EmbedResource.BDAY.value)
+        embed.set_thumbnail(url=em.EmbedResource.BDAY.value)
         embed.quick_set_author(person)
         
         today = datetime.datetime.today()
@@ -50,7 +52,7 @@ class Birthday(commands.Cog):
         date_vals =[int(i) for i in reply.content.split("-")]
         kwargs = ("day", "month", "year")
 
-        await self.bot.db_pool.execute("UPDATE user_details SET bday $1 WHERE user_id=$2", datetime.date(**zip(kwargs, date_vals)), person.id)
+        await self.bot.db_pool.execute("UPDATE user_details SET bday $1 WHERE user_id=$2", datetime.date(**dict(zip(kwargs, date_vals))), person.id)
         
         out = em.CrajyEmbed(title=f"Birthday Set!", embed_type=enums.EmbedType.SUCCESS)
         out.description = f"{person.nick}'s birthday is saved. They shall be wished."
