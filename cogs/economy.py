@@ -313,7 +313,7 @@ class Economy(commands.Cog):
             await self.bot.db_pool.execute("UPDATE economy SET cash = cash - $1 WHERE user_id = $2", amount, ctx.author.id)
             await self.bot.db_pool.execute("UPDATE economy SET cash = cash + $1 WHERE user_id = $2", amount, person.id)
             response = EconomyEmbed(title='Money Transfer ', description=f"{ctx.author.mention} transferred {int(amount)} to {person.mention}", embed_type=enums.EmbedType.BOT)
-            response.set_thumbnail(url=em.EmbedResource.PAYMENT)
+            response.set_thumbnail(url=em.EmbedResource.PAYMENT.value)
         return await ctx.maybe_reply(embed=response, mention_author=True)
                                  
     @commands.command(name="rob",
