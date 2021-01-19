@@ -46,9 +46,15 @@ class CrajyContext(commands.Context):
                 return True
             else:
                 return False
-        except asyncio.TimeoutError:
-            await target_message.clear_reactions()
-            return False   
+        except Exception as e:
+            if isinstance(e, asyncio.TimeoutError):
+                await target_message.clear_reactions()
+                return False
+            elif isinstance(e, discord.errors.Forbidden):
+                if str(reaction.emoji) == EmbedResource.CHECK_EMOJI.value:
+                    return True
+                else:
+                    return False
 
     async def get_user_data(self, *, member: discord.Member = None, table: Table) -> dict:
         """Returns `user`s data from the `table` specified.
@@ -57,7 +63,7 @@ class CrajyContext(commands.Context):
         if member is None:
             member = self.author
 
-        return await self.bot.db_pool.fetchrow(f"SELECT * FROM {table.name} WHERE user_id=$1", member.id)
+        return await self.bot.db_pool.fetchrow(f"SELECT * FROM {table.value} WHERE user_id=$1", member.id)
 
     async def maybe_reply(self, content: str = None, mention_author: bool = False, **kwargs):
         """Replies if there is a message in between the command invoker and the bot's message."""
