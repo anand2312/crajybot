@@ -63,7 +63,7 @@ class CrajyContext(commands.Context):
         if member is None:
             member = self.author
 
-        return await self.bot.db_pool.fetchrow(f"SELECT * FROM {table.value} WHERE user_id=$1", member.id)
+        return await self.bot.db_pool.fetchrow(f"SELECT * FROM {table.name} WHERE user_id=$1", member.id)
 
     async def maybe_reply(self, content: str = None, mention_author: bool = False, **kwargs):
         """Replies if there is a message in between the command invoker and the bot's message."""

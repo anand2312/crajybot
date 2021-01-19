@@ -58,6 +58,9 @@ class CrajyBot(commands.Bot):
         elif isinstance(error, asyncio.TimeoutError):
             embed.description = f"You took too long to respond for: {ctx.invoked_with}"
             return await ctx.message.edit(embed=embed)
+        elif isinstnace(error, commands.UserInputError):
+            ctx.command.reset_cooldown(ctx)
+            return
         else:
             embed.title = "Unexpected error occurred."
             embed.description = str(error)

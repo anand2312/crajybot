@@ -3,10 +3,25 @@ import discord
 from discord.ext import commands
 
 from contextlib import suppress
+import more_itertools as mitertools
 
 import typing
 import asyncio
 import random
+
+from utils import embed as em
+from internal import enumerations as enums
+
+
+class EconomyEmbed(em.CrajyEmbed):
+    """Made with thumbnail set according to EmbedType passed."""
+    def __init__(self, embed_type: enums.EmbedType, **kwargs):
+        super().__init__(**kwargs)
+        if embed_type in (enums.EmbedType.BOT, enums.EmbedType.INFO):
+            self.set_thumbnail(url=em.EmbedResource.BANK.value)
+        elif embed_type == enums.EmbedType.SUCCESS:
+            self.set_thumbnail(url=em.EmbedResource.PAYMENT.value)
+
 
 class Economy(commands.Cog):
     def __init__(self, bot):
@@ -15,148 +30,154 @@ class Economy(commands.Cog):
     async def cog_check(self, ctx):
         """Restricts these commands to some specific channels. This is server specific, so change the list according to what you need.
         Or you can entirely remove this function."""
-        return ctx.channel.name in ["bot-test","botspam-v2","botspam"]
+        return ctx.channel.name in ["bot-test", "botspam-v2", "botspam"]
 
-    async def get_user_dict(self, ctx: discord.ext.commands.Context, user: typing.Union[discord.Member, str]) -> dict:
-        """Helper function to get user data from database"""
-        if user is not None:
-            if isinstance(user, discord.Member): 
-                user_dict = await self.bot.economy_collection.find_one({'user': user.id})
-            elif isinstance(user, str):
-                for member in ctx.guild.members:
-                    if member.name.lower() == user.lower():
-                        user = member
-                    elif member.nick is not None:
-                        if member.nick.lower() == user.lower():
-                            user = member
-                user_dict = await self.bot.economy_collection.find_one({'user': user.id})
-        else: 
-            user_dict = await self.bot.economy_collection.find_one({'user': ctx.author.id})
-        return user_dict
+    def random_robber(self):
+        return random.choice([em.EmbedResource.ROBBER_1.value, em.EmbedResource.ROBBER_2.value])
+
+    def get_item_column(self, inp: str):
+        # get corresponding item name column in inventory table. add item names with different column names in this dict.
+        mapping = {
+            "stock": "stock",
+            "heist tools": "heist",
+            "chicken": "chicken"
+            }
+        return mapping.get(inp.lower())
 
     @commands.command(name="withdraw",
                       aliases=["with"],
                       help="Withdraw money from your account.")
-    async def withdraw(self, ctx, amount):
+    async def withdraw(self, ctx, amount: typing.Union[int, str]):
         try:
-            amount = int(amount)
-            existing = await self.bot.economy_collection.find_one({'user': ctx.author.id})
+            existing = await ctx.get_user_data(table=enums.Table.ECONOMY)
             if existing['bank'] >= amount:
-                await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$inc": {'bank': -amount, 'cash':amount}})
-                response = discord.Embed(title = str(ctx.message.author), description = f"Withdrew {int(amount)}", colour = discord.Color.green())
-                await ctx.message.channel.send(embed=response)
+                await self.bot.db_pool.execute("UPDATE economy SET cash=cash + $1, bank=bank - $1 WHERE user_id=$2", amount, ctx.author.id)
+                response = EconomyEmbed(title="Withdrawal", description=f"Withdrew {int(amount)}", embed_type=enums.EmbedType.BOT)
+                response.quick_set_author(ctx.author)
+                await ctx.reply(embed=response)
             else:
-                await ctx.message.channel.send("You do not have that much balance")
+                raise ValueError(f"You do not have that much balance; you're {amount - existing['bank']} short.")
         except ValueError:
             if amount.lower() == "all":
-                user_data = await self.bot.economy_collection.find_one({'user': ctx.author.id})
-                await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set":{'bank': 0, 'cash': user_data['cash']+user_data['bank']}})
-                response = discord.Embed(title = str(ctx.message.author), description = f"Withdrew {int(user_data['bank'])}", colour = discord.Color.green())
-                await ctx.message.channel.send(embed=response)
+                await self.bot.db_pool.execute("UPDATE economy SET cash=cash + bank, bank=0 WHERE user_id=$1", ctx.author.id)
+                response = EconomyEmbed(title="Withdrawal", description=f"Withdrew all money from bank.", embed_type=enums.EmbedType.BOT)
+                response.quick_set_author(ctx.author)
+                await ctx.reply(embed=response)
 
     @commands.command(name="deposit",
                       aliases=["dep"],
                       help="Deposit money to your account.")
-    async def deposit(self, ctx, amount):
-            try:
-                amount = int(amount)
-                user_data = await self.bot.economy_collection.find_one({'user': ctx.author.id})
-                if user_data['cash'] >= amount:
-                    await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$inc":{'cash': -amount, 'bank': amount}})
-                    response = discord.Embed(title = str(ctx.message.author), description = f"Deposited {int(amount)}", colour = discord.Color.green())
-                    await ctx.message.channel.send(embed=response)
-                else:
-                    await ctx.message.channel.send("You don't have that much moni to deposit")
-            except ValueError:
-                if amount.lower() == "all":
-                    user_data = await self.bot.economy_collection.find_one({'user': ctx.author.id})
-                    await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$inc":{'cash': -user_data['cash'], 'bank': user_data['cash']}})
-                    response = discord.Embed(title = str(ctx.message.author), description = f"Deposited {int(user_data['cash'])}", colour = discord.Color.green())
-                    await ctx.message.channel.send(embed=response)
+    async def deposit(self, ctx, amount: typing.Union[int, str]):
+        try:
+            existing = await ctx.get_user_data(table=enums.Table.ECONOMY)
+            if existing['cash'] >= amount:
+                await self.bot.db_pool.execute("UPDATE economy SET bank=bank + $1, cash=cash - $1 WHERE user_id=$2", amount, ctx.author.id)
+                response = EconomyEmbed(title="Deposit", description=f"Deposited {int(amount)}", embed_type=enums.EmbedType.BOT)
+                response.quick_set_author(ctx.author)
+                await ctx.reply(embed=response)
+            else:
+                raise ValueError("You don't have that much moni to deposit")
+        except ValueError:
+            if amount.lower() == "all":
+                await self.bot.db_pool.execute("UPDATE economy SET bank=cash + bank, cash=0 WHERE user_id=$1", ctx.author.id)
+                response = EconomyEmbed(title="Withdrawal", description=f"Deposited all money to bank.", embed_type=enums.EmbedType.BOT)
+                response.quick_set_author(ctx.author)
+                await ctx.reply(embed=response)
                     
     @commands.command(name='balance',
                       aliases=["bal"],
                       help="Displays your current bank balance.")
     async def balance(self, ctx, user: typing.Union[discord.Member, str]=None):
-        if user is None: user = ctx.author
-        user_dict = await self.get_user_dict(ctx, user)
+        if user is None:
+            user = ctx.author
+        user_data = await self.bot.fetchrow("SELECT cash, bank, cash + bank - debt AS networth, debt FROM economy WHERE user_id=$1", user.id)
 
-        networth = (user_dict['cash'] + user_dict['bank']) - user_dict['debt']
-        response = discord.Embed(title=str(user), description="Balance is:")
-        response.add_field(name="Cash Balance : ",value=f"{int(user_dict['cash'])}", inline = False)
-        response.add_field(name="Bank balance : ",value=f"{int(user_dict['bank'])}", inline = False)
-        response.add_field(name="Debt : ",value=f"{-user_dict['debt']}", inline = False)
-        response.add_field(name="Net Worth : ",value=int(networth), inline = False)
-
-        return await ctx.send(embed=response)
+        response = EconomyEmbed(title="Crajy Bank", description="Balance is:", embed_type=enums.EmbedType.BOT)
+        response.add_field(name="Cash Balance: ",value=user_data['cash'], inline=True)
+        response.add_field(name="Bank balance: ",value=user_data['bank'], inline=False)
+        response.add_field(name="Debt: ",value=user_data['debt'], inline=True)
+        response.add_field(name="Net Worth: ",value=user_data['networth'], inline=False)
+        response.quick_set_author(ctx.author)
+        return await ctx.reply(embed=response)
 
     @commands.command(name='work',
                       help="Do work to earn some money.")
     @commands.cooldown(1, 3600, commands.BucketType.user)  
     async def work(self, ctx):
-        rand_val = random.randint(50,200)
-        await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$inc": {'cash': rand_val}})
-        response = discord.Embed(title=str(ctx.message.author), description=f"You earned {rand_val}", colour=discord.Colour.green())
-        return await ctx.message.channel.send(embed=response)
+        rand_val = random.randint(50, 200)
+        await self.bot.db_pool.execute("UPDATE economy SET cash = cash + $1 WHERE user_id=$2", rand_val, ctx.author.id)
+        response = EconomyEmbed(title="Work", description=f"You earned {rand_val}", embed_type=enums.EmbedType.SUCCESS)
+        response.quick_set_author(ctx.author)
+        return await ctx.reply(embed=response)
 
     @commands.command(name='slut',
                       help="Be a slut to earn that dough")
     @commands.cooldown(1, 3600, commands.BucketType.user)          
     async def slut(self, ctx):
-        winning_odds=[1,2,3,4,5,6]
-        if random.randint(1,10) in winning_odds:
-            rand_val = random.randint(60,200)
-            await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$inc": {'cash': rand_val}})
-            response = discord.Embed(title=str(ctx.message.author), description=f"You whored out and earned {rand_val}!", colour=discord.Colour.green())
-        
+        winning_odds=[1, 2, 3, 4, 5, 6]
+        if random.randint(1, 10) in winning_odds:
+            rand_val = random.randint(60, 200)
+            await self.bot.db_pool.execute("UPDATE economy SET cash = cash + $1 WHERE user_id=$2", rand_val, ctx.author.id)
+            response = EconomyEmbed(title="You slut.", description=f"You whored out and earned {rand_val}!", embed_type=enums.EmbedType.SUCCESS)
         else:
-            rand_val = random.randint(60,200)
-            await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$inc": {'cash': -rand_val}})
-            response = discord.Embed(title=str(ctx.message.author),description=f"You hooked up with a psychopath lost {rand_val}!",colour=discord.Colour.red())
-        return await ctx.message.channel.send(embed=response)
+            rand_val = random.randint(60, 100)
+            await self.bot.db_pool.execute("UPDATE economy SET cash = cash - $1 WHERE user_id=$2", rand_val, ctx.author.id)
+            response = EconomyEmbed(title="Uh oh...", description=f"You hooked up with a psychopath, lost {rand_val}!", embed_type=enums.EmbedType.FAIL)
+            response.set_thumbnail(url=em.EmbedResource.LOSS.value)
+        response.quick_set_author(ctx.author)
+        return await ctx.reply(embed=response)
     
     @commands.command(name="crime",
                       help="Commit a crime to earn money.")
     @commands.cooldown(1, 3600, commands.BucketType.user)
     async def crime(self, ctx):            
-        winning_odds=[1,2,3,4]
-        if random.randint(1,10) in winning_odds:
-            rand_val = random.randint(150,400)
-            await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$inc": {'cash': rand_val}})
-            response = discord.Embed(title=str(ctx.author), description=f"You successfuly commited crime and earned {rand_val}!", colour=discord.Colour.green())
+        winning_odds=[1, 2, 3, 4]
+        if random.randint(1, 10) in winning_odds:
+            rand_val = random.randint(150, 400)
+            await self.bot.db_pool.execute("UPDATE economy SET cash = cash + $1 WHERE user_id=$2", rand_val, ctx.author.id)
+            response = EconomyEmbed(title="Gang shit bro.", description=f"You successfuly commited crime and earned {rand_val}!", embed_type=enums.EmbedType.SUCCESS)
+            response.quick_set_author(ctx.author)
+            response.set_thumbnail(url=self.random_robber())
         else:
             rand_val = random.randint(150,250)
-            await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$inc": {'cash': -rand_val}})
-            response = discord.Embed(title=str(ctx.author), description=f"You got caught and were fined {rand_val}!", colour=discord.Colour.red())
-        return await ctx.send(embed=response)
+            await self.bot.db_pool.execute("UPDATE economy SET cash = cash - $1 WHERE user_id=$2", rand_val, ctx.author.id)
+            response = EconomyEmbed(title="You're kinda stupid bro.", description=f"You got caught and were fined {rand_val}!", embed_type=enums.EmbedType.FAIL)
+        response.quick_set_author(ctx.author)
+        return await ctx.reply(embed=response)
 
     @commands.command(name="leaderboard", 
                       aliases=["top","lb"],
                       help="Economy leaderboard.")   
     async def leaderboard(self, ctx):
-        leaderboard_data = await self.bot.economy_collection.find().to_list(length=None)
-        key = lambda x: x["bank"] + x["cash"] - x["debt"]
-        lb_data = sorted(leaderboard_data, key=key, reverse=True)
-        response = discord.Embed(title="Crajy Leaderboard", description="")
-        for i in lb_data:
-            person = ctx.guild.get_member(i['user'])
-            with suppress(AttributeError):
-                response.add_field(name=f"{lb_data.index(i)+1}. {person.nick if person.nick is not None else person.name}", value=f"Balance {i['bank'] + i['cash']}", inline=False)
-        return await ctx.send(embed=response)
+        leaderboard_data = await self.bot.db_pool.fetch("SELECT user_id, bank + cash - debt AS networth FROM economy ORDER BY networth DESC")
+        embeds = []
+        counter = 1
+        for chunk in mitertools.chunked(leaderboard_data, 6):
+            response = EconomyEmbed(title="Crajy Leaderboard", description="", embed_type=enums.EmbedType.INFO)
+            for person in chunk:
+                person_obj = ctx.guild.get_member(i['user_id'])
+                response.add_field(name=f"{counter}. {person_obj.display_name}", value=f"Net Worth: {person['networth']}", inline=False)
+            embeds.append(response)
+
+        pages = em.quick_embed_paginate(embeds)
+        return await pages.start(ctx)
 
     @commands.command(name="get-loan", 
                       aliases=["gl"],
                       help="Take out a loan. Maximum amount you can take is twice your current bank balance."+
                             r"5% interest is applied. 10% fine is applied if you don't repay the loan within 64800 second.")    
-    async def loan(self,ctx,loan_val:int):
-        user_data = await self.bot.economy_collection.find_one({'user': ctx.author.id})
-        if loan_val < user_data['bank'] * 2 and user_data["debt"] == 0:
-            response = discord.Embed(title=str(ctx.message.author), description=f"You took a loan of {loan_val}!", colour=discord.Colour.red()) 
+    async def loan(self, ctx, loan_val:int):
+        raise NotImplementedError
+        # make a task loop which checks database periodically for debt times, don't asyncio.sleep for so long.
+        """
+        user_data = await self.bot.db_pool.fetchrow("SELECT bank, debt FROM economy WHERE user_id=$1", ctx.author.id)
+        if loan_val < user_data["bank"] * 2 and user_data["debt"] == 0:
+            response = EconomyEmbed(title="Debt.", description=f"You took a loan of {loan_val}!", embed_type=enums.EmbedType.SUCCESS)
+            response.quick_set_author(ctx.author) 
 
-            user_data['debt'] += (loan_val + int(loan_val * 0.05))
-            user_data['bank'] += loan_val
+            new_debt = (loan_val + int(loan_val * 0.05))
             
-            await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set":user_data})              
+            await self.bot.db_pool.execute("UPDATE economy SET debt = $1, cash = cash + $2 WHERE user_id = $3", new_debt, loan_val, ctx.author.id)              
             await ctx.send(embed=response)
 
             await asyncio.sleep(64800)           
@@ -179,12 +200,14 @@ class Economy(commands.Cog):
                 await ctx.message.author.send(f"poopi you messed up big time")
         else:
             await ctx.message.channel.send("You cannot take a loan greater than twice your current balance / you have an unpaid loan, repay it and try again.")
-
+        """
 
     @commands.command(name="repay-loan", 
                       aliases=["rl"],
                       help="Repay your loan.")
     async def repay_loan(self, ctx):
+        raise NotImplementedError
+        """
         user_data = await self.bot.economy_collection.find_one({'user': ctx.author.id})
         if user_data['debt'] > 0:
             if user_data['cash'] >= user_data['debt']:
@@ -198,167 +221,131 @@ class Economy(commands.Cog):
 
         else:
             return await ctx.send(f"You do not have any debt")
+        """
 
     @commands.command(name="inventory", 
                       aliases=["inv"],
                       help="View your inventory of items.")
-    async def inventory(self, ctx, user: typing.Union[discord.Member, str]=None):
-        if user is None: user = ctx.author
-        user_data = await self.get_user_dict(ctx, user)
-        response = discord.Embed(title=str(user), description="Inventory")
-        for k in user_data['inv']:
-            response.add_field(name=k, value=user_data['inv'][k], inline=False)
+    async def inventory(self, ctx, user: discord.Member = None):
+        if user is None:
+            user = ctx.author
+        user_data = await self.bot.db_pool.fetchrow("SELECT * FROM inventories WHERE user_id = $1", user.id)
+        response = EconomyEmbed(title="Inventory", embed_type=enums.EmbedType.INFO)
+        response.quick_set_author(user)
+        out = []
+        data_as_dict = dict(user_data)
+        for key, value in data_as_dict.items():
+            if key == "user_id":
+                continue
+            else:
+                response.add_field(name=key.capitalize(), value=value, inline=False)
+            
         return await ctx.send(embed=response)
 
     @commands.command(name='shop',
                       aliases=["store"],
                       help="View the store.")
     async def shop(self, ctx):
-        shop_data = self.bot.store_collection.find()
-        response = discord.Embed(title="Shop", description="All available items")
-
-        async for i in shop_data:
-            response.add_field(name=i['name'], value=f"Price : {i['price']} | Remaining Stock : {i['stock']}", inline=False)
-
-        return await ctx.send(embed=response)
+        shop_data = await self.bot.db_pool.fetch("SELECT item_name, stock, price FROM shop")
+        embeds = []
+        for chunk in mitertools.chunked(shop_data, 5):
+            response = EconomyEmbed(title="Crajy Shop", description="All available items.", embed_type=enums.EmbedType.INFO)
+            for item in chunk:
+                response.add_field(name=item["item_name"], value=f"Stock Remaining: {item['stock']}\nPrice: {item['price']}", inline=False)
+            embeds.append(response)
+        pages = em.quick_embed_paginate(embeds)
+        await pages.start(ctx)
 
     @commands.command(name="buy", 
                       help="Buy an item from the shop.")                        #IMPORTANT!! - For items that should have unlimited stock, use stock value as None in store_data collection.
-    async def buy(self, ctx, number: int, *, item: str):         
-        store_data = await self.bot.store_collection.find_one({'name': item.lower().capitalize()})
-        user_data = await self.bot.economy_collection.find_one({'user': ctx.author.id})
+    async def buy(self, ctx, number: int, *, item: str):
 
-        if user_data['cash'] >= (number * store_data['price']):
+        store_data = await self.bot.db_pool.fetchrow("SELECT stock, price FROM shop WHERE item_name = $1", item.lower())
+        user_cash_data = await self.bot.db_pool.fetchrow("SELECT cash FROM economy WHERE user_id = $1", ctx.author.id)
+
+        if user_cash_data['cash'] >= (number * store_data['price']):
             if store_data['stock'] is not None:
                 if store_data['stock'] >= number:
-                    user_data['cash'] -= (number * store_data['price'])
-                    store_data['stock'] -= number
-                    await self.bot.store_collection.update_one({'name': item.lower().capitalize()}, {"$set": store_data})
-                    try:
-                        user_data["inv"][item.lower()] += number
-                    except KeyError:
-                        user_data["inv"][item.lower()] = number
-                    await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": user_data})
-                    response = discord.Embed(title=str(ctx.author), description=f"You bought {number} {item}s!", colour=discord.Color.green())      
-                    return await ctx.send(embed=response)
+                    new_bal = user_cash_data['cash'] - (number * store_data['price'])
+                    await self.bot.db_pool.execute("UPDATE economy SET cash = $1 WHERE user_id = $2", new_bal, ctx.author.id)
+                    await self.bot.db_pool.execute(f"UPDATE inventories SET {self.get_item_column(item)} = {self.get_item_column(item)} + $1 WHERE user_id = $2", number, ctx.author.id)
+                    await self.bot.db_pool.execute("UPDATE shop SET stock = stock - $1 WHERE item_name = $2", number, item)
+                    response = EconomyEmbed(title="Purchase Successful", description=f"You bought {number} {item}s!", embed_type=enums.EmbedType.SUCCESS)      
+                    response.quick_set_author(ctx.author)
+                    return await ctx.reply(embed=response)
                 else:
-                    return await ctx.message.channel.send(f"Bruh not enough stock of this item is left.")
+                    raise ValueError(f"Bruh not enough stock of this item is left.")
             else:
-                user_data['cash'] -= (number * store_data['price'])
-                try:
-                    user_data["inv"][item.lower()] += number
-                except KeyError:
-                    user_data["inv"][item.lower()] = number
-                await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": user_data})
-                response = discord.Embed(title=str(ctx.author), description=f"You bought {number} {item}s!", colour=discord.Color.green())
-                return await ctx.send(embed=response)
+                new_val = user_data['cash'] - (number * store_data['price'])
+                await self.bot.db_pool.execute("UPDATE economy SET cash = $1 WHERE user_id = $2", new_bal, ctx.author.id)
+                await self.bot.db_pool.execute(f"UPDATE inventories SET {self.get_item_column(item)} = {self.get_item_column(item)} + $1 WHERE user_id = $2", number, ctx.author.id)
+                response = EconomyEmbed(title="Purchase Succeessful", description=f"You bought {number} {item}s!", embed_type=enums.EmbedType.SUCCESS)
+                response.quick_set_author(ctx.author)
+                return await ctx.reply(embed=response)
         else:
-            return await ctx.send(f"poopi you don't have enough moni {self.bot.get_emoji(703648812669075456)}")
+            raise ValueError(f"poopi you don't have enough moni {self.bot.get_emoji(703648812669075456)}")
 
     @commands.command(name="sell",
                       help="Sell an item for the current market price.")
-    async def sell(self, ctx, n:int, item:str):
-        store = await self.bot.store_collection.find_one({'name': item.lower().capitalize()})
-        sell_data = await self.bot.economy_collection.find_one({'user': ctx.author.id})
-        
-        sell_data["inv"][item.lower()] -= n
-        sell_data['cash'] += (store['price'] * n)
-        await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": sell_data})
+    async def sell(self, ctx, n: int, item: str):
+        cur_price = await self.bot.db_pool.fetchval("SELECT price FROM shop WHERE item_name = $1", item)
+        await self.bot.db_pool.execute(f"UPDATE inventories SET {self.get_item_column(item)} = {self.get_item_column(item)} - $1 WHERE user_id = $2", n, ctx.author.id)
+        await self.bot.db_pool.execute("UPDATE economy SET cash = cash + $1 WHERE user_id = $2", cur_price * n, ctx.author.id)
 
-        response = discord.Embed(title=f"{str(ctx.message.author)}", description=f"You sold {n} {item}s for {store['price'] * n}")
-        return await ctx.send(embed=response)
+        response = EconomyEmbed(title="Item Sold.", description=f"You sold {n} {item}s for {cur_price * n}", embed_type=enums.EmbedType.SUCCESS)
+        response.quick_set_author(ctx.author)
+
+        return await ctx.reply(embed=response)
 
     @commands.command(name='givemoney',
                       aliases=["donate"],
                       help="Be a kind soul and give your friends some of your cash.")
-    async def givemoney(self, ctx, person: typing.Union[discord.Member, str], amount: int):
-        sender = await self.bot.economy_collection.find_one({'user': ctx.author.id})
-        reciever = await self.get_user_dict(ctx, person)
+    async def givemoney(self, ctx, person: discord.Member, amount: int):
+        sender_balance = await self.bot.db_pool.fetchval("SELECT cash FROM economy WHERE user_id = $1", ctx.author.id)
+        if sender_balance < amount:
+            raise ValueError(f"You don't have that much money; You're short by {amount - sender_balance}")
 
-        if isinstance(person, str):
-            person = [member for member in ctx.guild.members if member.name.lower()==person.lower() or member.nick.lower()==person.lower()][0]
-        
         if amount < 0:  
-            response = discord.Embed(title='Money Transfer:', description="You can't send negative money, popi.")
-            return await ctx.send(embed=response)
+            raise ValueError("You can't send negative money poopi")
         else:
-            if sender['cash'] >= amount:
-                sender['cash'] -= amount
-                reciever['cash'] += amount
-                await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": sender})
-                await self.bot.economy_collection.update_one({'user': person.id}, {"$set": reciever})
-                response = discord.Embed(title='Money Transfer: ', description=f"{ctx.author.mention} transferred {int(amount)} to {person.mention}")
-            else:
-                response = discord.Embed(title='Money Transfer: ', description=f"You don't have enough money on hand.")
-        return await ctx.send(embed=response)
+            await self.bot.db_pool.execute("UPDATE economy SET cash = cash - $1 WHERE user_id = $2", amount, ctx.author.id)
+            await self.bot.db_pool.execute("UPDATE economy SET cash = cash + $1 WHERE user_id = $2", amount, person.id)
+            response = EconomyEmbed(title='Money Transfer ', description=f"{ctx.author.mention} transferred {int(amount)} to {person.mention}", embed_type=enums.EmbedType.BOT)
+            response.set_thumbnail(url=em.EmbedResource.PAYMENT)
+        return await ctx.maybe_reply(embed=response, mention_author=True)
                                  
     @commands.command(name="rob",
                       aliases=["steal"],
                       help="Rob your friends.")
     @commands.cooldown(1, 3600, commands.BucketType.user)
-    async def rob(self, ctx, person: typing.Union[discord.Member, str]):
-        robber = await self.bot.economy_collection.find_one({'user': ctx.author.id})
-        victim = await self.get_user_dict(ctx, person)
+    async def rob(self, ctx, person: discord.Member):
+        robber_heist_tools = await self.bot.db_pool.fetchval("SELECT heist FROM inventories WHERE user_id = $1", ctx.author.id)
+        victim = await ctx.get_user_data(table=enums.Table.ECONOMY, member=person.id)
 
-        if isinstance(person, str):
-            try:
-                for member in ctx.guild.members:
-                    if person.lower() == member.name.lower():
-                        person = member
-                    else:
-                        if member.nick is not None:
-                            if person.lower() in member.nick.lower():
-                                person = member
-            except:
-                await ctx.send("Person not found 😔")
-                ctx.command.reset_cooldown(ctx)      #should fix issue of faulty cooldown trigger
-                return
-        
-        if robber['inv']['heist tools'] > 0 and victim['cash'] > 10:
-            robber["inv"]["heist tools"] -= 1
-            win_chance = random.choice([True, True, True, False])
-            win_percent = random.randint(50, 80)
+        if robber_heist_tools > 0 and victim['cash'] > 10:
+            await self.bot.db_pool.fetchval("UPDATE inventories SET heist = heist - 1 WHERE user_id = $1", ctx.author.id)
+            won = random.choice([True, True, True, False])
+            win_percent = random.randint(40, 75)
             
-            if win_chance is True:
+            if won:
                 win_amount = int(victim['cash'] * (win_percent/100))
-                victim['cash'] -= win_amount
-                robber['cash'] += win_amount
-                response = discord.Embed(title=str(ctx.author), description=f"You robbed {win_amount} from {str(person)}", colour=discord.Color.green())
-                await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": robber})
-                await self.bot.economy_collection.update_one({'user': person.id}, {"$set": victim})
+                await self.bot.db_pool.execute("UPDATE economy SET cash = cash + $1 WHERE user_id = $2", win_amount, ctx.author.id)
+                await self.bot.db_pool.execute("UPDATE economy SET cash = cash - $1 WHERE user_id = $2", win_amount, person.id)
+                response = EconomyEmbed(title="Heist!", description=f"You robbed {win_amount} from {person.mention}", embed_type=enums.EmbedType.SUCCESS)
+                response.quick_set_author(ctx.author)
+                response.set_thumbnail(url=self.random_robber())
                 return await ctx.send(embed=response)
             else:
                 fine_amount = random.randint(75, 200)
-                robber['cash'] -= fine_amount
-                await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": robber})
-                response = discord.Embed(title=str(ctx.message.author), description=f"You were caught robbing, and fined {fine_amount}", colour=discord.Color.red())
+                await self.bot.db_pool.execute("UPDATE economy SET cash = cash 1 $1 WHERE user_id = $2", fine_amount, ctx.author.id)
+                response = EconomyEmbed(title="Uh oh...", description=f"You were caught robbing, and fined {fine_amount}.", embed_type=enums.EmbedType.FAIL)
+                response.quick_set_author(ctx.author)
+                response.set_thumbnail(url=em.EmbedResource.LOSS)
                 return await ctx.send(embed=response)
         else:
-            await ctx.message.channel.send("You do not have enough Heist tools items/ person doesn't have enough cash balance.")
             ctx.command.reset_cooldown(ctx)
-                                 
-    @rob.error
-    async def rob_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            return await ctx.message.channel.send(f"Time remaining = {int(error.retry_after//60)} mins and {int(error.retry_after)-(int(error.retry_after//60))*60} seconds")
-        ctx.command.reset_cooldown(ctx)
-    
-    @commands.command(name="use-item", aliases=["useitem"])
-    async def use_item(self, ctx, item):
-        # WIP
-        user_data = await self.bot.economy_collection.find_one({'user': ctx.author.id})
-        store_data = await self.bot.store_collection.find_one({'name': item})
-        role_get = store_data['role']
-        for i in user_data["inv"]:
-            if item.lower() in i.keys():
-                i[item.lower()] -= 1
-        await self.bot.economy_collection.update_one({'user': ctx.author.id},{"$set": user_data})
-        
-        if role_get != None:
-            role = discord.utils.get(ctx.guild.roles, name = role_get)
-            await ctx.author.add_roles(role)
-            await ctx.send("Role added!")
-        else: await ctx.send("This item does not give a role")
+            raise ValueError("You do not have enough Heist tools items/ person doesn't have enough cash balance.")
+
     
 def setup(bot):
     bot.add_cog(Economy(bot))

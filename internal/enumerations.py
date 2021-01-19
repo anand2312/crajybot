@@ -13,7 +13,7 @@ class EmbedType(enum.Enum):
 class Table(enum.Enum):
     """Enum for tables in the database."""
     ECONOMY = ("id", "bank", "cash", "debt")
-    DETAILS = ("id", "zodiac", "bday")
+    USER_DETAILS = ("id", "zodiac", "bday")
     INVENTORIES = ("id", "stock", "chicken", "heist tools")    # actual name in table is `heist`
     NOTES = ("id", "raw_text")
     SHOP = ("item_id", "item_name", "stock", "price")
