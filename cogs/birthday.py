@@ -15,7 +15,7 @@ class Birthday(commands.Cog):
                     help="Retrieve a birthday date. Could be your own if no user is specified, or a specified user.", 
                     invoke_without_command=True)
     async def bday(self, ctx, person: discord.Member = None):
-        date = await self.bot.pg_conn.fetchval("SELECT bday FROM user_details WHERE user_id=$1", person.id)
+        date = await self.bot.db_pool.fetchval("SELECT bday FROM user_details WHERE user_id=$1", person.id)
         embed = em.CrajyEmbed(title=f"{person.nick}'s birthday", description=date.strftime('%d %B %Y'), embed_type=enums.EmbedType.INFO)
         embed.set_thumbnail(em.EmbedResource.BDAY.value)
         embed.quick_set_author(person)
