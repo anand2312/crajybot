@@ -237,7 +237,7 @@ class Stupid(commands.Cog):
         embed.set_thumbnail(url=em.EmbedResource.PIN.value)
         out = []
         for i in data:
-            author = ctx.get_member(i['author'])
+            author = ctx.guild.get_member(i['author'])
             line = f"• **{i['role_name']}**, _by {author.display_name}_"
             out.append(line)
         embed.description = "\n".join(out)
