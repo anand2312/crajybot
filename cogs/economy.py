@@ -16,7 +16,7 @@ from internal import enumerations as enums
 class EconomyEmbed(em.CrajyEmbed):
     """Made with thumbnail set according to EmbedType passed."""
     def __init__(self, embed_type: enums.EmbedType, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(embed_type=embed_type, **kwargs)
         if embed_type in (enums.EmbedType.BOT, enums.EmbedType.INFO):
             self.set_thumbnail(url=em.EmbedResource.BANK.value)
         elif embed_type == enums.EmbedType.SUCCESS:
@@ -90,7 +90,7 @@ class Economy(commands.Cog):
     async def balance(self, ctx, user: typing.Union[discord.Member, str]=None):
         if user is None:
             user = ctx.author
-        user_data = await self.bot.fetchrow("SELECT cash, bank, cash + bank - debt AS networth, debt FROM economy WHERE user_id=$1", user.id)
+        user_data = await self.bot.db_pool.fetchrow("SELECT cash, bank, cash + bank - debt AS networth, debt FROM economy WHERE user_id=$1", user.id)
 
         response = EconomyEmbed(title="Crajy Bank", description="Balance is:", embed_type=enums.EmbedType.BOT)
         response.add_field(name="Cash Balance: ",value=user_data['cash'], inline=True)
