@@ -4,13 +4,9 @@ from discord.ext import commands, tasks
 
 from typing import Optional, Union
 import random
-import json
-
-import datetime
-import pytz
 
 from contextlib import suppress
-import itertools
+import more_itertools as mitertools
 
 from secret.constants import GUILD_ID, ROLE_NAME
 from secret.KEY import *  
@@ -18,11 +14,6 @@ from secret.TOKEN import *
 
 from utils import embed as em
 from internal import enumerations as enums
-
-try:
-    from secret.webhooks import BOTSPAM_HOOK, ANOTHERCHAT_HOOK, SLASH_COMMANDS_URL
-except:
-    pass
 
 #API requests headers and URLs
 fancy_url = "https://ajith-fancy-text-v1.p.rapidapi.com/text"
@@ -163,8 +154,6 @@ class Stupid(commands.Cog):
                 curr_func = "lower"
         await ctx.maybe_reply(out)
 
-############################################################
-
     @wat.command(name="react")
     async def react(self, ctx, id_: discord.Message, *emojis):
         for i in emojis:
@@ -180,7 +169,7 @@ class Stupid(commands.Cog):
                 out += f"{emojis[letter]} "
             else:
                 out += letter
-        await ctx.send(out)
+        await ctx.maybe_reply(out)
 
     @commands.command(name="owo", aliases=["uwu"])
     async def owo(self, ctx, *, text):
@@ -190,121 +179,101 @@ class Stupid(commands.Cog):
             if i.lower() in ["l","r"]: out += "w" if case=="lower" else "W"
             else: out+=i
 
-        await ctx.send(out)
+        await ctx.maybe_reply(out)
         
     @commands.command(name="pins", help="Display the messages pinned in the bot database. Useful if your channel has already reached the 50 pin limit.")
     async def pins(self, ctx): 
-        data = self.bot.pins_collection.find()
+        data = await self.bot.db_pool.fetch("SELECT pin_id, synopsis, jump_url, author, date FROM pins")
+
         embeds = []
 
-        counter = 1
+        for chunk in mitertools.chunked(data, 6):
+            embed = em.CrajyEmbed(title=f"{ctx.guild.name} Pins!", embed_type=enums.EmbedType.INFO)
+            embed.set_thumbnail(url=em.EmbedResource.TAG.value)
+            embed.quick_set_author(ctx.author)
 
-        embed = discord.Embed(title=f"{ctx.guild.name} Pins!", color=discord.Color.dark_gold())
-        embed.set_thumbnail(url=ctx.guild.icon_url)
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+            for pin in chunk:
+                author = ctx.guild.get_member(pin['author'])
+                if author is None:
+                    continue    # in case user has left the server, ignore their pin
+                embed.add_field(name=f"{pin['synopsis']}",
+                                value=f"[_~{author.display_name}_, on {pin['date']}]({pin['jump_url']})\nPin ID:{pin['pin_id']}", 
+                                inline=False)
 
-        async for pin in data:
-            try:
-                author = discord.utils.get(ctx.guild.members, id=pin['message_author']).name
-            except AttributeError:
-                author = pin['message_author']
-            if counter % 5 != 0:
-                embed.add_field(name=f"{pin['message_synopsis']}",
-                                value=f"[_~{author}_, on {pin['date']}]({pin['message_jump_url']})\nPin ID:{pin['_id']}", 
-                                inline=False)
-                counter += 1
-            else:
-                embed.add_field(name=f"{pin['message_synopsis']}",
-                                value=f"[_~{author}_, on {pin['date']}]({pin['message_jump_url']})\nPin ID:{pin['_id']} {'' if pin['name'] is None else pin['name']}", 
-                                inline=False)
-                embeds.append(embed)
-                counter += 1
-                embed = discord.Embed(title=f"{ctx.guild.name} Pins!", color=discord.Color.dark_gold())
-                embed.set_thumbnail(url=ctx.guild.icon_url)
-                embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-        else:
             embeds.append(embed)
 
-        paginator = disputils.BotEmbedPaginator(ctx, embeds)
-        await paginator.run()
-
-    @commands.has_guild_permissions(administrator=True)
-    @commands.command(name="change-vote-threshold")
-    async def change_vote_threshold(self, ctx, arg: int):
-        self.pin_vote_threshold = arg
-        await ctx.message.add_reaction("✅")
+        pages = em.quick_embed_paginate(embeds)
+        await pages.start(ctx)
 
     @commands.command(name="fetch-pin", aliases=["fetchpin"], help="Return a pin based on the ID provided. WIP.")
     async def fetch_pin(self, ctx, identifier: Union[str, int]):
 
         if identifier.isalpha():
-            data = await self.bot.pins_collection.find_one({"name": identifier})
+            data = await self.bot.db_pool.execute("SELECT pin_id, synopsis, jump_url, date FROM pins WHERE name=$1", identifier)
         elif identifier.isdigit():
-            data = await self.bot.pins_collection.find_one({"_id": int(identifier)})
+            data = await self.bot.db_pool.execute("SELECT pin_id, synopsis, jump_url, date FROM pins WHERE pin_id=$1", identifier)
 
-        embed = discord.Embed(title=f"Pin **{data['_id']}**", url=data["message_jump_url"], color=discord.Color.blurple())
-        text = f"**{data['message_synopsis']}**\n  _by {data['message_author']} on {data['date']}_"
-        embed.description = text 
+        embed = em.CrajyEmbed(title=f"Pin **{data['_id']}**", url=data["jump_url"], embed_type=enums.EmbedType.INFO)
+        embed.description = f"**{data['synopsis']}**\n  _by {data['author']} on {data['date']}_"
+        embed.set_thumbnail(url=em.EmbedResource.TAG)
         embed.set_footer(text=f"Requested by {ctx.author.nick}. Click on the embed title to go to the message.", icon_url=ctx.author.avatar_url)
-        return await ctx.send(embed=embed)
+        return await ctx.maybe_reply(embed=embed)
+
+    @commands.has_guild_permissions(administrator=True)
+    @commands.command(name="change-vote-threshold", help="Change the minimum votes required to pin a message.")
+    async def change_vote_threshold(self, ctx, arg: int):
+        self.pin_vote_threshold = arg
+        await ctx.check_mark()
         
     @commands.group(name="role-name", aliases=["rolename", "rolenames"], invoke_without_command=True)
     async def role_name(self, ctx, *, name: str):
-        if len(name) > 15:
-            return await ctx.send("bro too long bro")
 
-        if ctx.author.guild_permissions.administrator:
-            pass
-        else:
-            data = await self.bot.economy_collection.find_one({'user': ctx.author.id})
-            if data['inv']['role name'] >= 1:
-                data['inv']['role name'] -= 1
-                await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": data})
-            else:
-                return await ctx.send("Buy the `role name` item!")
+        await self.bot.db_pool.execute("INSERT INTO role_names(role_name, author) VALUES ($1, $2)", name, ctx.author.id)
 
-        await self.bot.role_names_collection.insert_one({'name': name, 'by': ctx.author.name})
+        embed = em.CrajyEmbed(title="Added!", description=f"`{name}` was added to the database. It will be picked randomly.", embed_type=enums.EmbedType.SUCCESS, url=r"https://www.youtube.com/watch?v=DLzxrzFCyOs")
+        embed.quick_set_author(ctx.author)
+        embed.set_thumbnail(url=em.EmbedResource.PIN)
 
-        embed = discord.Embed(title="Added!", description=f"`{name}` was added to the database. It will be picked randomly.", color=discord.Color.green(), url=r"https://www.youtube.com/watch?v=DLzxrzFCyOs")
         return await ctx.send(embed=embed)
 
     @role_name.command(name="list", aliases=["all"])
     async def role_name_list(self, ctx):
-        data = await self.bot.role_names_collection.find()
-        embed = discord.Embed(title="Role names", color=discord.Color.green())
-        val = ""
+        data = await self.bot.db_pool.fetch("SELECT role_name, author FROM role_names")
+        embed = em.CrajyEmbed(title="Role names", embed_type=enums.EmbedType.BOT)
+        out = []
         for i in data:
-            val += i['name'] + "\n"
-        embed.description = val
+            author = ctx.get_member(i['author'])
+            line = f"• **{i['role_name']}**, _by {author.display_name}_"
+            out.append(line)
+        embed.description = "\n".join(out)
         return await ctx.send(embed=embed)
 
     @role_name.command(name="remove", aliases=["delete"])
     @commands.has_guild_permissions(administrator=True)
-    async def role_name_remove(self, ctx, name: str):
-        await self.bot.role_names_collection.delete_one({'name': name})
-        return await ctx.send(f"Removed `{name}` (if it exists in the database)")
+    async def role_name_remove(self, ctx, *names: str):      # can pass multiple role names to bulk delete. each arg must be wrapped in quotes.
+        await self.bot.db_pool.execute("DELETE FROM role_names WHERE LOWER(role_name) = ANY($1)", names)
+
+        embed = em.CrajyEmbed(title="Deleting Role Names", embed_type=enums.EmbedType.BOT)
+        listed_names = '\n'.join(f'• {i}' for i in names)
+        embed.description = f"Deleted:\n ```{listed_names}```"
+        embed.set_thumbnail(url=em.EmbedType.TRASHCAN.value)
+        embed.quick_set_author(self.bot.user)
+        embed.set_footer(text="Note: Names are deleted if they existed in the database in the first place.")
+
+        await ctx.reply(embed=embed)
 
     @commands.command(name="quote", aliases=["qotd"], help="Displays a random quote.")
     async def qotd(self, ctx):
-        await ctx.send(self.cached_qotd)
+        await ctx.reply(self.cached_qotd, mention_author=True)
 
     @commands.command(name="change-presence", aliases=["changepresence", "changestatus", "change-status"], help="Change the bot's status.")
+    @commands.cooldown(1, 600, type=commands.BucketType.guild)
     async def change_presence(self, ctx, activity: str, *, status: str):
         if activity.lower() not in ["playing", "watching", "listening", "streaming"]:
-            return await ctx.send('Status has to be one of `"playing", "watching", "listening", "streaming"`')
+            raise ValueError('Status has to be one of `"playing", "watching", "listening", "streaming"`')
         
         if len(status) > 30:
-            return await ctx.send("bro too long bro")
-
-        if ctx.author.guild_permissions.administrator:
-            pass
-        else:
-            data = await self.bot.economy_collection.find_one({'user': ctx.author.id})
-            if data['inv']['bot status'] >= 1:
-                data['inv']['bot status'] -= 1
-                await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": data})
-            else:
-                return await ctx.send("Buy the `bot status` item!")
+            raise ValueError(f"Inputted status ({len(status)}) longer than 30 characters.")
 
         discord_activity = discord.Activity(name=status)
 
@@ -317,11 +286,12 @@ class Stupid(commands.Cog):
         elif activity.lower() == "streaming":
             discord_activity = discord.Streaming(name=activity)
             
-        await ctx.message.add_reaction("✅")
+        await ctx.check_mark()
         return await self.bot.change_presence(status=discord.Status.online, activity=discord_activity)
 
     @tasks.loop(hours=1)
     async def qotd_cache_loop(self):
+        # DOES THIS STILL WORK?
         """The quotes.rest API has a very strict limit on number of requests that are given for free, so
         instead of making requests everytime the command is called, this loop does the request once an hour and 
         caches it for further use."""
@@ -338,14 +308,13 @@ class Stupid(commands.Cog):
     async def role_name_loop(self):
         guild = self.bot.get_guild(GUILD_ID)
         role = guild.get_role(ROLE_NAME)
-        existing = self.bot.role_names_collection.find()
-        data = await existing.to_list(length=None)
+        existing = await self.bot.db_pool.fetch("SELECT role_name FROM role_names")
         new_name_data = random.choice(data)
-        await role.edit(name=new_name_data['name'])
+        await role.edit(name=new_name_data['role_name'])
 
     @role_name_loop.before_loop
     async def rolename_before(self):
         await self.bot.wait_until_ready()
 
 def setup(bot):
-    bot.add_cog(stupid(bot))
+    bot.add_cog(Stupid(bot))

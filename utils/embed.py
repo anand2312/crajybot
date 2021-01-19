@@ -26,6 +26,8 @@ class EmbedResource(enum.Enum):
     BDAY = r"https://media.discordapp.net/attachments/612638234782072882/800965411130179584/fhnpyxb3ywi21-removebg-preview.png?width=508&height=277"
     LOVE_CALC = r"https://media.discordapp.net/attachments/612638234782072882/801042923050762251/how-technology-is-changing-the-way-we-love.png?width=545&height=408"
     TAG = r"https://media.discordapp.net/attachments/612638234782072882/801049755392016414/red-tags-vector-clipart.png?width=409&height=409"
+    PIN = r"https://media.discordapp.net/attachments/612638234782072882/758190572526764052/emoji.png?width=58&height=58"
+    TRASHCAN = r"https://media.discordapp.net/attachments/612638234782072882/801083964893691954/unknown.png?width=128&height=137"
     CHECK_EMOJI = "<:check:800771830116909066>"
     XMARK_EMOJI = "<:xmark:800773561093849119>"
 

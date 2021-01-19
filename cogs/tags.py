@@ -76,7 +76,7 @@ class Tags(commands.Cog):
     @wat.command(name="use", aliases=["-u"])
     async def use(self, ctx, *, key):
         content = await self.bot.db_pool.fetchval("SELECT content FROM tags WHERE tag_name=$1", key)
-        await ctx.maybe_reply(content)
+        await ctx.reply(content)
 
     @wat.command(name="list", aliases=["-l"])
     async def list_(self, ctx):
