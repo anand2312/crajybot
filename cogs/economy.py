@@ -80,7 +80,7 @@ class Economy(commands.Cog):
         except TypeError:
             if amount.lower() == "all":
                 await self.bot.db_pool.execute("UPDATE economy SET bank=cash + bank, cash=0 WHERE user_id=$1", ctx.author.id)
-                response = EconomyEmbed(title="Withdrawal", description=f"Deposited all money to bank.", embed_type=enums.EmbedType.BOT)
+                response = EconomyEmbed(title="Deposit", description=f"Deposited all money to bank.", embed_type=enums.EmbedType.BOT)
                 response.quick_set_author(ctx.author)
                 await ctx.reply(embed=response)
                     
@@ -157,6 +157,8 @@ class Economy(commands.Cog):
             response = EconomyEmbed(title="Crajy Leaderboard", description="", embed_type=enums.EmbedType.INFO)
             for person in chunk:
                 person_obj = ctx.guild.get_member(person['user_id'])
+                if person_obj is None:
+                    continue
                 response.add_field(name=f"{counter}. {person_obj.display_name}", value=f"Net Worth: {person['networth']}", inline=False)
             embeds.append(response)
 
@@ -251,9 +253,9 @@ class Economy(commands.Cog):
         for chunk in mitertools.chunked(shop_data, 5):
             response = EconomyEmbed(title="Crajy Shop", description="All available items.", embed_type=enums.EmbedType.INFO)
             for item in chunk:
-                response.add_field(name=item["item_name"], value=f"Stock Remaining: {item['stock']}\nPrice: {item['price']}", inline=False)
+                stock = "∞" if item["stock"] is None else item["stock"]
+                response.add_field(name=item["item_name"], value=f"Stock Remaining: {stock}\nPrice: {item['price']}", inline=False)
             embeds.append(response)
-        print(embeds)
         pages = em.quick_embed_paginate(embeds)
         await pages.start(ctx)
 
