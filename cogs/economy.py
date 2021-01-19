@@ -57,7 +57,7 @@ class Economy(commands.Cog):
                 await ctx.reply(embed=response)
             else:
                 raise ValueError(f"You do not have that much balance; you're {amount - existing['bank']} short.")
-        except ValueError:
+        except TypeError:
             if amount.lower() == "all":
                 await self.bot.db_pool.execute("UPDATE economy SET cash=cash + bank, bank=0 WHERE user_id=$1", ctx.author.id)
                 response = EconomyEmbed(title="Withdrawal", description=f"Withdrew all money from bank.", embed_type=enums.EmbedType.BOT)
@@ -77,7 +77,7 @@ class Economy(commands.Cog):
                 await ctx.reply(embed=response)
             else:
                 raise ValueError("You don't have that much moni to deposit")
-        except ValueError:
+        except TypeError:
             if amount.lower() == "all":
                 await self.bot.db_pool.execute("UPDATE economy SET bank=cash + bank, cash=0 WHERE user_id=$1", ctx.author.id)
                 response = EconomyEmbed(title="Withdrawal", description=f"Deposited all money to bank.", embed_type=enums.EmbedType.BOT)
