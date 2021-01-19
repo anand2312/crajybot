@@ -38,7 +38,7 @@ class Birthday(commands.Cog):
         if person is None:
             person = ctx.author
         
-        ask_embed = em.CrajyEmbed(title=f"Setting Birthday for {person.nick}", embed_type=enums.EmbedType.INFO)
+        ask_embed = em.CrajyEmbed(title=f"Setting Birthday for {person.display_name}", embed_type=enums.EmbedType.INFO)
         ask_embed.description = f"Enter the date in DD-MM-YYYY format"
         ask_embed.set_thumbnail(url=em.EmbedResource.BDAY.value)
         ask_embed.quick_set_author(person)
@@ -55,7 +55,7 @@ class Birthday(commands.Cog):
         await self.bot.db_pool.execute("UPDATE user_details SET bday=$1 WHERE user_id=$2", datetime.date(**dict(zip(kwargs, date_vals))), person.id)
         
         out = em.CrajyEmbed(title=f"Birthday Set!", embed_type=enums.EmbedType.SUCCESS)
-        out.description = f"{person.nick}'s birthday is saved. They shall be wished."
+        out.description = f"{person.display_name}'s birthday is saved. They shall be wished."
         out.set_thumbnail(url=em.EmbedResource.BDAY.value)
         out.quick_set_author(person)
 
