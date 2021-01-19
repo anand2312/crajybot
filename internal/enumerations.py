@@ -18,3 +18,4 @@ class Table(enum.Enum):
     NOTES = ("id", "raw_text")
     SHOP = ("item_id", "item_name", "stock", "price")
     PINS = ("pin_id", "synopsis", "jump_url", "author", "date", "name")
+    TAGS = ("tag_name", "tag_content", "tag_author")

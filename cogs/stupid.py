@@ -1,13 +1,10 @@
 """Some fun commands."""
 import discord
 from discord.ext import commands, tasks
-import disputils
-
-from pymongo import ASCENDING
-import json
 
 from typing import Optional, Union
 import random
+import json
 
 import datetime
 import pytz
@@ -17,7 +14,10 @@ import itertools
 
 from secret.constants import GUILD_ID, ROLE_NAME
 from secret.KEY import *  
-from secret.TOKEN import *    
+from secret.TOKEN import *  
+
+from utils import embed as em
+from internal import enumerations as enums
 
 try:
     from secret.webhooks import BOTSPAM_HOOK, ANOTHERCHAT_HOOK, SLASH_COMMANDS_URL
@@ -39,15 +39,16 @@ love_headers = {
     'x-rapidapi-key': KEY
     }
 
-class stupid(commands.Cog):
+class Stupid(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
         self.pin_cache = set()
         self.pin_vote_threshold = 4
         # a loop that changes the name of a role, based on names saved in the database. Names are added with the `role-name` command
-        self.role_name_loop.start()   
-        self.qotd_cache_loop.start()
+
+        self.bot.task_loops['role_name'] = self.role_name_loop  
+        self.bot.task_loops['qotd_cache'] = self.qotd_cache_loop
 
         try:
             self.anotherchat_webhook = discord.Webhook.partial(ANOTHERCHAT_HOOK['id'], ANOTHERCHAT_HOOK['token'], adapter=discord.AsyncWebhookAdapter(self.bot.session))
@@ -59,6 +60,7 @@ class stupid(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        # REWRITE THIS.
         if message.author.bot: return
         currencies = {"usd", "omr", "inr", "eur"}
         message_string = message.content.lower().replace("euro", "eur")
@@ -115,12 +117,13 @@ class stupid(commands.Cog):
             async with self.bot.session.get(fancy_url, headers=fancy_headers, params=querystring) as response:
                 return_text = await response.json()
                 return_text = return_text["fancytext"].split(",")[0]
-            await ctx.send(return_text)
+            await ctx.maybe_reply(return_text)
 
     @commands.command(name="love-calc", aliases=["lc","love","lovecalc"])
-    async def love_calc(self, ctx, sname:str, fname=None):
+    async def love_calc(self, ctx, sname : str, fname=None):
+        # why are we using an API here; just randomize.
         if fname is None:
-            fname = str(ctx.message.author)
+            fname = str(ctx.author)
             querystring = {"fname":str(ctx.message.author),"sname":sname}
         else:
             querystring = {"fname":str(fname),"sname":str(sname)}
@@ -131,20 +134,21 @@ class stupid(commands.Cog):
                 result = await response.json()
                 result = result["result"]
             if int(percent) >= 50:
-                embed=discord.Embed(title="Love Calculator", colour=discord.Color.green())
-                embed.set_author(name=fname)
+                embed = em.CrajyEmbed(title="Love Calculator", embed_type=enums.EmbedType.SUCCESS)
+                embed.quick_set_author(ctx.author)
+                embed.set_thumbnail(url=em.EmbedResource.LOVE_CALC.value)
                 embed.add_field(name="That poor person", value=sname, inline=False)
                 embed.add_field(name="Percent", value=percent, inline=True)
                 embed.add_field(name="Result", value=result, inline=False)
             else:
-                embed=discord.Embed(title="Love Calculator", colour=discord.Color.red())
-                embed.set_author(name=fname)
+                embed=discord.Embed(title="Love Calculator", embed_type=enums.EmbedType.FAIL)
+                embed.quick_set_author(ctx.author)
+                embed.set_thumbnail(url=em.EmbedResource.LOVE_CALC.value)
                 embed.add_field(name="That poor person", value=sname, inline=False)
                 embed.add_field(name="Percent", value=percent, inline=True)
                 embed.add_field(name="Result", value=result, inline=False)          
-            sent_message = await ctx.message.channel.send(content=None, embed=embed)
-            await sent_message.add_reaction("✅")
-            await sent_message.add_reaction("❌")
+            sent_message = await ctx.maybe_reply(embed=embed)
+            await ctx.check_mark(sent_message)
 
     @commands.command(name="weird", aliases=["w"])
     async def weird(self, ctx, *, message):
@@ -157,77 +161,9 @@ class stupid(commands.Cog):
             else:
                 out += i.upper()
                 curr_func = "lower"
-        #await ctx.message.delete()
-        await ctx.message.channel.send(out)
+        await ctx.maybe_reply(out)
 
-    @commands.group(aliases=['tag'], help="Tags.")
-    async def wat(self, ctx):
-        if ctx.invoked_subcommand is None:
-            await ctx.send("bruh that isn't a thing.")
-
-    @wat.command(name="add", aliases=["-a"])
-    async def add_to_wat(self, ctx, key, *, output):
-        await self.bot.stupid_collection.insert_one({"key":key, "output":output})
-        await ctx.send("Added")
-
-    @wat.command(name="remove", aliases=["-r"])
-    @commands.has_any_role('admin','Bot Dev')
-    async def remove_from_wat(self, ctx, key):
-        try:
-            await self.bot.stupid_collection.delete_one({"key":key})
-            await ctx.send(f"Removed {key}")
-        except:
-            await ctx.send(f"{key} doesn't exist")
-
-    @wat.command(name="edit-output", aliases=["edit-out"])
-    async def edit_wat_output(self, ctx, key, *, output):
-        try:
-            await self.bot.stupid_collection.update_one({'key':key},{"$set":{"output":output}})
-            await ctx.send("Updated output.")
-        except:
-            await ctx.send("Key doesn't exist")
-
-    @wat.command(name="edit-key", aliases=["edit-name"])
-    async def edit_wat_key(self, ctx, key, new_key):
-        try:
-            await self.bot.stupid_collection.update_one({'key':key},{"$set":{"key":new_key}})
-            await ctx.send("Updated name.")
-        except:
-            await ctx.send("Key doesn't exist")    
-
-    @wat.command(name="use", aliases=["-u"])
-    async def use(self, ctx, *, key):
-        existing = await self.bot.stupid_collection.find_one({"key": key})
-        data = existing["output"]
-        if data is not None:
-            if ctx.channel.name == "another-chat":
-                await self.anotherchat_webhook.send(data, username=ctx.author.nick, avatar_url=ctx.author.avatar_url)
-            elif ctx.channel.name == "botspam":
-                await self.botspam_webhook.send(data, username=ctx.author.nick, avatar_url=ctx.author.avatar_url)
-            else:
-                await ctx.send(data)
-        else:
-            ctx.send("Not found.")
-
-    @wat.command(name="list", aliases=["-l"])
-    async def list_(self, ctx):
-        out = ""
-        async for i in self.bot.stupid_collection.find():
-            out += i["key"] + "\n"
-        out += f"**Total**: {i}"
-        await ctx.send(out)
-
-    @wat.command(name="search", aliases=["-s"])
-    async def wat_search(self, ctx, key):
-        check = 0
-        embed = discord.Embed(title="Search Results", color=discord.Color.blurple())
-        async for i in self.bot.stupid_collection.find():
-            if key.lower() in i["key"].lower():
-                embed.add_field(name=i['key'], value=i['output'], inline=False)
-                check += 1
-        if check == 0:
-            embed.add_field(name="No search results found", value=" ")
-        await ctx.send(embed=embed)
+############################################################
 
     @wat.command(name="react")
     async def react(self, ctx, id_: discord.Message, *emojis):

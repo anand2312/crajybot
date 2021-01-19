@@ -1,4 +1,5 @@
 from collections import defaultdict
+import asyncio
 
 from discord.ext import commands
 
@@ -54,6 +55,9 @@ class CrajyBot(commands.Bot):
             else:
                 embed.description = f"Command {ctx.invoked_with} not found."
                 return await ctx.send(embed=embed)
+        elif isinstance(error, asyncio.TimeoutError):
+            embed.description = f"You took too long to respond for: {ctx.invoked_with}"
+            return await ctx.message.edit(embed=embed)
         else:
             embed.title = "Unexpected error occurred."
             embed.description = str(error)

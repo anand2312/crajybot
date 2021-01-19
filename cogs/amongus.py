@@ -19,13 +19,6 @@ class AmongUs(commands.Cog):
         if "code" in message.content.lower() or "server" in message.content.lower():
             await message.channel.send(embed=self.embed)
 
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
-        """Local error handler for this cog."""
-        error = getattr(error, 'original', error)
-        if isinstance(error, asyncio.TimeoutError):
-            return await ctx.send("You took too long. Start the command again.")
-
     @commands.group(name="among_us",
                     aliases=["amongus", "play", "among-us"],
                     invoke_without_command=True,
@@ -33,7 +26,7 @@ class AmongUs(commands.Cog):
     async def among_us(self, ctx):
         """Command to save the room code and server when starting a new game."""
         if self.status is True:
-            return await ctx.send(f"{ctx.author.mention}, {self.data['user'].name} has already started a game.\nCode: ``{self.data['code']}``\nServer: ``{self.data['server']}``")
+            return await ctx.maybe_reply(f"{ctx.author.mention}, {self.data['user'].name} has already started a game.\nCode: ``{self.data['code']}``\nServer: ``{self.data['server']}``")
         #checks
         def code_check(m):
             return m.author==ctx.author and len(m.content)==6 and all([i.isalpha() for i in m.content])
@@ -63,7 +56,7 @@ class AmongUs(commands.Cog):
         if self.status is False:
             return await ctx.send("What are you trying to end? No one is playing now.")
         
-        if ctx.author == self.data['user'] or any([role.name=="Moderators" or role.name=="admin" for role in ctx.author.roles]):
+        if ctx.author == self.data['user'] or ctx.author.guild_permissions.administrator:
             self.status = False
             self.data = {"user": None, "code": None, "server": None}
             self.embed = None  
