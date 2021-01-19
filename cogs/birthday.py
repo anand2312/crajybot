@@ -23,7 +23,7 @@ class Birthday(commands.Cog):
         embed.quick_set_author(person)
         
         today = datetime.datetime.today()
-        this_year_date = datetime.date(year=today.year, month=date.month, day=date.day)
+        this_year_date = datetime.datetime(year=today.year, month=date.month, day=date.day, hour=0, minute=0, second=0)
         remaining = this_year_date - today
 
         embed.set_footer(text=f"Their birthday is in {remaining}")
