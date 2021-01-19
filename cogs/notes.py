@@ -33,7 +33,7 @@ class Notes(commands.Cog):
         if note_id is None:
             data = await self.bot.db_pool.fetch("SELECT note_id, raw_note FROM notes WHERE user_id=$1", ctx.author.id)
         else:
-            data = await self.bot.db_pool.fetch("SELECT note_id, raw_note FROM notes WHERE user_id=$1 AND note_id IN ($2::array)", ctx.author.id, note_id)
+            data = await self.bot.db_pool.fetch("SELECT note_id, raw_note FROM notes WHERE user_id=$1 AND note_id=ANY($2::INT[])", ctx.author.id, note_id)
         if not data:     # if no records
             embed = em.CrajyEmbed(title="Fetched Notes", embed_type=EmbedType.WARNING)
             embed.quick_set_author(self.bot.user)
@@ -71,7 +71,7 @@ class Notes(commands.Cog):
             if note_id is None:
                 await self.bot.db_pool.execute("DELETE FROM notes WHERE user_id=$1", ctx.author.id)
             else:
-                await self.bot.db_pool.execute("DELETE FROM notes WHERE user_id=$1 AND note_id IN $2", ctx.author.id, note_id)
+                await self.bot.db_pool.execute("DELETE FROM notes WHERE user_id=$1 AND note_id=ANY($2::INT[])", ctx.author.id, note_id)
             out = em.CrajyEmbed(title="Deleted Notes", embed_type=EmbedType.SUCCESS)
             out.description = "Deleted notes."
         else:
