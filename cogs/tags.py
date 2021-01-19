@@ -16,7 +16,7 @@ class Tags(commands.Cog):
 
     @wat.command(name="add", aliases=["-a"])
     async def add_to_wat(self, ctx, key, *, output):
-        await self.bot.db_pool.execute("INSERT INTO tags(tag_name, content, author) VALUES($1, $2. $3)", key, output, ctx.author.id)
+        await self.bot.db_pool.execute("INSERT INTO tags(tag_name, content, author) VALUES($1, $2, $3)", key, output, ctx.author.id)
         embed = em.CrajyEmbed(title="Added tag.", embed_type=enums.EmbedType.BOT)
         embed.quick_set_author(ctx.author)
         embed.set_thumbnail(url=em.EmbedResource.TAG.value)
@@ -84,11 +84,11 @@ class Tags(commands.Cog):
         chunked_tags = mitertools.chunked(all_tags, 6)
         embeds = []
         for chunk in chunked_tags:
-            page = em.CrajyEmbed(title="All Tags.", description="\n".join(chunk), embed_type=enums.EmbedType.BOT)
+            page = em.CrajyEmbed(title="All Tags.", description="\n".join(i['tag_name'] for i in chunk), embed_type=enums.EmbedType.BOT)
             page.set_thumbnail(url=em.EmbedResource.TAG.value)
             page.quick_set_author(ctx.author)
             embeds.append(page)
-
+        print(embeds)
         pages = em.quick_embed_paginate(embeds)
         await pages.start(ctx)
 
