@@ -97,7 +97,7 @@ class Economy(commands.Cog):
         response.add_field(name="Bank balance: ",value=user_data['bank'], inline=False)
         response.add_field(name="Debt: ",value=user_data['debt'], inline=True)
         response.add_field(name="Net Worth: ",value=user_data['networth'], inline=False)
-        response.quick_set_author(ctx.author)
+        response.quick_set_author(user)
         return await ctx.reply(embed=response)
 
     @commands.command(name='work',
@@ -240,7 +240,6 @@ class Economy(commands.Cog):
                 continue
             else:
                 response.add_field(name=key.capitalize(), value=value, inline=False)
-            
         return await ctx.send(embed=response)
 
     @commands.command(name='shop',
