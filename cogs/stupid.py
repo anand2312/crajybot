@@ -226,7 +226,7 @@ class Stupid(commands.Cog):
 
         embed = em.CrajyEmbed(title="Added!", description=f"`{name}` was added to the database. It will be picked randomly.", embed_type=enums.EmbedType.SUCCESS, url=r"https://www.youtube.com/watch?v=DLzxrzFCyOs")
         embed.quick_set_author(ctx.author)
-        embed.set_thumbnail(url=em.EmbedResource.PIN)
+        embed.set_thumbnail(url=em.EmbedResource.PIN.value)
 
         return await ctx.send(embed=embed)
 
@@ -234,6 +234,7 @@ class Stupid(commands.Cog):
     async def role_name_list(self, ctx):
         data = await self.bot.db_pool.fetch("SELECT role_name, author FROM role_names")
         embed = em.CrajyEmbed(title="Role names", embed_type=enums.EmbedType.BOT)
+        embed.set_thumbnail(url=em.EmbedResource.PIN.value)
         out = []
         for i in data:
             author = ctx.get_member(i['author'])
@@ -258,7 +259,7 @@ class Stupid(commands.Cog):
 
     @commands.command(name="quote", aliases=["qotd"], help="Displays a random quote.")
     async def qotd(self, ctx):
-        await ctx.reply(self.cached_qotd, mention_author=True)
+        await ctx.reply(self.cached_qotd, mention_author=False)
 
     @commands.command(name="change-presence", aliases=["changepresence", "changestatus", "change-status"], help="Change the bot's status.")
     @commands.cooldown(1, 600, type=commands.BucketType.guild)
