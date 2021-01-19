@@ -323,7 +323,7 @@ class Economy(commands.Cog):
     @commands.cooldown(1, 3600, commands.BucketType.user)
     async def rob(self, ctx, person: discord.Member):
         robber_heist_tools = await self.bot.db_pool.fetchval("SELECT heist FROM inventories WHERE user_id = $1", ctx.author.id)
-        victim = await ctx.get_user_data(table=enums.Table.ECONOMY, member=person.id)
+        victim = await ctx.get_user_data(table=enums.Table.ECONOMY, member=person)
 
         if robber_heist_tools > 0 and victim['cash'] > 10:
             await self.bot.db_pool.fetchval("UPDATE inventories SET heist = heist - 1 WHERE user_id = $1", ctx.author.id)
