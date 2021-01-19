@@ -73,7 +73,7 @@ class Birthday(commands.Cog):
             person_obj = discord.utils.get(ctx.guild.members, id=person['user_id'])
             if person_obj is None:
                 continue
-            response.add_field(name=person_obj.nick, value=person['bday'].strftime('%d %B %Y'), inline=False)
+            response.add_field(name=person_obj.display_name, value=person['bday'].strftime('%d %B %Y'), inline=False)
         await ctx.maybe_reply(embed=response)
 
     def find_horoscope_sign(self, date: datetime.datetime) -> str:
