@@ -142,6 +142,7 @@ class Economy(commands.Cog):
             rand_val = random.randint(150,250)
             await self.bot.db_pool.execute("UPDATE economy SET cash = cash - $1 WHERE user_id=$2", rand_val, ctx.author.id)
             response = EconomyEmbed(title="You're kinda stupid bro.", description=f"You got caught and were fined {rand_val}!", embed_type=enums.EmbedType.FAIL)
+            response.set_thumbnail(url=em.EmbedResource.LOSS.value)
         response.quick_set_author(ctx.author)
         return await ctx.reply(embed=response)
 
@@ -155,7 +156,7 @@ class Economy(commands.Cog):
         for chunk in mitertools.chunked(leaderboard_data, 6):
             response = EconomyEmbed(title="Crajy Leaderboard", description="", embed_type=enums.EmbedType.INFO)
             for person in chunk:
-                person_obj = ctx.guild.get_member(i['user_id'])
+                person_obj = ctx.guild.get_member(person['user_id'])
                 response.add_field(name=f"{counter}. {person_obj.display_name}", value=f"Net Worth: {person['networth']}", inline=False)
             embeds.append(response)
 
@@ -253,6 +254,7 @@ class Economy(commands.Cog):
             for item in chunk:
                 response.add_field(name=item["item_name"], value=f"Stock Remaining: {item['stock']}\nPrice: {item['price']}", inline=False)
             embeds.append(response)
+        print(embeds)
         pages = em.quick_embed_paginate(embeds)
         await pages.start(ctx)
 
