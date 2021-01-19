@@ -15,7 +15,6 @@ import typing
 from tabulate import tabulate
 
 from secret.webhooks import *
-import utils.decorators as deco
 from utils import embed as em
 from internal import enumerations as enums
 
