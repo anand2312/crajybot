@@ -57,16 +57,13 @@ async def stock_price_before():
 async def birthday_loop():
     guild = bot.get_guild(GUILD_ID)
     wishchannel = guild.get_channel(GENERAL_CHAT)
-    data = await bot.db_pool.fetch("SELECT user_id, bday FROM user_details")
-
-    today = datetime.datetime.now()
+    data = await bot.db_pool.fetch("SELECT user_id FROM user_details WHERE EXTRACT(day FROM bday)=EXTRACT(day FROM current_date) AND EXTRACT(month FROM bday)=EXTRACT(month FROM current_date)")
 
     for person in data:
-        if person['bday'].strftime("%d %m") == today.strftime("%d %m"):
-            person_obj = discord.utils.get(guild.members, id=person['user_id'])
-            embed = CrajyEmbed(title=f"Happy Birthday {person_obj.display_name}!", embed_type=EmbedType.SUCCESS)
-            embed.quick_set_author(person_obj)
-            await wishchannel.send(content="@here", embed=embed)
+        person_obj = discord.utils.get(guild.members, id=person['user_id'])
+        embed = CrajyEmbed(title=f"Happy Birthday {person_obj.display_name}!", embed_type=EmbedType.SUCCESS)
+        embed.quick_set_author(person_obj)
+        await wishchannel.send(content="@here", embed=embed)
 
 @birthday_loop.before_loop
 async def birthdayloop_before():
