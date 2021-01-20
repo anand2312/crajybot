@@ -133,7 +133,7 @@ class Moderator(commands.Cog):
     async def remove_pins(self, ctx, identifiers: commands.Greedy[typing.Union[int, str]]):
         ids, names = [], []
         for i in identifiers:
-            if i.isnumeric():
+            if isinstance(i, int):
                 ids.append(int(i))
             else:
                 names.append(i)
