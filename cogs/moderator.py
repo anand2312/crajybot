@@ -155,7 +155,7 @@ class Moderator(commands.Cog):
             if len(identifiers) == 1 and identifiers[0].lower() == "all":
                 await self.bot.db_pool.execute("DELETE FROM pins")
             else:
-                await self.bot.db_pool.execite("DELETE FROM pins WHERE name=ANY($1) OR pin_id=ANY($2)", names, ids)
+                await self.bot.db_pool.execute("DELETE FROM pins WHERE name=ANY($1) OR pin_id=ANY($2)", names, ids)
 
     @commands.command(name="pin", help="Pins a message to the bot's database. Pins can be viewed with the `pins` command.")
     async def pin(self, ctx, id_: discord.Message, name_: str=None):
