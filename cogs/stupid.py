@@ -177,7 +177,7 @@ class Stupid(commands.Cog):
         
     @commands.command(name="pins", help="Display the messages pinned in the bot database. Useful if your channel has already reached the 50 pin limit.")
     async def pins(self, ctx): 
-        data = await self.bot.db_pool.fetch("SELECT pin_id, synopsis, jump_url, author, date FROM pins")
+        data = await self.bot.db_pool.fetch("SELECT pin_id, synopsis, jump_url, author, pin_date FROM pins")
 
         embeds = []
 
@@ -203,9 +203,9 @@ class Stupid(commands.Cog):
     async def fetch_pin(self, ctx, identifier: Union[str, int]):
 
         if identifier.isalpha():
-            data = await self.bot.db_pool.execute("SELECT pin_id, synopsis, jump_url, date FROM pins WHERE name=$1", identifier)
+            data = await self.bot.db_pool.execute("SELECT pin_id, synopsis, jump_url, pin_date FROM pins WHERE name=$1", identifier)
         elif identifier.isdigit():
-            data = await self.bot.db_pool.execute("SELECT pin_id, synopsis, jump_url, date FROM pins WHERE pin_id=$1", identifier)
+            data = await self.bot.db_pool.execute("SELECT pin_id, synopsis, jump_url, pin_date FROM pins WHERE pin_id=$1", identifier)
 
         embed = em.CrajyEmbed(title=f"Pin **{data['_id']}**", url=data["jump_url"], embed_type=enums.EmbedType.INFO)
         embed.description = f"**{data['synopsis']}**\n  _by {data['author']} on {data['date']}_"
