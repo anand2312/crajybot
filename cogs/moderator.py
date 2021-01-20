@@ -152,7 +152,7 @@ class Moderator(commands.Cog):
             confirm_embed.color = enums.EmbedType.BOT.value
             return await ask.edit(embed=confirm_embed)
         else:
-            if id_.lower() == "all":
+            if identifiers.lower() == "all":
                 await self.bot.db_pool.execute("DELETE FROM pins")
             else:
                 await self.bot.db_pool.execite("DELETE FROM pins WHERE name=ANY($1) OR pin_id=ANY($2)", names, ids)
