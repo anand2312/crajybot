@@ -164,7 +164,31 @@ class Moderator(commands.Cog):
         author = id_.author
         date = datetime.date.today()
 
-        await self.bot.db_pool.fetchval("INSERT INTO pins(synopsis, jump_url, author, pin_date, name) VALUES ($1, $2, $3, $4F
+        await self.bot.db_pool.fetchval("INSERT INTO pins(synopsis, jump_url, author, pin_date, name) VALUES($1, $2, $3, $4)", synopsis, url, author, date, name_)
+        await id_.add_reaction("📌")
+        reply_embed = em.CrajyEmbed(title=f"Pinned!", description=f"_{synopsis[:10]+'...'}_\n", embed_type=enums.EmbedType.SUCCESS)
+        reply_embed.set_thumbnail(url=em.EmbedResource.PIN.value)
+        reply_embed.quick_set_author(self.bot.user)
+        reply_embed.set_footer(text=f"Pinned by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=reply_embed)
+
+    @commands.command(name="query", aliases=["db"], help="Query the database. Don't mess with this if you don't know what it is doing.")
+    @commands.is_owner()
+    async def sql_query(self, ctx, table: str, query: str):
+        # wrap query in quotes
+        columns =  enums.Table[table.upper()].value
+        data = await self.bot.db_pool.fetch(query)
+        tabulated = tabulate(data, headers=columns)
+        out = "```" + tabulated + "```"
+        return await ctx.reply(out, mention_author=True)
+    
+    @commands.is_owner()
+    @commands.command(name="internal-eval", aliases=["int-eval"])
+    async def internal_eval(self, ctx, *, code: str):
+        code = code.strip("`")
+        code = code.lstrip("py")
+        real_code = f"""
+async def func():
     {textwrap.indent(code, "    ")}
 self.env['func'] = func"""
         env = {
