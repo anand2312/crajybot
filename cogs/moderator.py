@@ -144,7 +144,7 @@ class Moderator(commands.Cog):
         confirm_embed.description = f"Are you sure you want to clear:\n{listed_pins}"
         confirm_embed.set_thumbnail(url=em.EmbedResource.WARNING.value)
         confirm_embed.set_footer(text="This action cannot be undone.")
-        ask = await ctx.reply(embed=embed, mention_author=True)
+        ask = await ctx.reply(embed=confirm_embed, mention_author=True)
 
         response = await ctx.get_confirmation(ask)
         if not response:
