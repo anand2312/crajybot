@@ -279,7 +279,7 @@ class Economy(commands.Cog):
                 else:
                     raise ValueError(f"Bruh not enough stock of this item is left.")
             else:
-                new_val = user_data['cash'] - (number * store_data['price'])
+                new_val = user_cash_data['cash'] - (number * store_data['price'])
                 await self.bot.db_pool.execute("UPDATE economy SET cash = $1 WHERE user_id = $2", new_bal, ctx.author.id)
                 await self.bot.db_pool.execute(f"UPDATE inventories SET {self.get_item_column(item)} = {self.get_item_column(item)} + $1 WHERE user_id = $2", number, ctx.author.id)
                 response = EconomyEmbed(title="Purchase Succeessful", description=f"You bought {number} {item}s!", embed_type=enums.EmbedType.SUCCESS)
@@ -323,7 +323,7 @@ class Economy(commands.Cog):
     @commands.cooldown(1, 3600, commands.BucketType.user)
     async def rob(self, ctx, person: discord.Member):
         robber_heist_tools = await self.bot.db_pool.fetchval("SELECT heist FROM inventories WHERE user_id = $1", ctx.author.id)
-        victim = await ctx.get_user_data(table=enums.Table.ECONOMY, member=person.id)
+        victim = await ctx.get_user_data(table=enums.Table.ECONOMY, member=person)
 
         if robber_heist_tools > 0 and victim['cash'] > 10:
             await self.bot.db_pool.fetchval("UPDATE inventories SET heist = heist - 1 WHERE user_id = $1", ctx.author.id)

@@ -133,7 +133,7 @@ class Moderator(commands.Cog):
     async def remove_pins(self, ctx, identifiers: commands.Greedy[typing.Union[int, str]]):
         ids, names = [], []
         for i in identifiers:
-            if i.isnumeric():
+            if isinstance(i, int):
                 ids.append(int(i))
             else:
                 names.append(i)
@@ -144,7 +144,7 @@ class Moderator(commands.Cog):
         confirm_embed.description = f"Are you sure you want to clear:\n{listed_pins}"
         confirm_embed.set_thumbnail(url=em.EmbedResource.WARNING.value)
         confirm_embed.set_footer(text="This action cannot be undone.")
-        ask = await ctx.reply(embed=embed, mention_author=True)
+        ask = await ctx.reply(embed=confirm_embed, mention_author=True)
 
         response = await ctx.get_confirmation(ask)
         if not response:
@@ -152,10 +152,10 @@ class Moderator(commands.Cog):
             confirm_embed.color = enums.EmbedType.BOT.value
             return await ask.edit(embed=confirm_embed)
         else:
-            if id_.lower() == "all":
+            if len(identifiers) == 1 and identifiers[0].lower() == "all":
                 await self.bot.db_pool.execute("DELETE FROM pins")
             else:
-                await self.bot.db_pool.execite("DELETE FROM pins WHERE name=ANY($1) OR pin_id=ANY($2)", names, ids)
+                await self.bot.db_pool.execute("DELETE FROM pins WHERE name=ANY($1) OR pin_id=ANY($2)", names, ids)
 
     @commands.command(name="pin", help="Pins a message to the bot's database. Pins can be viewed with the `pins` command.")
     async def pin(self, ctx, id_: discord.Message, name_: str=None):
@@ -164,7 +164,7 @@ class Moderator(commands.Cog):
         author = id_.author
         date = datetime.date.today()
 
-        await self.bot.db_pool.fetchval("INSERT INTO pins(synopsis, jump_url, author, pin_date, name)", synopsis, url, author, date, name_)
+        await self.bot.db_pool.fetchval("INSERT INTO pins(synopsis, jump_url, author, pin_date, name) VALUES($1, $2, $3, $4)", synopsis, url, author, date, name_)
         await id_.add_reaction("📌")
         reply_embed = em.CrajyEmbed(title=f"Pinned!", description=f"_{synopsis[:10]+'...'}_\n", embed_type=enums.EmbedType.SUCCESS)
         reply_embed.set_thumbnail(url=em.EmbedResource.PIN.value)

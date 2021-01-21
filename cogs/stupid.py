@@ -177,7 +177,7 @@ class Stupid(commands.Cog):
         
     @commands.command(name="pins", help="Display the messages pinned in the bot database. Useful if your channel has already reached the 50 pin limit.")
     async def pins(self, ctx): 
-        data = await self.bot.db_pool.fetch("SELECT pin_id, synopsis, jump_url, author, date FROM pins")
+        data = await self.bot.db_pool.fetch("SELECT pin_id, synopsis, jump_url, author, pin_date FROM pins")
 
         embeds = []
 
@@ -191,7 +191,7 @@ class Stupid(commands.Cog):
                 if author is None:
                     continue    # in case user has left the server, ignore their pin
                 embed.add_field(name=f"{pin['synopsis']}",
-                                value=f"[_~{author.display_name}_, on {pin['date']}]({pin['jump_url']})\nPin ID:{pin['pin_id']}", 
+                                value=f"[_~{author.display_name}_, on {pin['pin_date']}]({pin['jump_url']})\nPin ID:{pin['pin_id']}", 
                                 inline=False)
 
             embeds.append(embed)
@@ -203,12 +203,12 @@ class Stupid(commands.Cog):
     async def fetch_pin(self, ctx, identifier: Union[str, int]):
 
         if identifier.isalpha():
-            data = await self.bot.db_pool.execute("SELECT pin_id, synopsis, jump_url, date FROM pins WHERE name=$1", identifier)
+            data = await self.bot.db_pool.execute("SELECT pin_id, synopsis, jump_url, pin_date FROM pins WHERE name=$1", identifier)
         elif identifier.isdigit():
-            data = await self.bot.db_pool.execute("SELECT pin_id, synopsis, jump_url, date FROM pins WHERE pin_id=$1", identifier)
+            data = await self.bot.db_pool.execute("SELECT pin_id, synopsis, jump_url, pin_date FROM pins WHERE pin_id=$1", identifier)
 
         embed = em.CrajyEmbed(title=f"Pin **{data['_id']}**", url=data["jump_url"], embed_type=enums.EmbedType.INFO)
-        embed.description = f"**{data['synopsis']}**\n  _by {data['author']} on {data['date']}_"
+        embed.description = f"**{data['synopsis']}**\n  _by {data['author']} on {data['pin_date']}_"
         embed.set_thumbnail(url=em.EmbedResource.TAG)
         embed.set_footer(text=f"Requested by {ctx.author.nick}. Click on the embed title to go to the message.", icon_url=ctx.author.avatar_url)
         return await ctx.maybe_reply(embed=embed)
