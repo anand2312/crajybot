@@ -18,7 +18,7 @@ def get_timedelta(arg: str) -> timedelta:
         "year": "years"
     }
     
-    grouped = groupby(i, key=str.isdigit)
+    grouped = groupby(arg, key=str.isdigit)
     
     for key, group in grouped:
         if key:   # means isdigit returned true, meaning they are numbers
