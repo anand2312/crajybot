@@ -59,8 +59,9 @@ class CrajyBot(commands.Bot):
             embed.description = f"You took too long to respond for: {ctx.invoked_with}"
             return await ctx.message.edit(embed=embed)
         elif isinstance(error, commands.UserInputError):
+            embed.description = f"Improper argument passed."
             ctx.command.reset_cooldown(ctx)
-            return
+            return await ctx.send(embed=embed)
         else:
             embed.title = "Unexpected error occurred."
             embed.description = str(error)
