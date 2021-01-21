@@ -32,13 +32,13 @@ class Notes(commands.Cog):
                    help="Saves a note. Notes are personal; only you can retrieve your notes. You can invoke these commands in"
                         "DMs with the bot as well."
                         "You can also specify a `time`, after which the bot should remind you about a note.")
-    async def notes_create(self, ctx, time: Optional[CustomTimeConverter], *, content):
+    async def notes_create(self, ctx, time: commands.Greedy[CustomTimeConverter], *, content):
         note_id = await self.bot.db_pool.fetchval("INSERT INTO notes(user_id, raw_note) VALUES($1, $2) RETURNING note_id", ctx.author.id, content)
         embed = em.CrajyEmbed(title=f"Note Creation: ID {note_id}", embed_type=EmbedType.SUCCESS)
         embed.quick_set_author(ctx.author)
         embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
 
-        if time is None:
+        if time == []:
             # don't schedule
             embed.description = f"Added to your notes! Use `.notes return` to get all your stored notes."
         else:
