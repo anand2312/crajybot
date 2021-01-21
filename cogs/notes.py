@@ -23,7 +23,7 @@ class Notes(commands.Cog):
         embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
         return await user.send(embed=embed)
 
-    @commands.group(help="Notes making command.")
+    @commands.group(help="Note making commands.")
     async def notes(self, ctx):
         await ctx.send_help(notes)
 
