@@ -1,30 +1,30 @@
-from collections import defaultdict
 import asyncio
-
-from discord.ext import commands
+from collections import defaultdict
 
 from aiohttp import ClientSession
+from aioscheduler import TimedScheduler
 import asyncpg
-
-from utils.embed import CrajyEmbed
+from discord.ext import commands
 
 from internal.help_class import HelpCommand
 from internal.enumerations import EmbedType
 from internal.context import CrajyContext
-
 from secret.constants import *
+from utils.embed import CrajyEmbed
 
 
 class CrajyBot(commands.Bot):
     """Subclass of commands.Bot with some attributes set."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, help_command=HelpCommand(), **kwargs)
-        self.session = ClientSession()
         self.chat_money_cache = defaultdict(lambda: 0)
-        self.__version__ = "3.0a"
         self.db_pool = self.loop.run_until_complete(asyncpg.create_pool(DB_CONNECTION_STRING))
+        self.__version__ = "3.0a"
+        self.scheduler = TimedScheduler()    # task scheduler for reminders/notes 
+        self.session = ClientSession()     # aiohttp clientsession for API interactions
 
     async def on_ready(self):
+        self.scheduler.start()
         embed = CrajyEmbed(embed_type=EmbedType.BOT, description="Ready!")
         embed.quick_set_author(self.user)
         await self.get_channel(BOT_ANNOUNCE_CHANNEL).send(embed=embed)
