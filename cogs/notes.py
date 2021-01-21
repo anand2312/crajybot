@@ -25,7 +25,7 @@ class Notes(commands.Cog):
 
     @commands.group(help="Note making commands.")
     async def notes(self, ctx):
-        await ctx.send_help(notes)
+        await ctx.send_help("notes")
 
     @notes.command(name="create",
                    aliases=["-c"],
