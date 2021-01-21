@@ -1,13 +1,13 @@
-
-import pytz
 from datetime import timedelta
+from itertools import groupby
+import pytz
 
 BOT_TZ = pytz.timezone("Asia/Dubai")
 
 def get_timedelta(arg: str) -> timedelta:
     """Converts a string of time for eg: 5h -> into an equivalent timedelta object."""
-    time_, units = [], []
     arg = arg.lower()
+    amts, units = [], []
 
     unit_mapping = {
         "h": "hours", "hour": "hours", 
@@ -17,11 +17,13 @@ def get_timedelta(arg: str) -> timedelta:
         "month": "months",     # m already assigned for minutes
         "year": "years"
     }
-
-    for i in arg:
-        if i.isdigit():
-            time_.append(int(i))
+    
+    grouped = groupby(i, key=str.isdigit)
+    
+    for key, group in grouped:
+        if key:   # means isdigit returned true, meaning they are numbers
+            amts.append(int("".join(group)))
         else:
-            units.append(unit_mapping[i])
-
-    return timedelta(**dict(zip(units, time_)))
+            units.append("".join(group))
+    
+    return timedelta(**dict(zip(units, amts)))
