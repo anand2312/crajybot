@@ -1,28 +1,19 @@
 """Some fun commands."""
 import discord
 from discord.ext import commands, tasks
-import disputils
-
-from pymongo import ASCENDING
-import json
 
 from typing import Optional, Union
 import random
 
-import datetime
-import pytz
-
 from contextlib import suppress
-import itertools
+import more_itertools as mitertools
 
 from secret.constants import GUILD_ID, ROLE_NAME
 from secret.KEY import *  
-from secret.TOKEN import *    
+from secret.TOKEN import *  
 
-try:
-    from secret.webhooks import BOTSPAM_HOOK, ANOTHERCHAT_HOOK, SLASH_COMMANDS_URL
-except:
-    pass
+from utils import embed as em
+from internal import enumerations as enums
 
 #API requests headers and URLs
 fancy_url = "https://ajith-fancy-text-v1.p.rapidapi.com/text"
@@ -39,15 +30,16 @@ love_headers = {
     'x-rapidapi-key': KEY
     }
 
-class stupid(commands.Cog):
+class Stupid(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
         self.pin_cache = set()
         self.pin_vote_threshold = 4
         # a loop that changes the name of a role, based on names saved in the database. Names are added with the `role-name` command
-        self.role_name_loop.start()   
-        self.qotd_cache_loop.start()
+
+        self.bot.task_loops['role_name'] = self.role_name_loop  
+        self.bot.task_loops['qotd_cache'] = self.qotd_cache_loop
 
         try:
             self.anotherchat_webhook = discord.Webhook.partial(ANOTHERCHAT_HOOK['id'], ANOTHERCHAT_HOOK['token'], adapter=discord.AsyncWebhookAdapter(self.bot.session))
@@ -59,6 +51,7 @@ class stupid(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        # REWRITE THIS.
         if message.author.bot: return
         currencies = {"usd", "omr", "inr", "eur"}
         message_string = message.content.lower().replace("euro", "eur")
@@ -115,12 +108,13 @@ class stupid(commands.Cog):
             async with self.bot.session.get(fancy_url, headers=fancy_headers, params=querystring) as response:
                 return_text = await response.json()
                 return_text = return_text["fancytext"].split(",")[0]
-            await ctx.send(return_text)
+            await ctx.maybe_reply(return_text)
 
     @commands.command(name="love-calc", aliases=["lc","love","lovecalc"])
-    async def love_calc(self, ctx, sname:str, fname=None):
+    async def love_calc(self, ctx, sname : str, fname=None):
+        # why are we using an API here; just randomize.
         if fname is None:
-            fname = str(ctx.message.author)
+            fname = str(ctx.author)
             querystring = {"fname":str(ctx.message.author),"sname":sname}
         else:
             querystring = {"fname":str(fname),"sname":str(sname)}
@@ -131,20 +125,21 @@ class stupid(commands.Cog):
                 result = await response.json()
                 result = result["result"]
             if int(percent) >= 50:
-                embed=discord.Embed(title="Love Calculator", colour=discord.Color.green())
-                embed.set_author(name=fname)
+                embed = em.CrajyEmbed(title="Love Calculator", embed_type=enums.EmbedType.SUCCESS)
+                embed.quick_set_author(ctx.author)
+                embed.set_thumbnail(url=em.EmbedResource.LOVE_CALC.value)
                 embed.add_field(name="That poor person", value=sname, inline=False)
                 embed.add_field(name="Percent", value=percent, inline=True)
                 embed.add_field(name="Result", value=result, inline=False)
             else:
-                embed=discord.Embed(title="Love Calculator", colour=discord.Color.red())
-                embed.set_author(name=fname)
+                embed=discord.Embed(title="Love Calculator", embed_type=enums.EmbedType.FAIL)
+                embed.quick_set_author(ctx.author)
+                embed.set_thumbnail(url=em.EmbedResource.LOVE_CALC.value)
                 embed.add_field(name="That poor person", value=sname, inline=False)
                 embed.add_field(name="Percent", value=percent, inline=True)
                 embed.add_field(name="Result", value=result, inline=False)          
-            sent_message = await ctx.message.channel.send(content=None, embed=embed)
-            await sent_message.add_reaction("✅")
-            await sent_message.add_reaction("❌")
+            sent_message = await ctx.maybe_reply(embed=embed)
+            await ctx.check_mark(sent_message)
 
     @commands.command(name="weird", aliases=["w"])
     async def weird(self, ctx, *, message):
@@ -157,125 +152,7 @@ class stupid(commands.Cog):
             else:
                 out += i.upper()
                 curr_func = "lower"
-        #await ctx.message.delete()
-        await ctx.message.channel.send(out)
-
-    @commands.group(aliases=['tag'], help="Tags.")
-    async def wat(self, ctx):
-        if ctx.invoked_subcommand is None:
-            await ctx.send("bruh that isn't a thing.")
-
-    @wat.command(name="add", aliases=["-a"])
-    async def add_to_wat(self, ctx, key, *, output):
-        await self.bot.stupid_collection.insert_one({"key":key, "output":output})
-        await ctx.send("Added")
-
-    @wat.command(name="remove", aliases=["-r"])
-    @commands.has_any_role('admin','Bot Dev')
-    async def remove_from_wat(self, ctx, key):
-        try:
-            await self.bot.stupid_collection.delete_one({"key":key})
-            await ctx.send(f"Removed {key}")
-        except:
-            await ctx.send(f"{key} doesn't exist")
-
-    @wat.command(name="edit-output", aliases=["edit-out"])
-    async def edit_wat_output(self, ctx, key, *, output):
-        try:
-            await self.bot.stupid_collection.update_one({'key':key},{"$set":{"output":output}})
-            await ctx.send("Updated output.")
-        except:
-            await ctx.send("Key doesn't exist")
-
-    @wat.command(name="edit-key", aliases=["edit-name"])
-    async def edit_wat_key(self, ctx, key, new_key):
-        try:
-            await self.bot.stupid_collection.update_one({'key':key},{"$set":{"key":new_key}})
-            await ctx.send("Updated name.")
-        except:
-            await ctx.send("Key doesn't exist")    
-
-    @wat.command(name="use", aliases=["-u"])
-    async def use(self, ctx, *, key):
-        existing = await self.bot.stupid_collection.find_one({"key": key})
-        data = existing["output"]
-        if data is not None:
-            if ctx.channel.name == "another-chat":
-                await self.anotherchat_webhook.send(data, username=ctx.author.nick, avatar_url=ctx.author.avatar_url)
-            elif ctx.channel.name == "botspam":
-                await self.botspam_webhook.send(data, username=ctx.author.nick, avatar_url=ctx.author.avatar_url)
-            else:
-                await ctx.send(data)
-        else:
-            ctx.send("Not found.")
-
-    @wat.command(name="list", aliases=["-l"])
-    async def list_(self, ctx):
-        out = ""
-        async for i in self.bot.stupid_collection.find():
-            out += i["key"] + "\n"
-        out += f"**Total**: {i}"
-        await ctx.send(out)
-
-    @wat.command(name="search", aliases=["-s"])
-    async def wat_search(self, ctx, key):
-        check = 0
-        embed = discord.Embed(title="Search Results", color=discord.Color.blurple())
-        async for i in self.bot.stupid_collection.find():
-            if key.lower() in i["key"].lower():
-                embed.add_field(name=i['key'], value=i['output'], inline=False)
-                check += 1
-        if check == 0:
-            embed.add_field(name="No search results found", value=" ")
-        await ctx.send(embed=embed)
-
-    @wat.command(name="react")
-    async def react(self, ctx, id_: discord.Message, *emojis):
-        for i in emojis:
-            await id_.add_reaction(i)
-        await ctx.message.delete()
-
-    @wat.command(name="slash-add", aliases=["-sa"])
-    async def wat_slash_add(self, ctx, key: str, value: str):
-        with open("utils/slash_commands.json", "r") as f:
-            existing = json.load(f)
-
-        if len(existing["commands"]) >= 50:
-            raise Exception("There are already 50 /wat commands. Remove one of them before adding more.")
-
-        update_function = {"name": key, "value": key}
-        existing["commands"].append(update_function)
-
-        update_data = {key: value}
-
-        json = {
-            "name": "wat",
-            "description": "Some of the best .wat commands, but now they look sick.",
-            "options": [
-                {
-                    "name": "use",
-                    "description": "Which tag to bring.",
-                    "type": 3,
-                    "required": True,
-                    "choices": existing["commands"]
-                },
-            ]
-        }
-        headers = {"Authorization": f"Bot {TOKEN}"}
-        with open("utils/slash_commands.json", "w") as f:
-            json.dump(existing, f)
-
-        guild_url = f"https://discord.com/api/v8/applications/{APPLICATION_ID}/guilds/{GUILD_ID}/commands"
-
-        # update the command in the application
-        async with ctx.channel.typing():
-            async with self.bot.session.post(guild_url, json=json, headers=headers) as resp:
-                await ctx.send(await resp.text())
-            async with self.bot.session.post(SLASH_COMMANDS_URL, json=json) as resp:
-                if resp.status == 200:
-                    return await ctx.send(f"**{key}** added!")
-                else:
-                    return await ctx.send("Internal error occurred.")
+        await ctx.maybe_reply(out)
     
     @commands.command(name="emojify", aliases=['e'])
     async def emojify(self, ctx, *, message):
@@ -286,7 +163,7 @@ class stupid(commands.Cog):
                 out += f"{emojis[letter]} "
             else:
                 out += letter
-        await ctx.send(out)
+        await ctx.maybe_reply(out)
 
     @commands.command(name="owo", aliases=["uwu"])
     async def owo(self, ctx, *, text):
@@ -296,121 +173,102 @@ class stupid(commands.Cog):
             if i.lower() in ["l","r"]: out += "w" if case=="lower" else "W"
             else: out+=i
 
-        await ctx.send(out)
+        await ctx.maybe_reply(out)
         
     @commands.command(name="pins", help="Display the messages pinned in the bot database. Useful if your channel has already reached the 50 pin limit.")
     async def pins(self, ctx): 
-        data = self.bot.pins_collection.find()
+        data = await self.bot.db_pool.fetch("SELECT pin_id, synopsis, jump_url, author, pin_date FROM pins")
+
         embeds = []
 
-        counter = 1
+        for chunk in mitertools.chunked(data, 6):
+            embed = em.CrajyEmbed(title=f"{ctx.guild.name} Pins!", embed_type=enums.EmbedType.INFO)
+            embed.set_thumbnail(url=em.EmbedResource.TAG.value)
+            embed.quick_set_author(ctx.author)
 
-        embed = discord.Embed(title=f"{ctx.guild.name} Pins!", color=discord.Color.dark_gold())
-        embed.set_thumbnail(url=ctx.guild.icon_url)
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+            for pin in chunk:
+                author = ctx.guild.get_member(pin['author'])
+                if author is None:
+                    continue    # in case user has left the server, ignore their pin
+                embed.add_field(name=f"{pin['synopsis']}",
+                                value=f"[_~{author.display_name}_, on {pin['pin_date']}]({pin['jump_url']})\nPin ID:{pin['pin_id']}", 
+                                inline=False)
 
-        async for pin in data:
-            try:
-                author = discord.utils.get(ctx.guild.members, id=pin['message_author']).name
-            except AttributeError:
-                author = pin['message_author']
-            if counter % 5 != 0:
-                embed.add_field(name=f"{pin['message_synopsis']}",
-                                value=f"[_~{author}_, on {pin['date']}]({pin['message_jump_url']})\nPin ID:{pin['_id']}", 
-                                inline=False)
-                counter += 1
-            else:
-                embed.add_field(name=f"{pin['message_synopsis']}",
-                                value=f"[_~{author}_, on {pin['date']}]({pin['message_jump_url']})\nPin ID:{pin['_id']} {'' if pin['name'] is None else pin['name']}", 
-                                inline=False)
-                embeds.append(embed)
-                counter += 1
-                embed = discord.Embed(title=f"{ctx.guild.name} Pins!", color=discord.Color.dark_gold())
-                embed.set_thumbnail(url=ctx.guild.icon_url)
-                embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-        else:
             embeds.append(embed)
 
-        paginator = disputils.BotEmbedPaginator(ctx, embeds)
-        await paginator.run()
-
-    @commands.has_guild_permissions(administrator=True)
-    @commands.command(name="change-vote-threshold")
-    async def change_vote_threshold(self, ctx, arg: int):
-        self.pin_vote_threshold = arg
-        await ctx.message.add_reaction("✅")
+        pages = em.quick_embed_paginate(embeds)
+        await pages.start(ctx)
 
     @commands.command(name="fetch-pin", aliases=["fetchpin"], help="Return a pin based on the ID provided. WIP.")
     async def fetch_pin(self, ctx, identifier: Union[str, int]):
 
         if identifier.isalpha():
-            data = await self.bot.pins_collection.find_one({"name": identifier})
+            data = await self.bot.db_pool.execute("SELECT pin_id, synopsis, jump_url, pin_date FROM pins WHERE name=$1", identifier)
         elif identifier.isdigit():
-            data = await self.bot.pins_collection.find_one({"_id": int(identifier)})
+            data = await self.bot.db_pool.execute("SELECT pin_id, synopsis, jump_url, pin_date FROM pins WHERE pin_id=$1", identifier)
 
-        embed = discord.Embed(title=f"Pin **{data['_id']}**", url=data["message_jump_url"], color=discord.Color.blurple())
-        text = f"**{data['message_synopsis']}**\n  _by {data['message_author']} on {data['date']}_"
-        embed.description = text 
+        embed = em.CrajyEmbed(title=f"Pin **{data['_id']}**", url=data["jump_url"], embed_type=enums.EmbedType.INFO)
+        embed.description = f"**{data['synopsis']}**\n  _by {data['author']} on {data['pin_date']}_"
+        embed.set_thumbnail(url=em.EmbedResource.TAG)
         embed.set_footer(text=f"Requested by {ctx.author.nick}. Click on the embed title to go to the message.", icon_url=ctx.author.avatar_url)
-        return await ctx.send(embed=embed)
+        return await ctx.maybe_reply(embed=embed)
+
+    @commands.has_guild_permissions(administrator=True)
+    @commands.command(name="change-vote-threshold", help="Change the minimum votes required to pin a message.")
+    async def change_vote_threshold(self, ctx, arg: int):
+        self.pin_vote_threshold = arg
+        await ctx.check_mark()
         
     @commands.group(name="role-name", aliases=["rolename", "rolenames"], invoke_without_command=True)
     async def role_name(self, ctx, *, name: str):
-        if len(name) > 15:
-            return await ctx.send("bro too long bro")
 
-        if ctx.author.guild_permissions.administrator:
-            pass
-        else:
-            data = await self.bot.economy_collection.find_one({'user': ctx.author.id})
-            if data['inv']['role name'] >= 1:
-                data['inv']['role name'] -= 1
-                await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": data})
-            else:
-                return await ctx.send("Buy the `role name` item!")
+        await self.bot.db_pool.execute("INSERT INTO role_names(role_name, author) VALUES ($1, $2)", name, ctx.author.id)
 
-        await self.bot.role_names_collection.insert_one({'name': name, 'by': ctx.author.name})
+        embed = em.CrajyEmbed(title="Added!", description=f"`{name}` was added to the database. It will be picked randomly.", embed_type=enums.EmbedType.SUCCESS, url=r"https://www.youtube.com/watch?v=DLzxrzFCyOs")
+        embed.quick_set_author(ctx.author)
+        embed.set_thumbnail(url=em.EmbedResource.PIN.value)
 
-        embed = discord.Embed(title="Added!", description=f"`{name}` was added to the database. It will be picked randomly.", color=discord.Color.green(), url=r"https://www.youtube.com/watch?v=DLzxrzFCyOs")
         return await ctx.send(embed=embed)
 
     @role_name.command(name="list", aliases=["all"])
     async def role_name_list(self, ctx):
-        data = self.bot.role_names_collection.find()
-        embed = discord.Embed(title="Role names", color=discord.Color.green())
-        val = ""
-        async for i in data:
-            val += i['name'] + "\n"
-        embed.description = val
-        return await ctx.send(embed=embed)
+        data = await self.bot.db_pool.fetch("SELECT role_name, author FROM role_names")
+        embed = em.CrajyEmbed(title="Role names", embed_type=enums.EmbedType.BOT)
+        embed.set_thumbnail(url=em.EmbedResource.PIN.value)
+        out = []
+        for i in data:
+            author = ctx.guild.get_member(i['author'])
+            line = f"• **{i['role_name']}**, _by {author.display_name}_"
+            out.append(line)
+        embed.description = "\n".join(out)
+        return await ctx.maybe_reply(embed=embed)
 
     @role_name.command(name="remove", aliases=["delete"])
     @commands.has_guild_permissions(administrator=True)
-    async def role_name_remove(self, ctx, name: str):
-        await self.bot.role_names_collection.delete_one({'name': name})
-        return await ctx.send(f"Removed `{name}` (if it exists in the database)")
+    async def role_name_remove(self, ctx, *names: str):      # can pass multiple role names to bulk delete. each arg must be wrapped in quotes.
+        await self.bot.db_pool.execute("DELETE FROM role_names WHERE LOWER(role_name) = ANY($1)", names)
+
+        embed = em.CrajyEmbed(title="Deleting Role Names", embed_type=enums.EmbedType.BOT)
+        listed_names = '\n'.join(f'• {i}' for i in names)
+        embed.description = f"Deleted:\n ```{listed_names}```"
+        embed.set_thumbnail(url=em.EmbedType.TRASHCAN.value)
+        embed.quick_set_author(self.bot.user)
+        embed.set_footer(text="Note: Names are deleted if they existed in the database in the first place.")
+
+        await ctx.reply(embed=embed)
 
     @commands.command(name="quote", aliases=["qotd"], help="Displays a random quote.")
     async def qotd(self, ctx):
-        await ctx.send(self.cached_qotd)
+        await ctx.reply(self.cached_qotd, mention_author=False)
 
     @commands.command(name="change-presence", aliases=["changepresence", "changestatus", "change-status"], help="Change the bot's status.")
+    @commands.cooldown(1, 600, type=commands.BucketType.guild)
     async def change_presence(self, ctx, activity: str, *, status: str):
         if activity.lower() not in ["playing", "watching", "listening", "streaming"]:
-            return await ctx.send('Status has to be one of `"playing", "watching", "listening", "streaming"`')
+            raise ValueError('Status has to be one of `"playing", "watching", "listening", "streaming"`')
         
         if len(status) > 30:
-            return await ctx.send("bro too long bro")
-
-        if ctx.author.guild_permissions.administrator:
-            pass
-        else:
-            data = await self.bot.economy_collection.find_one({'user': ctx.author.id})
-            if data['inv']['bot status'] >= 1:
-                data['inv']['bot status'] -= 1
-                await self.bot.economy_collection.update_one({'user': ctx.author.id}, {"$set": data})
-            else:
-                return await ctx.send("Buy the `bot status` item!")
+            raise ValueError(f"Inputted status ({len(status)}) longer than 30 characters.")
 
         discord_activity = discord.Activity(name=status)
 
@@ -423,11 +281,12 @@ class stupid(commands.Cog):
         elif activity.lower() == "streaming":
             discord_activity = discord.Streaming(name=activity)
             
-        await ctx.message.add_reaction("✅")
+        await ctx.check_mark()
         return await self.bot.change_presence(status=discord.Status.online, activity=discord_activity)
 
     @tasks.loop(hours=1)
     async def qotd_cache_loop(self):
+        # DOES THIS STILL WORK?
         """The quotes.rest API has a very strict limit on number of requests that are given for free, so
         instead of making requests everytime the command is called, this loop does the request once an hour and 
         caches it for further use."""
@@ -444,14 +303,13 @@ class stupid(commands.Cog):
     async def role_name_loop(self):
         guild = self.bot.get_guild(GUILD_ID)
         role = guild.get_role(ROLE_NAME)
-        existing = self.bot.role_names_collection.find()
-        data = await existing.to_list(length=None)
+        existing = await self.bot.db_pool.fetch("SELECT role_name FROM role_names")
         new_name_data = random.choice(data)
-        await role.edit(name=new_name_data['name'])
+        await role.edit(name=new_name_data['role_name'])
 
     @role_name_loop.before_loop
     async def rolename_before(self):
         await self.bot.wait_until_ready()
 
 def setup(bot):
-    bot.add_cog(stupid(bot))
+    bot.add_cog(Stupid(bot))
