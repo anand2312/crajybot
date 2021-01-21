@@ -241,7 +241,7 @@ class Stupid(commands.Cog):
             line = f"• **{i['role_name']}**, _by {author.display_name}_"
             out.append(line)
         embed.description = "\n".join(out)
-        return await ctx.send(embed=embed)
+        return await ctx.maybe_reply(embed=embed)
 
     @role_name.command(name="remove", aliases=["delete"])
     @commands.has_guild_permissions(administrator=True)
