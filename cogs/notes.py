@@ -106,7 +106,7 @@ class Notes(commands.Cog):
 
     @commands.command(name="remind", aliases=["reminder", "remindme"],
                       help="Alias for `.notes create`, but the `time` argument is compulsory now.")
-    async def create_reminder(self, ctx, time, *, content):
+    async def create_reminder(self, ctx, time: CustomTimeConverter, *, content):
         return await self.notes_create(ctx, time, content=content)
 
 def setup(bot):
