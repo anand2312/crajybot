@@ -24,4 +24,4 @@ def get_timedelta(arg: str) -> timedelta:
         else:
             units.append(unit_mapping[i])
 
-    return timedelta(**dict(zip(time_, units)))
+    return timedelta(**dict(zip(units, time_)))
