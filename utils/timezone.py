@@ -24,6 +24,6 @@ def get_timedelta(arg: str) -> timedelta:
         if key:   # means isdigit returned true, meaning they are numbers
             amts.append(int("".join(group)))
         else:
-            units.append("".join(group))
+            units.append(unit_mapping["".join(group)])     # convert h -> hours, m -> minutes and so on
     
     return timedelta(**dict(zip(units, amts)))
