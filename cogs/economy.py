@@ -33,7 +33,11 @@ class Economy(commands.Cog):
         return ctx.channel.name in ["bot-test", "botspam-v2", "botspam"]
 
     def random_robber(self):
-        return random.choice([em.EmbedResource.ROBBER_1.value, em.EmbedResource.ROBBER_2.value])
+        return random.choice(em.EmbedResource)
+    
+    @staticmethod
+    def not_negative(amt: int) -> bool:
+        return amt >= 0
 
     def get_item_column(self, inp: str):
         # get corresponding item name column in inventory table. add item names with different column names in this dict.
@@ -48,6 +52,8 @@ class Economy(commands.Cog):
                       aliases=["with"],
                       help="Withdraw money from your account.")
     async def withdraw(self, ctx, amount: typing.Union[int, str]):
+        if not self.not_negative(amount):
+            raise ValueError("Negative amounts are not allowed.")
         try:
             existing = await ctx.get_user_data(table=enums.Table.ECONOMY)
             if existing['bank'] >= amount:
@@ -68,6 +74,8 @@ class Economy(commands.Cog):
                       aliases=["dep"],
                       help="Deposit money to your account.")
     async def deposit(self, ctx, amount: typing.Union[int, str]):
+        if not self.not_negative(amount):
+            raise ValueError("Negative amounts are not allowed.")
         existing = await ctx.get_user_data(table=enums.Table.ECONOMY)
         try:
             if existing['cash'] >= amount:
@@ -262,7 +270,8 @@ class Economy(commands.Cog):
     @commands.command(name="buy", 
                       help="Buy an item from the shop.")                        #IMPORTANT!! - For items that should have unlimited stock, use stock value as None in store_data collection.
     async def buy(self, ctx, number: int, *, item: str):
-
+        if not self.not_negative(number):
+            raise ValueError("Negative numbers are not allowed.")
         store_data = await self.bot.db_pool.fetchrow("SELECT stock, price FROM shop WHERE item_name = $1", item.lower())
         user_cash_data = await self.bot.db_pool.fetchrow("SELECT cash FROM economy WHERE user_id = $1", ctx.author.id)
 
@@ -291,6 +300,8 @@ class Economy(commands.Cog):
     @commands.command(name="sell",
                       help="Sell an item for the current market price.")
     async def sell(self, ctx, n: int, item: str):
+        if not self.not_negative(n):
+            raise ValueError("Negative numbers are not allowed.")
         cur_price = await self.bot.db_pool.fetchval("SELECT price FROM shop WHERE item_name = $1", item)
         await self.bot.db_pool.execute(f"UPDATE inventories SET {self.get_item_column(item)} = {self.get_item_column(item)} - $1 WHERE user_id = $2", n, ctx.author.id)
         await self.bot.db_pool.execute("UPDATE economy SET cash = cash + $1 WHERE user_id = $2", cur_price * n, ctx.author.id)
@@ -304,6 +315,8 @@ class Economy(commands.Cog):
                       aliases=["donate"],
                       help="Be a kind soul and give your friends some of your cash.")
     async def givemoney(self, ctx, person: discord.Member, amount: int):
+        if not self.not_negative(amount):
+            raise ValueError("Negative numbers are not allowed.")
         sender_balance = await self.bot.db_pool.fetchval("SELECT cash FROM economy WHERE user_id = $1", ctx.author.id)
         if sender_balance < amount:
             raise ValueError(f"You don't have that much money; You're short by {amount - sender_balance}")
