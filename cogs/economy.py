@@ -340,7 +340,7 @@ class Economy(commands.Cog):
                 return await ctx.send(embed=response)
             else:
                 fine_amount = random.randint(75, 200)
-                await self.bot.db_pool.execute("UPDATE economy SET cash = cash 1 $1 WHERE user_id = $2", fine_amount, ctx.author.id)
+                await self.bot.db_pool.execute("UPDATE economy SET cash = cash - $1 WHERE user_id = $2", fine_amount, ctx.author.id)
                 response = EconomyEmbed(title="Uh oh...", description=f"You were caught robbing, and fined {fine_amount}.", embed_type=enums.EmbedType.FAIL)
                 response.quick_set_author(ctx.author)
                 response.set_thumbnail(url=em.EmbedResource.LOSS)
