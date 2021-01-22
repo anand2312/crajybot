@@ -117,7 +117,7 @@ class Notes(commands.Cog):
         data = await self.bot.db_pool.fetch("SELECT note_id, raw_note FROM notes WHERE user_id = $1 AND reminder", ctx.author.id)    # retrieve only those notes that have been marked as reminders.
         chunked = mitertools.chunked(data, 4)
         embeds = []
-        for chunk in chunks:
+        for chunk in chunked:
             embed = em.CrajyEmbed(title="Reminders", embed_type=enums.EmbedType.INFO)
             out_as_list = [f"__**Note ID:{i['note_id']}**__\n{i['raw_note'][:30]}..." for i in chunk]
             embed.description = "\n".join(out_as_list)
