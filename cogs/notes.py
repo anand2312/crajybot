@@ -1,6 +1,7 @@
 """Some commands to store user notes."""
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+import more_itertools as mitertools
 
 import discord
 from discord.ext import commands, menus
@@ -34,7 +35,8 @@ class Notes(commands.Cog):
                         "DMs with the bot as well."
                         "You can also specify a `time`, after which the bot should remind you about a note.")
     async def notes_create(self, ctx, time: commands.Greedy[CustomTimeConverter], *, content):
-        note_id = await self.bot.db_pool.fetchval("INSERT INTO notes(user_id, raw_note) VALUES($1, $2) RETURNING note_id", ctx.author.id, content)
+        is_reminder = False if time == [] else True
+        note_id = await self.bot.db_pool.fetchval("INSERT INTO notes(user_id, raw_note, reminder) VALUES($1, $2, $3) RETURNING note_id", ctx.author.id, content, is_reminder)
         embed = em.CrajyEmbed(title=f"Note Creation: ID {note_id}", embed_type=EmbedType.SUCCESS)
         embed.quick_set_author(ctx.author)
         embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
@@ -105,10 +107,25 @@ class Notes(commands.Cog):
         out.set_thumbnail(url=em.EmbedResource.NOTES.value)
         return await ask.edit(embed=out)
 
-    @commands.command(name="remind", aliases=["reminder", "remindme"],
+    @commands.group(name="remind", aliases=["reminder", "remindme"], invoke_without_command=True,
                       help="Alias for `.notes create`, but the `time` argument is compulsory now.")
     async def create_reminder(self, ctx, time: CustomTimeConverter, *, content):
         return await self.notes_create(ctx, time, content=content)
+                              
+    @create_reminder.command(name="list", help="Returns a list of all reminders you have.")
+    async def reminder_list(self, ctx):
+        data = await self.bot.db_pool.fetch("SELECT note_id, raw_note FROM notes WHERE user_id = $1 AND reminder", ctx.author.id)    # retrieve only those notes that have been marked as reminders.
+        chunked = mitertools.chunked(data, 4)
+        embeds = []
+        for chunk in chunks:
+            embed = em.CrajyEmbed(title="Reminders", embed_type=enums.EmbedType.INFO)
+            out_as_list = [f"__**Note ID:{i['note_id']}**__\n{i['raw_note'][:30]}..." for i in chunk]
+            embed.description = "\n".join(out_as_list)
+            embed.quick_set_author(ctx.author)
+            embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
+            embeds.append(embed)                
+        pages = em.quick_embed_paginate(embeds)
+        return await pages.start(ctx)
 
 def setup(bot):
     bot.add_cog(Notes(bot))
