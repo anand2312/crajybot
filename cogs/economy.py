@@ -68,11 +68,11 @@ class Economy(commands.Cog):
                       aliases=["dep"],
                       help="Deposit money to your account.")
     async def deposit(self, ctx, amount: typing.Union[int, str]):
+        existing = await ctx.get_user_data(table=enums.Table.ECONOMY)
         try:
-            existing = await ctx.get_user_data(table=enums.Table.ECONOMY)
             if existing['cash'] >= amount:
                 await self.bot.db_pool.execute("UPDATE economy SET bank=bank + $1, cash=cash - $1 WHERE user_id=$2", amount, ctx.author.id)
-                response = EconomyEmbed(title="Deposit", description=f"Deposited {int(amount)}", embed_type=enums.EmbedType.BOT)
+                response = EconomyEmbed(title="Deposit", description=f"Deposited {int(amount)} to bank.", embed_type=enums.EmbedType.BOT)
                 response.quick_set_author(ctx.author)
                 await ctx.reply(embed=response)
             else:
@@ -80,7 +80,7 @@ class Economy(commands.Cog):
         except TypeError:
             if amount.lower() == "all":
                 await self.bot.db_pool.execute("UPDATE economy SET bank=cash + bank, cash=0 WHERE user_id=$1", ctx.author.id)
-                response = EconomyEmbed(title="Deposit", description=f"Deposited all money to bank.", embed_type=enums.EmbedType.BOT)
+                response = EconomyEmbed(title="Deposit", description=f"Deposited {existing['cash']} to bank.", embed_type=enums.EmbedType.BOT)
                 response.quick_set_author(ctx.author)
                 await ctx.reply(embed=response)
                     
