@@ -118,7 +118,7 @@ class Notes(commands.Cog):
         chunked = mitertools.chunked(data, 4)
         embeds = []
         for chunk in chunked:
-            embed = em.CrajyEmbed(title="Reminders", embed_type=enums.EmbedType.INFO)
+            embed = em.CrajyEmbed(title="Reminders", embed_type=EmbedType.INFO)
             out_as_list = [f"__**Note ID:{i['note_id']}**__\n{i['raw_note'][:30]}..." for i in chunk]
             embed.description = "\n".join(out_as_list)
             embed.quick_set_author(ctx.author)
