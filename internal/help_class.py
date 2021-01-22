@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands
 
+from utils import embed as em
+from internal import enumerations as enums
+
 class HelpCommand(commands.HelpCommand):
     def __init__(self):
         super().__init__(command_attrs={
@@ -12,8 +15,8 @@ class HelpCommand(commands.HelpCommand):
         ctx = self.context
         bot = ctx.bot
 
-        embed = discord.Embed(color=discord.Color.blurple())
-        embed.add_field(name="Usage", value=f"Do `{self.clean_prefix}help <category | command>` to get help on a command or category", inline=False)
+        embed = em.CrajyEmbed(title="CrajyBot", description="Do `{self.clean_prefix}help <category | command>` to get help on a command or category", 
+                              embed_type=enums.EmbedType.INFO)
 
         out = ""
         # bot.cogs returns a dict mapping of name:cog
@@ -21,24 +24,28 @@ class HelpCommand(commands.HelpCommand):
             if cog_name not in ["Control", "ErrorHandler"]: out += cog_name.capitalize() + "\n"
 
         embed.add_field(name="Categories", value=out, inline=False)
-        embed.add_field(name="Contact us", value="[Join our support server](https://www.youtube.com/watch?v=dQw4w9WgXcQ)", inline=False)
-        await ctx.send(embed=embed)
+        embed.add_field(name="Contact", value="[Join our support server](https://www.youtube.com/watch?v=dQw4w9WgXcQ)", inline=False)
+        embed.quick_set_author(ctx.author)
+        embed.set_thumbnail(url=bot.user.avatar_url)
+        await ctx.maybe_reply(embed=embed)
 
     async def send_cog_help(self, cog):
         ctx = self.context
         bot = ctx.bot
 
-        embed = discord.Embed(title=f"Module **{cog.qualified_name}**", description=cog.description, color=discord.Color.blue())
+        embed = discord.Embed(title=f"Module **{cog.qualified_name}**", description=cog.description, embed_type=enums.EmbedType.INFO)
         commands_in_cog = ""
         for command in cog.get_commands():
             commands_in_cog += command.name + "\n"
         embed.add_field(name="**Commands**", value=commands_in_cog, inline=False)
         embed.set_footer(text=f"Do {self.clean_prefix}help <command> to get help on a specific command.")
-        await ctx.send(embed=embed)
+        embed.quick_set_author(ctx.author)
+        embed.set_thumbnail(url=bot.user.avatar_url)
+        await ctx.maybe_reply(embed=embed)
 
     async def send_group_help(self, group):
         ctx = self.context
-        embed = discord.Embed(title=f"Group - {group.name}",
+        embed = em.CrajyEmbed(title=f"Group - {group.name}",
                               description=f"{group.help} \n **Usage** `{self.get_command_signature(group)}`",
                               color=discord.Color.blue())
         for cmd in group.commands:
@@ -49,13 +56,13 @@ class HelpCommand(commands.HelpCommand):
     async def send_command_help(self, command):
         ctx = self.context
         if command.root_parent is None:
-            embed = discord.Embed(title=f"Help - {command.name}",
+            embed = em.CrajyEmbed(title=f"Help - {command.name}",
                                   description=f"{command.help} \n **Usage** `{self.get_command_signature(command)}` \n **Aliases** `{', '.join(command.aliases)}`",
-                                  color=discord.Color.blue())
+                                  embed_type=enums.EmbedType.INFO)
         else:
-            embed = discord.Embed(title=f"Help - {command.name}",
+            embed = em.CrajyEmbed(title=f"Help - {command.name}",
                                   description=f"{command.help} \n **Usage** `{self.get_command_signature(command)}` \n **Aliases** `{', '.join(command.aliases)}`",
-                                  color=discord.Color.blue())
+                                  embed_type=enums.EmbedType.INFO)
             embed.set_footer(text=f"This command is part of the {command.root_parent.name} group.")
 
         await ctx.send(embed=embed)
