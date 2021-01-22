@@ -15,7 +15,7 @@ class HelpCommand(commands.HelpCommand):
         ctx = self.context
         bot = ctx.bot
 
-        embed = em.CrajyEmbed(title="CrajyBot", description="Do `{self.clean_prefix}help <category | command>` to get help on a command or category", 
+        embed = em.CrajyEmbed(title="CrajyBot", description=f"Do `{self.clean_prefix}help <category | command>` to get help on a command or category", 
                               embed_type=enums.EmbedType.INFO)
 
         out = ""
