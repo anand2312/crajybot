@@ -37,6 +37,8 @@ class Economy(commands.Cog):
     
     @staticmethod
     def not_negative(amt: int) -> bool:
+        if amt == "all":
+            return True
         return amt >= 0
 
     def get_item_column(self, inp: str):
