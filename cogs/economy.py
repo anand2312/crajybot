@@ -26,6 +26,7 @@ class EconomyEmbed(em.CrajyEmbed):
 class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.bot.task_loops["chat-money"] = self.chat_money_loop
 
     async def cog_check(self, ctx):
         """Restricts these commands to some specific channels. This is server specific, so change the list according to what you need.
@@ -49,6 +50,16 @@ class Economy(commands.Cog):
             "chicken": "chicken"
             }
         return mapping.get(inp.lower())
+    
+    @tasks.loop(seconds=5)
+    async def chat_money_loop(self):
+        if len(self.bot.chat_money_cache) == 0:
+            return
+        await self.bot.db_pool.executemany(
+            "UPDATE economy SET cash = cash + $1 WHERE user_id = $2",
+            [(v * random.randint(1, 15), k) for k, v in self.bot.chat_money_cache.items()]
+        )
+        self.bot.chat_money_cache.clear()
 
     @commands.command(name="withdraw",
                       aliases=["with"],
