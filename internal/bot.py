@@ -16,7 +16,7 @@ from utils.embed import CrajyEmbed
 class CrajyBot(commands.Bot):
     """Subclass of commands.Bot with some attributes set."""
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, help_command=HelpCommand(), **kwargs)
+        super().__init__(*args, help_command=HelpCommand(), case_insensitive=True, **kwargs)
         self.chat_money_cache = defaultdict(lambda: 0)
         self.db_pool = self.loop.run_until_complete(asyncpg.create_pool(DB_CONNECTION_STRING))
         self.__version__ = "3.0a"
@@ -27,7 +27,9 @@ class CrajyBot(commands.Bot):
         self.scheduler.start()
         embed = CrajyEmbed(embed_type=EmbedType.BOT, description="Ready!")
         embed.quick_set_author(self.user)
-        await self.get_channel(BOT_ANNOUNCE_CHANNEL).send(embed=embed)
+        m = await self.get_channel(BOT_ANNOUNCE_CHANNEL).send(embed=embed)
+        ctx = await self.get_context(m)
+        await self.reschedule_tasks(ctx)
 
     async def on_member_join(self, member):
         """When a new member joins, add them to the database and greet them in DMs."""
@@ -71,6 +73,18 @@ class CrajyBot(commands.Bot):
     async def get_context(self, message, *, cls=None):
         """Overriding get_context to use custom context."""
         return await super().get_context(message, cls=CrajyContext)
+
+    async def reschedule_tasks(self, ctx):
+        """Reschedule unfinished tasks that were stored in the database.
+        Bot gets_context from the ready message it sends which can be used to get the guild object for get_member."""
+        print("Loading unfinished tasks from database.")
+        notes_cog = self.get_cog("Notes")
+        #this query assumes that the only tasks are going to be reminders from the notes table. update as necessary.
+        remaining_tasks = await self.db_pool.fetch("SELECT user_id, note_id, exec_time FROM notes NATURAL JOIN tasks")
+        for record in remaining_tasks:
+            author = ctx.guild.get_member(record["user_id"])
+            self.scheduler.schedule(notes_cog.remind(author, record["note_id"]), record["exec_time"])
+        print("Loaded unfinished tasks.")
 
     async def process_commands(self, message):
         """Triggers typing in channels before sending a message."""

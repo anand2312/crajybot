@@ -47,6 +47,7 @@ class Notes(commands.Cog):
         else:
             now = datetime.utcnow()
             self.bot.scheduler.schedule(self.remind(ctx.author, note_id), now + time)
+            self.bot.db_pool.execute("INSERT INTO tasks(task_id, exec_time) VALUES($1, $2)", note_id, now + time)
             embed.description =  f"You will be reminded about this in {time}. Use `.notes return` to get all your stored notes."
 
         await ctx.maybe_reply(embed=embed)
