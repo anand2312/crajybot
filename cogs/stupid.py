@@ -67,6 +67,8 @@ class Stupid(commands.Cog):
                 init_cur = word
                 number = int(splitted[index-1])
                 break
+        else:
+            return
         
         url1 = f"https://free.currconv.com/api/v7/convert?apiKey={CURRENCY_KEY}&q={init_cur}_OMR,{init_cur}_INR"
         url2 = f"https://free.currconv.com/api/v7/convert?apiKey={CURRENCY_KEY}&q={init_cur}_USD,{init_cur}_EUR"
