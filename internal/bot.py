@@ -42,6 +42,15 @@ class CrajyBot(commands.Bot):
     async def on_member_remove(self, member):
         """When a member leaves, quietly remove them from the database."""
         await self.delete_member(member)
+        
+    async def on_message_edit(self, before, after):
+        """If a message is edited, reprocess it for commands."""
+        ctx = await self.get_context(after)
+        confirm = await ctx.get_confirmation()
+        if confirm:
+            await self.process_commands(after)
+        else:
+            return
 
     async def on_command_error(self, ctx, error):
         """Global error handler."""
