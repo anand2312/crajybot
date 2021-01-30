@@ -45,12 +45,11 @@ class CrajyBot(commands.Bot):
         
     async def on_message_edit(self, before, after):
         """If a message is edited, reprocess it for commands."""
-        ctx = await self.get_context(after)
-        confirm = await ctx.get_confirmation()
-        if confirm:
-            await self.process_commands(after)
-        else:
+        if before.author.bot:
             return
+        
+        ctx = await self.get_context(after)
+        await self.invoke(ctx)
 
     async def on_command_error(self, ctx, error):
         """Global error handler."""
