@@ -50,7 +50,7 @@ async def stock_price():
 	if len(last_4) > 4:
 		del(last_4[0])
     
-    for i in last_4:
+    for i in last_4: 
     	if i<0:
         	neg += 1
       	else:
