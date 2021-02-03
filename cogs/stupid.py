@@ -269,7 +269,7 @@ class Stupid(commands.Cog):
         if activity.lower() not in ["playing", "watching", "listening", "streaming"]:
             raise ValueError('Status has to be one of `"playing", "watching", "listening", "streaming"`')
         
-        if len(status) > 30:
+        if len(status) > 30 and activity != "streaming":
             raise ValueError(f"Inputted status ({len(status)}) longer than 30 characters.")
 
         discord_activity = discord.Activity(name=status)
