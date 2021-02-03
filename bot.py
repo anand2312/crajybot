@@ -52,6 +52,27 @@ async def stock_price():
 @stock_price.before_loop
 async def stock_price_before():
     await bot.wait_until_ready()
+    
+@stock_price.error
+async def stock_price_error(error):
+  """In case the loop tries taking the stock price below 15, increase the price OR keep it at the same price."""
+  if isinstance(error, asyncpg.exceptions.CheckViolationError):
+    message_channel = bot.get_channel(BOT_ANNOUNCE_CHANNEL)
+    # copy pasted the same process 
+    rand_sign = random.choice(["+","-"])
+    if rand_sign == "+":
+        rand_val = random.randint(1,6)
+        emb_type = EmbedType.SUCCESS
+    else:
+        rand_val = -random.randint(1,6)
+        emb_type = EmbedType.FAIL
+
+    new = await bot.db_pool.fetchval(f"UPDATE shop SET price=price + $1 WHERE item_name='stock' RETURNING price", rand_val)
+
+    embed = CrajyEmbed(title="Stock Price Updated!", embed_type=emb_type)
+    embed.description = f"New price: {new}"
+    embed.quick_set_author(bot.user)
+    await message_channel.send(embed=embed)
 
 @tasks.loop(hours=24)
 async def birthday_loop():
