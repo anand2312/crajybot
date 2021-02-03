@@ -281,7 +281,8 @@ class Stupid(commands.Cog):
         elif activity.lower() == "watching":
             discord_activity.type = discord.ActivityType.watching
         elif activity.lower() == "streaming":
-            discord_activity = discord.Streaming(name=activity)
+            name, url = status.split("|")
+            discord_activity = discord.Streaming(name=name, url=url)
             
         await ctx.check_mark()
         return await self.bot.change_presence(status=discord.Status.online, activity=discord_activity)
