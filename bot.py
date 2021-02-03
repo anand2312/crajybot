@@ -22,6 +22,8 @@ bot = CrajyBot(command_prefix=commands.when_mentioned_or("."),
 
 bot.task_loops = dict()    # add all task loops, across cogs to this.
 
+last_4 = []                # List for stock loop correction
+
 @bot.listen("on_message")
 async def chat_money_tracker(message):
     if message.author.bot:
@@ -35,13 +37,32 @@ async def stock_price():
     message_channel = bot.get_channel(BOT_ANNOUNCE_CHANNEL)
 
     rand_sign = random.choice(["+","-"])
+    pos = 0
+    neg = 0
     if rand_sign == "+":
         rand_val = random.randint(1,6)
         emb_type = EmbedType.SUCCESS
     else:
         rand_val = -random.randint(1,6)
         emb_type = EmbedType.FAIL
+    
+    last_4.append(rand_val)
+    if len(last_4) > 4:
+        del last_4[0]
+    
+    for i in last_4:
+        if i < 0:
+            neg += 1
+        else:
+            pos += 1
 
+    if pos >= random.randint(1,6):
+        rand_val = -(rand_val)
+        emb_type = EmbedType.FAIL
+    elif neg >= random.randint(1,6):
+        rand_val = -(rand_val)
+        emb_type = EmbedType.SUCCESS
+    
     new = await bot.db_pool.fetchval(f"UPDATE shop SET price=price + $1 WHERE item_name='stock' RETURNING price", rand_val)
 
     embed = CrajyEmbed(title="Stock Price Updated!", embed_type=emb_type)

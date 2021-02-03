@@ -61,13 +61,13 @@ class Birthday(commands.Cog):
 
         return await ask_message.edit(embed=out)
 
-    @bday.command(name="all",
+    @bday.command(name="all", aliases=["list"]
                   help="Get a list of all birthdays saved.")
     async def bday_all(self, ctx):
         response = em.CrajyEmbed(title="Everyone's birthdays", embed_type=enums.EmbedType.INFO)
         response.set_thumbnail(url=em.EmbedResource.BDAY.value)
 
-        all_data = await self.bot.db_pool.fetch("SELECT user_id, bday FROM user_details")
+        all_data = await self.bot.db_pool.fetch("SELECT user_id, bday FROM user_details ORDER BY bday ASC")
         
         for person in all_data:    
             person_obj = discord.utils.get(ctx.guild.members, id=person['user_id'])
