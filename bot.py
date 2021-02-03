@@ -45,24 +45,24 @@ async def stock_price():
     else:
         rand_val = -random.randint(1,6)
         emb_type = EmbedType.FAIL
-
-    last_4.append(rand_val)
-	if len(last_4) > 4:
-		del(last_4[0])
     
-    for i in last_4: 
-    	if i<0:
-        	neg += 1
-      	else:
-        	pos += 1
+    last_4.append(rand_val)
+    if len(last_4) > 4:
+        del last_4[0]
+    
+    for i in last_4:
+        if i < 0:
+            neg += 1
+        else:
+            pos += 1
 
-    if pos >= random.randint(2,4):
-      	rand_val = -(rand_val)
-		emb_type = EmbedType.FAIL
-	if neg >= random.randint(2,4):
-      	rand_val = -(rand_val)
-		emb_type = EmbedType.SUCCESS
-
+    if pos >= random.randint(1,6):
+        rand_val = -(rand_val)
+        emb_type = EmbedType.FAIL
+    elif neg >= random.randint(1,6):
+        rand_val = -(rand_val)
+        emb_type = EmbedType.SUCCESS
+    
     new = await bot.db_pool.fetchval(f"UPDATE shop SET price=price + $1 WHERE item_name='stock' RETURNING price", rand_val)
 
     embed = CrajyEmbed(title="Stock Price Updated!", embed_type=emb_type)
