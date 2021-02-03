@@ -63,8 +63,12 @@ class CrajyBot(commands.Bot):
             if ctx.message.content.startswith(".."):
                 pass
             else:
-                embed.description = f"Command {ctx.invoked_with} not found."
-                return await ctx.send(embed=embed)
+                tag = await self.db_pool.fetchval("SELECT content FROM tags WHERE tag_name=$1", ctx.invoked_with)
+                if tag:
+                    return await ctx.reply(tag)
+                else:
+                    embed.description = f"Command {ctx.invoked_with} not found."
+                    return await ctx.send(embed=embed)
         elif isinstance(error, asyncio.TimeoutError):
             embed.description = f"You took too long to respond for: {ctx.invoked_with}"
             return await ctx.message.edit(embed=embed)
