@@ -61,7 +61,7 @@ class Birthday(commands.Cog):
 
         return await ask_message.edit(embed=out)
 
-    @bday.command(name="all", aliases=["list"]
+    @bday.command(name="all", aliases=["list"],
                   help="Get a list of all birthdays saved.")
     async def bday_all(self, ctx):
         response = em.CrajyEmbed(title="Everyone's birthdays", embed_type=enums.EmbedType.INFO)
