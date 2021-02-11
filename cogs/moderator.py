@@ -16,6 +16,7 @@ from tabulate import tabulate
 
 from secret.webhooks import *
 from utils import embed as em
+from utils import converters
 from internal import enumerations as enums
 
 channels_available = ["bot-test","botspam-v2","botspam"]
