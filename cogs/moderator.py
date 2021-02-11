@@ -187,7 +187,7 @@ class Moderator(commands.Cog):
     async def clear(self, ctx, amount: int, filter: commands.Greedy[converters.KwargConverter] = None):
         if filter:
             def check(message):
-                merged_kwargs = {key: value for key, value in inner.items() for inner in filter}
+                merged_kwargs = {**kwarg for kwarg in filter}
                 results = []
                 for key, value in merged_kwargs.items():
                     attr = getattr(message, key, None)
