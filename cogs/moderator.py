@@ -185,7 +185,18 @@ class Moderator(commands.Cog):
     @commands.command(name="clear")
     async def clear(self, ctx, amount: int, filter: commands.Greedy[converters.KwargConverter] = None):
         if filter:
-            pass
+            def check(message):
+                merged_kwargs = {key: value for key, value in inner.items() for inner in filter}
+                results = []
+                for key, value in merged_kwargs.items():
+                    attr = getattr(message, key, None)
+                    check_result = attr.name == value or str(attr.id) == value
+                    results.append(check_result)
+                return any(results)
+        else:
+            check = None
+        deleted = await ctx.channel.purge(limit=amount, check=check)
+        return await ctx.send(f"{em.EmbedResource.CHECK_EMOJI.value} Cleared {len(deleted)} messages.", delete_after=5)
     
     @commands.is_owner()
     @commands.command(name="internal-eval", aliases=["int-eval"])
