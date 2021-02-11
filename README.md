@@ -1,11 +1,10 @@
 # Crajy Bot
 Discord bot for our server, built with discord.py and MongoDB.
-Well, at least till people started cloning this repository.
 
 ### Requirements
 - Python 3.7 +
 - Python pip - to install dependencies.
-- MongoDB
+- PostgreSQL
 - [A RapidAPI Key](https://rapidapi.com/marketplace) - some commands in the `stupid` cog need APIs. If you do not want to use them, you can remove the code for those commands from that cog.
 
 ### Setup
@@ -19,11 +18,6 @@ and pick the `setup` option.
 ### Points to remember
 - This bot wasn't made with _releasing to public_ in mind, and as such some features may not work.
 - This bot was made **very** specifically with our private Discord server in mind, and as such the bot will probably not work very well in _multiple_ servers at once. One running instance of the bot will serve _one_ server very well, but *may* get mixed up with different servers. 
-- MongoDB was picked to store data because of 
-   1. It's easy to set up
-   2. It's easy to use
- I've used the `PyMongo` MongoDB driver, which isn't async (it blocks.) 
- The database and driver runs fast enough, but this is because the data is small (only a few thousand documents at _max_) and the server is running on localhost on the same VM as the bot. **BUT** if you plan on using this in more servers/under more load, definitely don't use PyMongo - use Motor, the async mongo driver, OR use PostgreSQL (asyncpg is _really_ fast)
  
  ### Setting up manually
  In case you want to set the files containing secrets yourself, this is the structure you'll have to follow:
@@ -44,7 +38,7 @@ and pick the `setup` option.
  BOT_COMMANDER_ROLES = [list of IDs of roles that should be allowed to use bot moderator commands]
  BOT_ANNOUNCE_CHANNEL = <channel ID where the bot can announce stuff (stock price changing, bot online etc)
  DEFAULT_COGS = [list of cogs you want to be loaded when you run the bot. use the same file names as you see in the cogs folder, WITHOUT THE .py part. For example, 'amongus', 'minecraft']
- DB_CONNECTION_STRING = <mongodb database connection string. "mongodb://localhost:27017/" if the database is running on the same machine.>
+ DB_CONNECTION_STRING = <postgres database connection string.>
  ```
 ### Hosting
 You can host the bot virtually anywhere.
