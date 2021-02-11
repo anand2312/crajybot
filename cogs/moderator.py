@@ -181,6 +181,11 @@ class Moderator(commands.Cog):
         tabulated = tabulate(data, headers=columns)
         out = "```" + tabulated + "```"
         return await ctx.reply(out, mention_author=True)
+                                    
+    @commands.command(name="clear")
+    async def clear(self, ctx, amount: int, filter: commands.Greedy[converters.KwargConverter] = None):
+        if filter:
+            pass
     
     @commands.is_owner()
     @commands.command(name="internal-eval", aliases=["int-eval"])
