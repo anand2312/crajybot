@@ -1,7 +1,7 @@
 class Menu:
     """Pass in all the functions that has to be run in the menu
     For eg, if you had defined three functions
-    def push(): 
+    def push():
         ...
     def pull():
         ...
@@ -18,7 +18,15 @@ class Menu:
     menu_object = Menu(push, pull, pop, heading="EXAMPLE!", format_symbol="=", continue_prompt=True)
     menu_object.run()
     """
-    def __init__(self, *methods: tuple, heading: str="MENU!", format_symbol: str="#", continue_prompt: bool=True,  variables: dict=None) -> "Menu":
+
+    def __init__(
+        self,
+        *methods: tuple,
+        heading: str = "MENU!",
+        format_symbol: str = "#",
+        continue_prompt: bool = True,
+        variables: dict = None,
+    ) -> "Menu":
         self.variables = variables
         self.methods = methods
         self.heading = heading
@@ -38,7 +46,7 @@ class Menu:
         self.bullshit()
 
     def execute(self, choice: int) -> None:
-        self.methods[choice-1]()
+        self.methods[choice - 1]()
 
     def get_choice(self) -> int:
         choice = int(input("Enter your choice:"))

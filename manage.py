@@ -2,9 +2,12 @@ from utils.menu import Menu
 from secret.TOKEN import TOKEN
 import os
 
+
 def setup() -> None:
     guild_id = int(input("Enter your Guild ID:"))
-    announce_channel = int(input("Enter channel ID where the bot is allowed to announce things:"))
+    announce_channel = int(
+        input("Enter channel ID where the bot is allowed to announce things:")
+    )
     test_channel = int(input("Enter ID of the channel where bot testing will be done:"))
     general = int(input("Enter general chat ID:"))
     bot_commander_roles = []
@@ -18,7 +21,11 @@ def setup() -> None:
     check = "y"
     print()
     while check == "y":
-        i = int(input("Enter the ID of a channel where users will be allowed to earn currency for chatting: "))
+        i = int(
+            input(
+                "Enter the ID of a channel where users will be allowed to earn currency for chatting: "
+            )
+        )
         chat_money_channels.append(i)
         check = input("Enter more channels? (y/n): ")
 
@@ -40,19 +47,26 @@ def setup() -> None:
 
     print("Bot token set up.")
 
+
 def debug():
     print("DEBUG MODE")
-    print("Enter the name of the cog that you want to load. The name must match the filename.")
+    print(
+        "Enter the name of the cog that you want to load. The name must match the filename."
+    )
     print("For example; to load `cogs/amongus.py` - enter `amongus`.")
-    print("If you want to load multiple cogs, enter their names separated by spaces. For example; `amongus economy`.")
+    print(
+        "If you want to load multiple cogs, enter their names separated by spaces. For example; `amongus economy`."
+    )
     func = lambda x: f"cogs.{x}"
     cogs = list(map(func, input().split()))
     from bot import bot
     from secret.constants import BOT_TEST_CHANNEL
 
     @bot.event
-    async def on_ready(): # sends this message when bot starts working in #bot-tests
-        await bot.get_channel(BOT_TEST_CHANNEL).send(f"Bot running in debug mode! Cogs loaded - {', '.join(cogs)}, jishaku.")
+    async def on_ready():  # sends this message when bot starts working in #bot-tests
+        await bot.get_channel(BOT_TEST_CHANNEL).send(
+            f"Bot running in debug mode! Cogs loaded - {', '.join(cogs)}, jishaku."
+        )
         print(f"Bot running in debug mode! Cogs loaded - {', '.join(cogs)}, jishaku.")
 
     for cog in cogs:
@@ -61,20 +75,22 @@ def debug():
         bot.load_extension("jishaku")
     bot.run(TOKEN)
 
+
 def run():
     from bot import bot
     from secret.constants import DEFAULT_COGS
-    #loading cogs
+
+    # loading cogs
     if DEFAULT_COGS == []:
-        for filename in os.listdir('./cogs'):
-            if filename.endswith('.py'):
-                bot.load_extension(f'cogs.{filename[:-3]}')
-        bot.load_extension('jishaku')
+        for filename in os.listdir("./cogs"):
+            if filename.endswith(".py"):
+                bot.load_extension(f"cogs.{filename[:-3]}")
+        bot.load_extension("jishaku")
     else:
         for cog in DEFAULT_COGS:
-            bot.load_extension(f'cogs.{cog}')
+            bot.load_extension(f"cogs.{cog}")
 
-    for loop in bot.task_loops.values():   # start all task loops.
+    for loop in bot.task_loops.values():  # start all task loops.
         loop.start()
 
     bot.run(TOKEN)
@@ -82,5 +98,7 @@ def run():
 
 if __name__ == "__main__":
     functions = [setup, run, debug]
-    menu = Menu(*functions, heading="Bot Control", format_symbol="=", continue_prompt=False)
+    menu = Menu(
+        *functions, heading="Bot Control", format_symbol="=", continue_prompt=False
+    )
     menu.run()

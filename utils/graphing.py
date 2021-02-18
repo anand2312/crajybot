@@ -1,4 +1,5 @@
 import matplotlib
+
 matplotlib.use("Agg")
 
 from matplotlib.figure import Figure
@@ -16,10 +17,11 @@ import discord
 @dataclass
 class InstantaneousMetrics:
     """Represents all the data for the metrics stored for a particular datetime object."""
+
     time: datetime.datetime
     author_counts: dict
     channel_counts: dict
-    
+
     def total_count(self) -> int:
         return sum(self.author_counts.values())
 
@@ -31,17 +33,23 @@ class InstantaneousMetrics:
         return self.channel_counts[channel]
 
     def clean_hours_repr(self) -> str:
-        return self.time.strftime("%H")    # returns in 00 format
+        return self.time.strftime("%H")  # returns in 00 format
 
     def clean_date_repr(self) -> str:
         return self.time.strftime("%d/%m/%Y")
 
+
 ImageEmbed = namedtuple("ImageEmbed", "file embed")
+
 
 def parse_data(db_response: dict) -> InstantaneousMetrics:
     """Convert the mongodb response dictionary into the dataclass instance.
     The dictionary is in the form `{datetime: <time inserted>, author_counts: <dict containing message count for each user>, channel_counts: >dict containing message counts for each channel>}`."""
-    return InstantaneousMetrics(time=db_response["datetime"], author_counts=db_response["author_counts"], channel_counts=db_response["channel_counts"])
+    return InstantaneousMetrics(
+        time=db_response["datetime"],
+        author_counts=db_response["author_counts"],
+        channel_counts=db_response["channel_counts"],
+    )
 
 
 def graph_hourly_message_count(data: Sequence[InstantaneousMetrics]) -> ImageEmbed:
@@ -49,11 +57,19 @@ def graph_hourly_message_count(data: Sequence[InstantaneousMetrics]) -> ImageEmb
     x_array = np.array([x.clean_hours_repr() for x in data])
     y_array = np.array([y.total_count() for y in data])
     # prepare bytes buffer using _make_graph function
-    buffer = _make_graph("Total messages sent, hourly", xlabel="Time", ylabel="Messages", x_axis=x_array, y_axis=y_array)
+    buffer = _make_graph(
+        "Total messages sent, hourly",
+        xlabel="Time",
+        ylabel="Messages",
+        x_axis=x_array,
+        y_axis=y_array,
+    )
     return make_discord_embed(buffer)
 
 
-def _make_graph(title: str, *, xlabel: str, ylabel: str ,x_axis: np.array, y_axis: np.array) -> io.BytesIO:
+def _make_graph(
+    title: str, *, xlabel: str, ylabel: str, x_axis: np.array, y_axis: np.array
+) -> io.BytesIO:
     """A general graphing function that is called by all other functions."""
     fig = Figure()
     ax = fig.subplots()
@@ -65,10 +81,13 @@ def _make_graph(title: str, *, xlabel: str, ylabel: str ,x_axis: np.array, y_axi
 
     # a bytes buffer to which the generated graph image will be stored, instead of saving every graph image.
     buffer = io.BytesIO()
-    fig.savefig(buffer, format="png", bbox_inchex="tight")     # saves file with name <date>-<first plotted hour>-<last plotted hour>
+    fig.savefig(
+        buffer, format="png", bbox_inchex="tight"
+    )  # saves file with name <date>-<first plotted hour>-<last plotted hour>
     buffer.seek(0)
 
     return buffer
+
 
 def make_discord_embed(image_buffer: io.BytesIO) -> ImageEmbed:
     """Converts the BytesIO buffer into a discord.File object that can be sent to any channel."""
