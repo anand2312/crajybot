@@ -1,6 +1,7 @@
 """Decorators."""
 import asyncio
 
+
 def eval_safe(coro):
     async def wrapper(ref, *args):
         no_no = ["import"]
@@ -9,4 +10,5 @@ def eval_safe(coro):
                 raise TypeError("Bro.")
         else:
             return await coro(ref, *args)
-    return wrapper 
+
+    return wrapper

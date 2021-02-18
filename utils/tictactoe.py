@@ -4,12 +4,35 @@ Tic Tac Toe Player
 
 import random
 
-X = ('<:x1:757950268875735041>', '<:x2:757950318045560902>', '<:x3:757950402661449819>', '<:x4:757950360336728086>')
-O = ('<:o1:757945971123683418>', '<:o2:757945990090326068>', '<:o3:757946006322282507>', '<:o4:757946024064057395>')
-EMPTY = ("<:empty:755333349043863623>", "<:empty:755333349043863623>", "<:empty:755333349043863623>", "<:empty:755333349043863623>")
-board = {"↖": EMPTY, "⬆": EMPTY, "↗": EMPTY,
-         "⬅": EMPTY, "⏺": EMPTY, "➡": EMPTY,
-         "↙": EMPTY, "⬇": EMPTY, "↘": EMPTY}
+X = (
+    "<:x1:757950268875735041>",
+    "<:x2:757950318045560902>",
+    "<:x3:757950402661449819>",
+    "<:x4:757950360336728086>",
+)
+O = (
+    "<:o1:757945971123683418>",
+    "<:o2:757945990090326068>",
+    "<:o3:757946006322282507>",
+    "<:o4:757946024064057395>",
+)
+EMPTY = (
+    "<:empty:755333349043863623>",
+    "<:empty:755333349043863623>",
+    "<:empty:755333349043863623>",
+    "<:empty:755333349043863623>",
+)
+board = {
+    "↖": EMPTY,
+    "⬆": EMPTY,
+    "↗": EMPTY,
+    "⬅": EMPTY,
+    "⏺": EMPTY,
+    "➡": EMPTY,
+    "↙": EMPTY,
+    "⬇": EMPTY,
+    "↘": EMPTY,
+}
 
 
 def initial_state():
@@ -30,21 +53,29 @@ def update_board_embed():
     for i in range(3):
         line1 = ""
         line2 = ""
-        for j in ["↖", "⬆", "↗", "⬅", "⏺", "➡", "↙", "⬇", "↘"][i * 3:(i + 1) * 3]:
-            line1 += ''.join(board[j][0:2])
-            line2 += ''.join(board[j][2:4])
+        for j in ["↖", "⬆", "↗", "⬅", "⏺", "➡", "↙", "⬇", "↘"][i * 3 : (i + 1) * 3]:
+            line1 += "".join(board[j][0:2])
+            line2 += "".join(board[j][2:4])
         board_result += line1 + "\n" + line2 + "\n"
     return board_result
 
 
 def reset_board():
     global board
-    board = {"↖": EMPTY, "⬆": EMPTY, "↗": EMPTY,
-             "⬅": EMPTY, "⏺": EMPTY, "➡": EMPTY,
-             "↙": EMPTY, "⬇": EMPTY, "↘": EMPTY}
+    board = {
+        "↖": EMPTY,
+        "⬆": EMPTY,
+        "↗": EMPTY,
+        "⬅": EMPTY,
+        "⏺": EMPTY,
+        "➡": EMPTY,
+        "↙": EMPTY,
+        "⬇": EMPTY,
+        "↘": EMPTY,
+    }
 
 
-def actions(board):               #NOT USED YET
+def actions(board):  # NOT USED YET
     """
     Returns set of all possible actions (i, j) available on the board.
     """
@@ -58,7 +89,7 @@ def actions(board):               #NOT USED YET
     return action
 
 
-def valid_action(move: tuple, board: list) -> bool:        #NOT USED YET
+def valid_action(move: tuple, board: list) -> bool:  # NOT USED YET
     return move in actions(board)
 
 
@@ -69,10 +100,15 @@ def winner(board):
     # if board is None:
     current_board = initial_state()
     for i in range(3):
-        if current_board[i*3] == current_board[i*3+1] == current_board[i*3+2] != EMPTY:
+        if (
+            current_board[i * 3]
+            == current_board[i * 3 + 1]
+            == current_board[i * 3 + 2]
+            != EMPTY
+        ):
             return True
     for i in range(3):
-        if current_board[i] == current_board[i+3] == current_board[i+6] != EMPTY:
+        if current_board[i] == current_board[i + 3] == current_board[i + 6] != EMPTY:
             return True
     if current_board[0] == current_board[4] == current_board[8] != EMPTY:
         return True
@@ -105,7 +141,7 @@ def utility(board):
         return 0
 
 
-def minimax(board):           #MIGHT DEVELOP LATER
+def minimax(board):  # MIGHT DEVELOP LATER
     """
     Returns the optimal action for the current player on the board.
     """

@@ -13,14 +13,18 @@ from internal.enumerations import Table, EmbedType
 
 
 intents = discord.Intents.default()
-intents.members = True    # TO DO: Investigate feature-loss with Member intents disabled
+intents.members = True  # TO DO: Investigate feature-loss with Member intents disabled
 intents.messages = True
-bot = CrajyBot(command_prefix=commands.when_mentioned_or("."),
-               activity=discord.Activity(type=discord.ActivityType.watching, name="cute panda videos or something."),
-               intents=intents,
-               owner_id=271586885346918400)
+bot = CrajyBot(
+    command_prefix=commands.when_mentioned_or("."),
+    activity=discord.Activity(
+        type=discord.ActivityType.watching, name="cute panda videos or something."
+    ),
+    intents=intents,
+    owner_id=271586885346918400,
+)
 
-bot.task_loops = dict()    # add all task loops, across cogs to this.
+bot.task_loops = dict()  # add all task loops, across cogs to this.
 
 if __name__ == "__main__":
     """To Do: Remove the exception and have this be the main way to run the bot through docker."""
