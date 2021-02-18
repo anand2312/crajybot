@@ -178,7 +178,3 @@ class Notes(commands.Cog):
             embeds.append(embed)
         pages = em.quick_embed_paginate(embeds)
         return await pages.start(ctx)
-
-
-def setup(bot):
-    bot.add_cog(Notes(bot))

@@ -624,7 +624,3 @@ class Economy(commands.Cog, command_attrs=dict(hidden=True)):
             raise ValueError(
                 "You do not have enough Heist tools items/ person doesn't have enough cash balance."
             )
-
-
-def setup(bot):
-    bot.add_cog(Economy(bot))

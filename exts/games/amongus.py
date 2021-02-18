@@ -135,7 +135,3 @@ class AmongUs(commands.Cog):
 
             await ctx.check_mark()
             return await ctx.send(embed=self.embed)
-
-
-def setup(bot):
-    bot.add_cog(AmongUs(bot))

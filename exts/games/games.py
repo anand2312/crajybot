@@ -352,7 +352,3 @@ class Games(commands.Cog):
         embed = discord.Embed(title="Games leaderboard", color=discord.Color.blurple())
         embed.description = out
         await ctx.send(embed=embed)
-
-
-def setup(bot):
-    bot.add_cog(Games(bot))

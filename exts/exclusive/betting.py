@@ -289,7 +289,3 @@ class Betting(commands.Cog, command_attrs=dict(hidden=True)):
             {"user": ctx.author.id}, {"$set": user_data}
         )
         return await ctx.send(embed=response)
-
-
-def setup(bot):
-    bot.add_cog(Betting(bot))

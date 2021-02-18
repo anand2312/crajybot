@@ -422,7 +422,3 @@ class Stupid(commands.Cog):
     @role_name_loop.before_loop
     async def rolename_before(self):
         await self.bot.wait_until_ready()
-
-
-def setup(bot):
-    bot.add_cog(Stupid(bot))

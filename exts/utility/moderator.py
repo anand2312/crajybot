@@ -340,7 +340,3 @@ self.env['func'] = func"""
         for name in removes:
             sys.modules.pop(name)
         return await ctx.send(f"Reloaded {module}")
-
-
-def setup(bot):
-    bot.add_cog(Moderator(bot))
