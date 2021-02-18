@@ -15,13 +15,18 @@ from utils.embed import CrajyEmbed
 
 class CrajyBot(commands.Bot):
     """Subclass of commands.Bot with some attributes set."""
+
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, help_command=HelpCommand(), case_insensitive=True, **kwargs)
+        super().__init__(
+            *args, help_command=HelpCommand(), case_insensitive=True, **kwargs
+        )
         self.chat_money_cache = defaultdict(lambda: 0)
-        self.db_pool = self.loop.run_until_complete(asyncpg.create_pool(DB_CONNECTION_STRING))
+        self.db_pool = self.loop.run_until_complete(
+            asyncpg.create_pool(DB_CONNECTION_STRING)
+        )
         self.__version__ = "3.0a"
-        self.scheduler = TimedScheduler()    # task scheduler for reminders/notes 
-        self.session = ClientSession()     # aiohttp clientsession for API interactions
+        self.scheduler = TimedScheduler()  # task scheduler for reminders/notes
+        self.session = ClientSession()  # aiohttp clientsession for API interactions
 
     async def on_ready(self):
         self.scheduler.start()
@@ -42,12 +47,12 @@ class CrajyBot(commands.Bot):
     async def on_member_remove(self, member):
         """When a member leaves, quietly remove them from the database."""
         await self.delete_member(member)
-        
+
     async def on_message_edit(self, before, after):
         """If a message is edited, reprocess it for commands."""
         if before.author.bot:
             return
-        
+
         ctx = await self.get_context(after)
         await self.invoke(ctx)
 
@@ -57,13 +62,15 @@ class CrajyBot(commands.Bot):
         embed.quick_set_footer(self.user)
 
         if isinstance(error, commands.CommandOnCooldown):
-            embed.description = F"{ctx.author.display_name}, you have to wait {int(error.retry_after/60)} minutes before using this command again."
+            embed.description = f"{ctx.author.display_name}, you have to wait {int(error.retry_after/60)} minutes before using this command again."
             return await ctx.send(embed=embed)
         elif isinstance(error, commands.CommandNotFound):
             if ctx.message.content.startswith(".."):
                 pass
             else:
-                tag = await self.db_pool.fetchval("SELECT content FROM tags WHERE tag_name=$1", ctx.invoked_with)
+                tag = await self.db_pool.fetchval(
+                    "SELECT content FROM tags WHERE tag_name=$1", ctx.invoked_with
+                )
                 if tag:
                     return await ctx.reply(tag)
                 else:
@@ -91,11 +98,15 @@ class CrajyBot(commands.Bot):
         Bot gets_context from the ready message it sends which can be used to get the guild object for get_member."""
         print("Loading unfinished tasks from database.")
         notes_cog = self.get_cog("Notes")
-        #this query assumes that the only tasks are going to be reminders from the notes table. update as necessary.
-        remaining_tasks = await self.db_pool.fetch("SELECT user_id, note_id, exec_time FROM notes NATURAL JOIN tasks")
+        # this query assumes that the only tasks are going to be reminders from the notes table. update as necessary.
+        remaining_tasks = await self.db_pool.fetch(
+            "SELECT user_id, note_id, exec_time FROM notes NATURAL JOIN tasks"
+        )
         for record in remaining_tasks:
             author = ctx.guild.get_member(record["user_id"])
-            self.scheduler.schedule(notes_cog.remind(author, record["note_id"]), record["exec_time"])
+            self.scheduler.schedule(
+                notes_cog.remind(author, record["note_id"]), record["exec_time"]
+            )
         print("Loaded unfinished tasks.")
 
     async def process_commands(self, message):
@@ -112,11 +123,16 @@ class CrajyBot(commands.Bot):
         async with self.db_pool.acquire() as connection:
             async with connection.transaction():
                 await connection.execute("INSERT INTO economy VALUES($1)", member.id)
-                await connection.execute("INSERT INTO user_details VALUES($1)", member.id)
-                await connection.execute("INSERT INTO inventories VALUES($1)", member.id)
-        
+                await connection.execute(
+                    "INSERT INTO user_details VALUES($1)", member.id
+                )
+                await connection.execute(
+                    "INSERT INTO inventories VALUES($1)", member.id
+                )
+
     async def delete_member(self, member):
         async with self.db_pool.acquire() as connection:
             async with connection.transaction():
-                await connection.execute("DELETE FROM economy WHERE user_id=$1", member.id)
-    
+                await connection.execute(
+                    "DELETE FROM economy WHERE user_id=$1", member.id
+                )
