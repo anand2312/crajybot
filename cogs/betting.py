@@ -4,14 +4,14 @@ from discord.ext import commands
 import random
 import asyncio
 
-class Betting(commands.Cog):
+class Betting(commands.Cog, command_attrs=dict(hidden=True)):
     def __init__(self, bot):
         self.bot = bot
 
     async def cog_check(self, ctx):
         """Restricts these commands to some specific channels. This is server specific, so change the list according to what you need.
         Or you can entirely remove this function."""
-        return ctx.channel.name in ["botspam", "bot-test", "admin-botspam"]
+        return ctx.channel.name in ["botspam", "bot-test", "admin-botspam"] and ctx.guild.id == 298871492924669954
 
     @commands.command(name="roulette",
                       help="Starts a game of roulette.")

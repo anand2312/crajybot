@@ -5,18 +5,19 @@ import datetime
 
 from internal import enumerations as enums
 from utils import embed as em
+from secret.constants import *
 
-class Birthday(commands.Cog):
+class Birthday(commands.Cog, commands_attrs=dict(hidden=True)):  # TO DO: Make this public-workable
     def __init__(self,  bot):
         self.bot = bot
+        self.bot.task_loops["bday"] = self.birthday_loop
 
     @commands.group(name="bday", 
                     aliases=["birthday"],
                     help="Retrieve a birthday date. Could be your own if no user is specified, or a specified user.", 
                     invoke_without_command=True)
     async def bday(self, ctx, person: discord.Member = None):
-        if person is None:
-            person = ctx.author
+        person = person or ctx.author
         date = await self.bot.db_pool.fetchval("SELECT bday FROM user_details WHERE user_id=$1", person.id)
         embed = em.CrajyEmbed(title=f"{person.display_name}'s birthday", description=date.strftime('%d %B %Y'), embed_type=enums.EmbedType.INFO)
         embed.set_thumbnail(url=em.EmbedResource.BDAY.value)
@@ -80,6 +81,23 @@ class Birthday(commands.Cog):
         """WIP for future functionality."""
         str_date = date.strftime('%d %B').split()
         pass
+
+    @tasks.loop(hours=24)
+    async def birthday_loop(self):
+        # TO DO: Make more fine-tuned loop which will schedule a wish in case it isn't the exact time at loop execution.
+        guild = self.bot.get_guild(GUILD_ID)
+        wishchannel = guild.get_channel(GENERAL_CHAT)
+        data = await bot.db_pool.fetch("SELECT user_id FROM user_details WHERE EXTRACT(day FROM bday)=EXTRACT(day FROM current_date) AND EXTRACT(month FROM bday)=EXTRACT(month FROM current_date)")
+
+        for person in data:
+            person_obj = discord.utils.get(guild.members, id=person['user_id'])
+            embed = em.CrajyEmbed(title=f"Happy Birthday {person_obj.display_name}!", embed_type=EmbedType.SUCCESS)
+            embed.quick_set_author(person_obj)
+            await wishchannel.send(content="@here", embed=embed)
+
+    @birthday_loop.before_loop
+    async def birthdayloop_before(self):
+        await self.bot.wait_until_ready()
 
 def setup(bot):
     bot.add_cog(Birthday(bot))

@@ -1,4 +1,4 @@
-"""Economy commands. Pretty self explanatory."""
+"""Economy commands. This cog is NOT accessible in all  guilds."""
 import discord
 from discord.ext import commands, tasks
 
@@ -11,11 +11,12 @@ import random
 
 from utils import embed as em
 from internal import enumerations as enums
+from secret.constants import *
 
 
 class EconomyEmbed(em.CrajyEmbed):
     """Made with thumbnail set according to EmbedType passed."""
-    def __init__(self, embed_type: enums.EmbedType, **kwargs):
+    def __init__(self, embed_type: enums.EmbedType, **kwargs) -> None:
         super().__init__(embed_type=embed_type, **kwargs)
         if embed_type in (enums.EmbedType.BOT, enums.EmbedType.INFO):
             self.set_thumbnail(url=em.EmbedResource.BANK.value)
@@ -23,17 +24,20 @@ class EconomyEmbed(em.CrajyEmbed):
             self.set_thumbnail(url=em.EmbedResource.PAYMENT.value)
 
 
-class Economy(commands.Cog):
-    def __init__(self, bot):
+class Economy(commands.Cog, command_attrs=dict(hidden=True)):
+    def __init__(self, bot: "internal.bot.CrajyBot") -> None:
         self.bot = bot
         self.bot.task_loops["chat-money"] = self.chat_money_loop
+        self.bot.task_loops["stock"] = self.stock_price
+        self.last_4 = []                # List for stock loop correction
 
-    async def cog_check(self, ctx):
+    async def cog_check(self, ctx) -> bool:
         """Restricts these commands to some specific channels. This is server specific, so change the list according to what you need.
         Or you can entirely remove this function."""
-        return ctx.channel.name in ["bot-test", "botspam-v2", "botspam"]
+        return ctx.channel.name in ["bot-test", "botspam-v2", "botspam"] and ctx.guild.id == 298871492924669954
 
-    def random_robber(self):
+    def random_robber(self) -> typing.AnyStr:
+        """Used to pick a random robber image from the embed resources."""
         return random.choice(em.EmbedResource)
     
     @staticmethod
@@ -42,7 +46,7 @@ class Economy(commands.Cog):
             return True
         return amt >= 0
 
-    def get_item_column(self, inp: str):
+    def get_item_column(self, inp: str) -> str:
         # get corresponding item name column in inventory table. add item names with different column names in this dict.
         mapping = {
             "stock": "stock",
@@ -50,6 +54,14 @@ class Economy(commands.Cog):
             "chicken": "chicken"
             }
         return mapping.get(inp.lower())
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message) -> None:
+        if message.author.bot:
+            return
+
+        if message.channel.id in CHAT_MONEY_CHANNELS:
+            bot.chat_money_cache[message.author.id] += 1
     
     @tasks.loop(seconds=5)
     async def chat_money_loop(self):
@@ -60,6 +72,49 @@ class Economy(commands.Cog):
             [(v * random.randint(1, 15), k) for k, v in self.bot.chat_money_cache.items()]
         )
         self.bot.chat_money_cache.clear()
+
+    @tasks.loop(hours=3)
+    async def stock_price(self):
+        message_channel = self.bot.get_channel(BOT_ANNOUNCE_CHANNEL)
+
+        rand_sign = random.choice(["+","-"])
+        pos = 0
+        neg = 0
+        if rand_sign == "+":
+            rand_val = random.randint(1,6)
+            emb_type = enums.EmbedType.SUCCESS
+        else:
+            rand_val = -random.randint(1,6)
+            emb_type = enums.EmbedType.FAIL
+        
+        self.last_4.append(rand_val)
+
+        if len(last_4) > 4:
+            del last_4[0]
+        
+        for i in last_4:
+            if i < 0:
+                neg += 1
+            else:
+                pos += 1
+
+        if pos >= random.randint(1,6):
+            rand_val = -(rand_val)
+            emb_type = enums.EmbedType.FAIL
+        elif neg >= random.randint(1,6):
+            rand_val = -(rand_val)
+            emb_type = enums.EmbedType.SUCCESS
+        
+        new = await self.bot.db_pool.fetchval(f"UPDATE shop SET price=price + $1 WHERE item_name='stock' RETURNING price", rand_val)
+
+        embed = em.CrajyEmbed(title="Stock Price Updated!", embed_type=emb_type)
+        embed.description = f"New price: {new}"
+        embed.quick_set_author(bot.user)
+        await message_channel.send(embed=embed)
+
+    @stock_price.before_loop
+    async def stock_price_before(self):
+        await self.bot.wait_until_ready()
 
     @commands.command(name="withdraw",
                       aliases=["with"],
