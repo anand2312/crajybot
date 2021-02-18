@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "crajybot"
+version = "0.1.0"
+description = "Crajy Discord Bot"
+authors = ["Anand Krishna <anandkrishna2312@gmail.com>"]
+license = "GPL-3"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+aiohttp = "^3.7.3"
+"discord.py" = "^1.6.0"
+"akinator.py" = {extras = ["async"], version = "^4.1.0"}
+pytz = "^2021.1"
+yarl = "1.4.2"
+jishaku = "^1.20.0"
+asyncpg = "^0.22.0"
+aioscheduler = "^1.4.2"
+pre-commit = "^2.10.1"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
