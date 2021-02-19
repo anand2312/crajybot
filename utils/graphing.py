@@ -13,6 +13,7 @@ from collections import namedtuple
 
 import discord
 
+# TO DO: complete dmetrics and use that as an extension instead.
 
 @dataclass
 class InstantaneousMetrics:

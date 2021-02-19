@@ -1,3 +1,5 @@
+# TO DO: Switch manage.py to argparse and delete this.
+
 class Menu:
     """Pass in all the functions that has to be run in the menu
     For eg, if you had defined three functions
