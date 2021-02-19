@@ -6,6 +6,7 @@ from internal import enumerations as enums
 
 
 class HelpCommand(commands.HelpCommand):
+    # TO DO: remake
     def __init__(self):
         super().__init__(
             command_attrs={
