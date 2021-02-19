@@ -1,11 +1,13 @@
 import os
+import dotenv
 
 import discord
 from discord.ext import commands
 
-from secret.constants import *
-
 from internal.bot import CrajyBot
+
+
+dotenv.load_dotenv(dotenv.find_dotenv())
 
 
 intents = discord.Intents.default()
@@ -35,4 +37,4 @@ if __name__ == "__main__":
     else:
         raise RuntimeError("Use the manage.py interface to run code while debugging.")
 
-    bot.run(TOKEN)
+    bot.run(os.environ.get("TOKEN"))
