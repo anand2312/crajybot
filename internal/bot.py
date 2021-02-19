@@ -1,6 +1,8 @@
 import asyncio
 from collections import defaultdict
+import dotenv
 import logging
+import os
 
 from aiohttp import ClientSession
 from aioscheduler import TimedScheduler
@@ -10,8 +12,10 @@ from discord.ext import commands
 from internal.help_class import HelpCommand
 from internal.enumerations import EmbedType
 from internal.context import CrajyContext
-from secret.constants import *
 from utils.embed import CrajyEmbed
+
+
+dotenv.load_dotenv(dotenv.find_dotenv())
 
 
 class CrajyBot(commands.Bot):
@@ -24,9 +28,9 @@ class CrajyBot(commands.Bot):
         self.chat_money_cache = defaultdict(int)
         self.task_loops = dict()
         self.db_pool = self.loop.run_until_complete(
-            asyncpg.create_pool(DB_CONNECTION_STRING)
+            asyncpg.create_pool(os.environ.get("DB_CONNECTION_STRING"))
         )
-        self.__version__ = "3.0a"
+        self.__version__ = "4.0a"
         self.scheduler = TimedScheduler()  # task scheduler for reminders/notes
         self.session = ClientSession()  # aiohttp clientsession for API interactions
 
@@ -41,7 +45,7 @@ class CrajyBot(commands.Bot):
         self.scheduler.start()
         embed = CrajyEmbed(embed_type=EmbedType.BOT, description="Ready!")
         embed.quick_set_author(self.user)
-        m = await self.get_channel(BOT_ANNOUNCE_CHANNEL).send(embed=embed)
+        m = await self.get_channel(int(os.environ.get("BOT_TEST_CHANNEL"))).send(embed=embed)
         ctx = await self.get_context(m)
         await self.reschedule_tasks(ctx)
 

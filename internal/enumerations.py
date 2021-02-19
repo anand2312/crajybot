@@ -12,6 +12,7 @@ class EmbedType(enum.Enum):
 
 
 class Table(enum.Enum):
+    # TO DO: this is a pointless enum
     """Enum for tables in the database."""
 
     ECONOMY = ("id", "bank", "cash", "debt")
