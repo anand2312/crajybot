@@ -6,10 +6,16 @@ repos:
     -   id: end-of-file-fixer
     -   id: check-yaml
     -   id: check-added-large-files
--   repo: https://gitlab.com/pycqa/flake8
-    rev: v3.8.4  # pick a git hash / tag to point to
+    -   id: mixed-line-ending
+-   repo: local
     hooks:
     -   id: flake8
+        name: Flake8
+        description: Run flake8 in the local environment
+        entry: poetry run flake8
+        language: system
+        types: [python]
+        require_serial: true
 -   repo: https://github.com/psf/black
     rev: 19.3b0
     hooks:

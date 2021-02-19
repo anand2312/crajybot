@@ -1,17 +1,11 @@
-import datetime
-import random
-import logging
 import os
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 
 from secret.constants import *
 
-from utils.embed import CrajyEmbed
-
 from internal.bot import CrajyBot
-from internal.enumerations import Table, EmbedType
 
 
 intents = discord.Intents.default()
