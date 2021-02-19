@@ -4,3 +4,4 @@ __pycache__/
 secret/*
 discord.log
 .vscode
+.env

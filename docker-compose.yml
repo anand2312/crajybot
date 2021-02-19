@@ -1,0 +1,9 @@
+version: "3.8"
+
+services:
+  bot:
+    build: .
+  
+  postgres:
+    image: postgres:13-alpine
+    
