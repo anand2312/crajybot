@@ -2,6 +2,7 @@ from utils.menu import Menu
 from secret.TOKEN import TOKEN
 import os
 
+# TO DO: Switch to argparse
 
 def setup() -> None:
     guild_id = int(input("Enter your Guild ID:"))
@@ -75,29 +76,8 @@ def debug():
         bot.load_extension("jishaku")
     bot.run(TOKEN)
 
-
-def run():
-    from bot import bot
-    from secret.constants import DEFAULT_COGS
-
-    # loading cogs
-    if DEFAULT_COGS == []:
-        for filename in os.listdir("./cogs"):
-            if filename.endswith(".py"):
-                bot.load_extension(f"cogs.{filename[:-3]}")
-        bot.load_extension("jishaku")
-    else:
-        for cog in DEFAULT_COGS:
-            bot.load_extension(f"cogs.{cog}")
-
-    for loop in bot.task_loops.values():  # start all task loops.
-        loop.start()
-
-    bot.run(TOKEN)
-
-
 if __name__ == "__main__":
-    functions = [setup, run, debug]
+    functions = [setup, debug]
     menu = Menu(
         *functions, heading="Bot Control", format_symbol="=", continue_prompt=False
     )

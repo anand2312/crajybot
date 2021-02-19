@@ -1,5 +1,6 @@
 import asyncio
 from collections import defaultdict
+import logging
 
 from aiohttp import ClientSession
 from aioscheduler import TimedScheduler
@@ -20,7 +21,8 @@ class CrajyBot(commands.Bot):
         super().__init__(
             *args, help_command=HelpCommand(), case_insensitive=True, **kwargs
         )
-        self.chat_money_cache = defaultdict(lambda: 0)
+        self.chat_money_cache = defaultdict(int)
+        self.task_loops = dict()
         self.db_pool = self.loop.run_until_complete(
             asyncpg.create_pool(DB_CONNECTION_STRING)
         )
@@ -28,7 +30,14 @@ class CrajyBot(commands.Bot):
         self.scheduler = TimedScheduler()  # task scheduler for reminders/notes
         self.session = ClientSession()  # aiohttp clientsession for API interactions
 
+        self.logger = logging.getLogger('discord')
+        self.logger.setLevel(logging.WARNING)
+        handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+        handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+        self.logger.addHandler(handler)
+
     async def on_ready(self):
+        self.logger.info("Bot Online!")
         self.scheduler.start()
         embed = CrajyEmbed(embed_type=EmbedType.BOT, description="Ready!")
         embed.quick_set_author(self.user)
