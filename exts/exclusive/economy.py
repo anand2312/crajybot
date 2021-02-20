@@ -11,7 +11,6 @@ import random
 
 from utils import embed as em
 from internal import enumerations as enums
-from secret.constants import *
 
 
 class EconomyEmbed(em.CrajyEmbed):
@@ -57,6 +56,7 @@ class Economy(commands.Cog, command_attrs=dict(hidden=True)):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
+        CHAT_MONEY_CHANNEL = [612638234782072882, 392576275761332226, 703141301549400144]
         if message.author.bot:
             return
 
@@ -78,7 +78,7 @@ class Economy(commands.Cog, command_attrs=dict(hidden=True)):
 
     @tasks.loop(hours=3)
     async def stock_price(self):
-        message_channel = self.bot.get_channel(BOT_ANNOUNCE_CHANNEL)
+        message_channel = self.bot.get_channel(int(self.bot.environ.get("BOT_ANNOUNCE_CHANNEL")))
 
         rand_sign = random.choice(["+", "-"])
         pos = 0

@@ -12,34 +12,18 @@ import random
 import asyncio
 import typing
 
-from tabulate import tabulate
 
-from secret.webhooks import *
 from utils import embed as em
 from utils import converters
 from internal import enumerations as enums
 
 channels_available = ["bot-test", "botspam-v2", "botspam"]
 
+# TO DO: Move this moderator cog to exclusive ext and make a new general moderator cog
 
 class Moderator(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.git_helper_webhook = discord.Webhook.partial(
-            GIT_HELPER["id"],
-            GIT_HELPER["token"],
-            adapter=discord.AsyncWebhookAdapter(self.bot.session),
-        )
-        self.another_chat_webhook = discord.Webhook.partial(
-            ANOTHERCHAT_HOOK["id"],
-            ANOTHERCHAT_HOOK["token"],
-            adapter=discord.AsyncWebhookAdapter(self.bot.session),
-        )
-        self.botspam_webhook = discord.Webhook.partial(
-            BOTSPAM_HOOK["id"],
-            BOTSPAM_HOOK["token"],
-            adapter=discord.AsyncWebhookAdapter(self.bot.session),
-        )
         self.env = {}
 
     async def cog_check(self, ctx):
@@ -266,20 +250,6 @@ class Moderator(commands.Cog):
         )
         await ctx.send(embed=reply_embed)
 
-    @commands.command(
-        name="query",
-        aliases=["db"],
-        help="Query the database. Don't mess with this if you don't know what it is doing.",
-    )
-    @commands.is_owner()
-    async def sql_query(self, ctx, table: str, query: str):
-        # wrap query in quotes
-        columns = enums.Table[table.upper()].value
-        data = await self.bot.db_pool.fetch(query)
-        tabulated = tabulate(data, headers=columns)
-        out = "```" + tabulated + "```"
-        return await ctx.reply(out, mention_author=True)
-
     @commands.command(name="clear")
     async def clear(
         self,
@@ -309,28 +279,6 @@ class Moderator(commands.Cog):
         )
 
     @commands.is_owner()
-    @commands.command(name="internal-eval", aliases=["int-eval"])
-    async def internal_eval(self, ctx, *, code: str):
-        code = code.strip("`")
-        code = code.lstrip("py")
-        real_code = f"""
-async def func():
-    {textwrap.indent(code, "    ")}
-self.env['func'] = func"""
-        env = {
-            "message": ctx.message,
-            "ctx": ctx,
-            "discord": discord,
-            "self": self,
-            "asyncio": asyncio,
-        }
-
-        eval(compile(real_code, "bruh", "exec"), env)
-
-        await self.env["func"]()
-
-        await ctx.check_mark()
-
     @commands.command(name="reload-module", aliases=["reloadm"])
     async def unload_module(self, ctx, module: str):
         removes = []

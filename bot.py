@@ -22,6 +22,8 @@ bot = CrajyBot(
     owner_id=271586885346918400,
 )
 
+bot.environ = os.environ  # use bot.environ.get wherever needed
+
 if __name__ == "__main__":
     if os.environ.get("PRODUCTION"):
         bot.logger.info(f"Began Loading Extensions")

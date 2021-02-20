@@ -8,10 +8,6 @@ import random
 from contextlib import suppress
 import more_itertools as mitertools
 
-from secret.constants import GUILD_ID, ROLE_NAME
-from secret.KEY import *
-from secret.TOKEN import *
-
 from utils import embed as em
 from internal import enumerations as enums
 
@@ -35,6 +31,7 @@ class Stupid(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+        # TO DO: Take this over to its own cog
         self.pin_cache = set()
         self.pin_vote_threshold = 4
         # a loop that changes the name of a role, based on names saved in the database. Names are added with the `role-name` command
@@ -42,65 +39,7 @@ class Stupid(commands.Cog):
         self.bot.task_loops["role_name"] = self.role_name_loop
         self.bot.task_loops["qotd_cache"] = self.qotd_cache_loop
 
-        try:
-            self.anotherchat_webhook = discord.Webhook.partial(
-                ANOTHERCHAT_HOOK["id"],
-                ANOTHERCHAT_HOOK["token"],
-                adapter=discord.AsyncWebhookAdapter(self.bot.session),
-            )
-            self.botspam_webhook = discord.Webhook.partial(
-                BOTSPAM_HOOK["id"],
-                BOTSPAM_HOOK["token"],
-                adapter=discord.AsyncWebhookAdapter(self.bot.session),
-            )
-        except:
-            pass
-
         self.cached_qotd = None
-
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        # REWRITE THIS.
-        if message.author.bot:
-            return
-        currencies = {"usd", "omr", "inr", "eur"}
-        message_string = message.content.lower().replace("euro", "eur")
-        message_string = message_string.replace("rial", "omr")
-        message_string = message_string.replace("rupees", "inr")
-        message_string = message_string.replace("rs", "inr")
-
-        converted = []
-        splitted = message_string.split()
-
-        for index, word in enumerate(splitted):
-            if word in currencies:
-                init_cur = word
-                number = int(splitted[index - 1])
-                break
-        else:
-            return
-
-        url1 = f"https://free.currconv.com/api/v7/convert?apiKey={CURRENCY_KEY}&q={init_cur}_OMR,{init_cur}_INR"
-        url2 = f"https://free.currconv.com/api/v7/convert?apiKey={CURRENCY_KEY}&q={init_cur}_USD,{init_cur}_EUR"
-        async with self.bot.session.get(url1) as resp1, self.bot.session.get(
-            url2
-        ) as resp2:
-            data1 = await resp1.json()
-            data2 = await resp2.json()
-            rates = {}
-            for key, value in data1["results"].items():
-                if value["val"] != 1:
-                    rates[key] = value["val"]
-            for key, value in data2["results"].items():
-                if value["val"] != 1:
-                    rates[key] = value["val"]
-
-        for key, value in rates.items():
-            res_string = f"{key[4:]} {value * number}"
-            converted.append(res_string)
-        joined = "\n".join(converted)
-        out = f"{number} {init_cur} is:\n{joined}"
-        return await message.reply(out)
 
     async def on_reaction_add(self, reaction, user):
         if str(reaction) == "📌" and user != self.bot.user:

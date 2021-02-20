@@ -5,7 +5,6 @@ import datetime
 
 from internal import enumerations as enums
 from utils import embed as em
-from secret.constants import *
 
 
 class Birthday(
@@ -121,8 +120,8 @@ class Birthday(
     @tasks.loop(hours=24)
     async def birthday_loop(self):
         # TO DO: Make more fine-tuned loop which will schedule a wish in case it isn't the exact time at loop execution.
-        guild = self.bot.get_guild(GUILD_ID)
-        wishchannel = guild.get_channel(GENERAL_CHAT)
+        guild = self.bot.get_guild(int(self.bot.environ.get("CRAJY_GUILD_ID")))
+        wishchannel = guild.get_channel(int(self.bot.environ.get("CRAJY_GENERAL_CHAT")))
         data = await bot.db_pool.fetch(
             "SELECT user_id FROM user_details WHERE EXTRACT(day FROM bday)=EXTRACT(day FROM current_date) AND EXTRACT(month FROM bday)=EXTRACT(month FROM current_date)"
         )

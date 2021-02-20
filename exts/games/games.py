@@ -3,7 +3,6 @@ import discord
 from discord.ext import commands
 
 import utils.tictactoe as tictactoe
-from secret.KEY import *
 
 import random
 import asyncio
@@ -13,6 +12,8 @@ from random_word import RandomWords
 from PyDictionary import PyDictionary
 
 from akinator.async_aki import Akinator
+
+# TO DO: rewrite the guess game logic, remove the old mongo code from here.
 
 
 d = PyDictionary()  # needed for the word guess game's random word generator.
@@ -335,20 +336,3 @@ class Games(commands.Cog):
             )
 
         return await ctx.send(content=None, embed=final_embed)
-
-    @commands.command(
-        name="games-leaderboard",
-        aliases=["g-lb", "glb", "g-top", "gtop", "games-top"],
-        help="Retrieve the games leaderboard.",
-    )
-    async def games_top(self, ctx):
-        out = ""
-        existing = await self.bot.games_leaderboard.find(
-            {"$query": {}, "$orderby": {"wins": -1}}
-        )
-        async for i, j in enumerate(existing):
-            member_obj = discord.utils.get(ctx.guild.members, id=j["user"])
-            out += f"{i+1}. {member_obj.name}  **{j['wins']}** wins\n"
-        embed = discord.Embed(title="Games leaderboard", color=discord.Color.blurple())
-        embed.description = out
-        await ctx.send(embed=embed)
