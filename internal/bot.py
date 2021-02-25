@@ -34,10 +34,14 @@ class CrajyBot(commands.Bot):
         self.scheduler = TimedScheduler()  # task scheduler for reminders/notes
         self.session = ClientSession()  # aiohttp clientsession for API interactions
 
-        self.logger = logging.getLogger('discord')
+        self.logger = logging.getLogger("discord")
         self.logger.setLevel(logging.WARNING)
-        handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-        handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+        handler = logging.FileHandler(
+            filename="discord.log", encoding="utf-8", mode="w"
+        )
+        handler.setFormatter(
+            logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
+        )
         self.logger.addHandler(handler)
 
     async def on_ready(self):
@@ -45,7 +49,9 @@ class CrajyBot(commands.Bot):
         self.scheduler.start()
         embed = CrajyEmbed(embed_type=EmbedType.BOT, description="Ready!")
         embed.quick_set_author(self.user)
-        m = await self.get_channel(int(os.environ.get("BOT_TEST_CHANNEL"))).send(embed=embed)
+        m = await self.get_channel(int(os.environ.get("BOT_TEST_CHANNEL"))).send(
+            embed=embed
+        )
         ctx = await self.get_context(m)
         await self.reschedule_tasks(ctx)
 

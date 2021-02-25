@@ -9,8 +9,10 @@ dotenv.load_dotenv(dotenv.find_dotenv())
 
 TOKEN = os.environ.get("TOKEN")
 
+
 def setup() -> None:
     raise NotImplementedError()
+
 
 def debug():
     print("DEBUG MODE")
@@ -37,6 +39,7 @@ def debug():
     else:
         bot.load_extension("jishaku")
     bot.run(TOKEN)
+
 
 if __name__ == "__main__":
     functions = [setup, debug]

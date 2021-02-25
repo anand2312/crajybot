@@ -21,6 +21,7 @@ channels_available = ["bot-test", "botspam-v2", "botspam"]
 
 # TO DO: Move this moderator cog to exclusive ext and make a new general moderator cog
 
+
 class Moderator(commands.Cog):
     def __init__(self, bot):
         self.bot = bot

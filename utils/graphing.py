@@ -15,6 +15,7 @@ import discord
 
 # TO DO: complete dmetrics and use that as an extension instead.
 
+
 @dataclass
 class InstantaneousMetrics:
     """Represents all the data for the metrics stored for a particular datetime object."""
