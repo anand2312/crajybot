@@ -18,6 +18,4 @@ RUN poetry install
 
 COPY . .
 
-ENTRYPOINT ["python3"]
-
-CMD ["bot.py"]
+CMD ["poetry", "run", "python", "bot.py"]
