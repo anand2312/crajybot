@@ -19,6 +19,6 @@ services:
       - db
 
 volumes:
-  database-data:
-  bot:
+  database-data: {}
+  bot: {}
     
