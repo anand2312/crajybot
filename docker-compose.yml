@@ -6,7 +6,7 @@ services:
     env_file: 
       - .env
     volumes:
-      - database-data: /var/lib/postgresql/data/
+      - database-data:/var/lib/postgresql/data/
 
   bot:
     build: .
@@ -14,7 +14,7 @@ services:
       - PRODUCTION=True
     command: poetry run python bot.py
     volumes:
-      - bot: /bot
+      - bot:/bot
     depends_on: 
       - postgres
 
