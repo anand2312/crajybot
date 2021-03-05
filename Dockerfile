@@ -9,6 +9,7 @@ RUN apt-get -y update \
 
 WORKDIR /bot
 
+COPY pyproject.toml ./
 COPY poetry.lock ./
 
 RUN pip install -U poetry

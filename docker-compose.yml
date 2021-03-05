@@ -12,7 +12,7 @@ services:
     build: .
     environment: 
       - PRODUCTION=True
-    command: python bot.py
+    command: poetry run python bot.py
     volumes:
       - bot: /bot
     depends_on: 
