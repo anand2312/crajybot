@@ -39,4 +39,4 @@ if __name__ == "__main__":
     else:
         raise RuntimeError("Use the manage.py interface to run code while debugging.")
 
-    bot.run(os.environ.get("TOKEN"))
+    bot.run(bot.environ.get("TOKEN"))

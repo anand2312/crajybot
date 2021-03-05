@@ -1,5 +1,7 @@
 FROM python:3.8-slim
 
+ENV PYTHONUNBUFFERED=1
+
 RUN apt-get -y update \
     && apt-get install -y \
         git \
