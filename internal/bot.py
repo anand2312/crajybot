@@ -2,11 +2,13 @@ import asyncio
 from collections import defaultdict
 import dotenv
 import logging
+import typing
 import os
 
 from aiohttp import ClientSession
 from aioscheduler import TimedScheduler
 import asyncpg
+import discord
 from discord.ext import commands
 
 from internal.help_class import HelpCommand
@@ -44,7 +46,10 @@ class CrajyBot(commands.Bot):
         )
         self.logger.addHandler(handler)
 
-    async def on_ready(self):
+        # run table creation
+        self.loop.run_until_complete(self.initialize_db())
+
+    async def on_ready(self) -> None:
         self.logger.info("Bot Online!")
         self.scheduler.start()
         embed = CrajyEmbed(embed_type=EmbedType.BOT, description="Ready!")
@@ -55,7 +60,7 @@ class CrajyBot(commands.Bot):
         ctx = await self.get_context(m)
         await self.reschedule_tasks(ctx)
 
-    async def on_member_join(self, member):
+    async def on_member_join(self, member: discord.Member) -> None:
         """When a new member joins, add them to the database and greet them in DMs."""
         await self.register_new_member(member)
         embed = CrajyEmbed(embed_type=EmbedType.SUCCESS, title="Hi! Welcome to Crajy!")
@@ -63,11 +68,11 @@ class CrajyBot(commands.Bot):
         embed.quick_set_footer(self.user)
         await member.send(embed=embed)
 
-    async def on_member_remove(self, member):
+    async def on_member_remove(self, member: discord.Member) -> None:
         """When a member leaves, quietly remove them from the database."""
         await self.delete_member(member)
 
-    async def on_message_edit(self, before, after):
+    async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
         """If a message is edited, reprocess it for commands."""
         if before.author.bot:
             return
@@ -75,7 +80,7 @@ class CrajyBot(commands.Bot):
         ctx = await self.get_context(after)
         await self.invoke(ctx)
 
-    async def on_command_error(self, ctx, error):
+    async def on_command_error(self, ctx: CrajyContext, error: typing.Exception) -> typing.Optional[discord.Message]:
         """Global error handler."""
         embed = CrajyEmbed(embed_type=EmbedType.FAIL, title="Command Errored.")
         embed.quick_set_footer(self.user)
@@ -84,17 +89,11 @@ class CrajyBot(commands.Bot):
             embed.description = f"{ctx.author.display_name}, you have to wait {int(error.retry_after/60)} minutes before using this command again."
             return await ctx.send(embed=embed)
         elif isinstance(error, commands.CommandNotFound):
-            if ctx.message.content.startswith(".."):
-                pass
-            else:
-                tag = await self.db_pool.fetchval(
-                    "SELECT content FROM tags WHERE tag_name=$1", ctx.invoked_with
-                )
-                if tag:
-                    return await ctx.reply(tag)
-                else:
-                    embed.description = f"Command {ctx.invoked_with} not found."
-                    return await ctx.send(embed=embed)
+            tag = await self.db_pool.fetchval(
+                "SELECT content FROM tags WHERE tag_name=$1", ctx.invoked_with
+            )
+            if tag:
+                return await ctx.reply(tag)
         elif isinstance(error, asyncio.TimeoutError):
             embed.description = f"You took too long to respond for: {ctx.invoked_with}"
             return await ctx.message.edit(embed=embed)
@@ -108,14 +107,14 @@ class CrajyBot(commands.Bot):
             await ctx.send(embed=embed)
             raise error
 
-    async def get_context(self, message, *, cls=None):
+    async def get_context(self, message: discord.Message, *, cls=None):
         """Overriding get_context to use custom context."""
         return await super().get_context(message, cls=CrajyContext)
 
-    async def reschedule_tasks(self, ctx):
+    async def reschedule_tasks(self, ctx: CrajyContext):
         """Reschedule unfinished tasks that were stored in the database.
         Bot gets_context from the ready message it sends which can be used to get the guild object for get_member."""
-        print("Loading unfinished tasks from database.")
+        self.logger.info("Loading unfinished tasks from database.")
         notes_cog = self.get_cog("Notes")
         # this query assumes that the only tasks are going to be reminders from the notes table. update as necessary.
         remaining_tasks = await self.db_pool.fetch(
@@ -128,7 +127,7 @@ class CrajyBot(commands.Bot):
             )
         print("Loaded unfinished tasks.")
 
-    async def process_commands(self, message):
+    async def process_commands(self, message: discord.Message) -> None:
         """Triggers typing in channels before sending a message."""
         if message.author.bot:
             return
@@ -138,7 +137,7 @@ class CrajyBot(commands.Bot):
             await ctx.trigger_typing()
         await self.invoke(ctx)
 
-    async def register_new_member(self, member):
+    async def register_new_member(self, member: discord.Message) -> None:
         async with self.db_pool.acquire() as connection:
             async with connection.transaction():
                 await connection.execute("INSERT INTO economy VALUES($1)", member.id)
@@ -149,9 +148,19 @@ class CrajyBot(commands.Bot):
                     "INSERT INTO inventories VALUES($1)", member.id
                 )
 
-    async def delete_member(self, member):
+    async def delete_member(self, member: discord.Message) -> None:
         async with self.db_pool.acquire() as connection:
             async with connection.transaction():
                 await connection.execute(
                     "DELETE FROM economy WHERE user_id=$1", member.id
                 )
+
+    async def initialize_db(self) -> None:
+        with open("crajybot.sql") as f:
+            queries = f.read().split(";")
+        
+        for query in queries:
+            try:
+                await self.db_pool.execute(query)
+            except Exception as e:
+                self.logger.warn(f"DB initialization: {str(e)}")
