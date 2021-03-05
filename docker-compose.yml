@@ -16,7 +16,7 @@ services:
     volumes:
       - bot: /bot
     depends_on: 
-      - db
+      - postgres
 
 volumes:
   database-data: {}
