@@ -80,7 +80,7 @@ class CrajyBot(commands.Bot):
         ctx = await self.get_context(after)
         await self.invoke(ctx)
 
-    async def on_command_error(self, ctx: CrajyContext, error: typing.Exception) -> typing.Optional[discord.Message]:
+    async def on_command_error(self, ctx: CrajyContext, error: Exception) -> typing.Optional[discord.Message]:
         """Global error handler."""
         embed = CrajyEmbed(embed_type=EmbedType.FAIL, title="Command Errored.")
         embed.quick_set_footer(self.user)
