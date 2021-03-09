@@ -165,7 +165,7 @@ class Moderator(commands.Cog):
         author = id_.author
         date = datetime.date.today()
 
-        await self.bot.db_pool.fetchval("INSERT INTO pins(synopsis, jump_url, author, pin_date, name) VALUES($1, $2, $3, $4, $5)", synopsis, url, author, date, name_)
+        await self.bot.db_pool.fetchval("INSERT INTO pins(synopsis, jump_url, author, pin_date, name) VALUES($1, $2, $3, $4, $5)", synopsis, url, author.id, date, name_)
         await id_.add_reaction("📌")
         reply_embed = em.CrajyEmbed(title=f"Pinned!", description=f"_{synopsis[:10]+'...'}_\n", embed_type=enums.EmbedType.SUCCESS)
         reply_embed.set_thumbnail(url=em.EmbedResource.PIN.value)
