@@ -36,7 +36,12 @@ class Notes(commands.Cog):
                         "You can also specify a `time`, after which the bot should remind you about a note.")
     async def notes_create(self, ctx, time: commands.Greedy[CustomTimeConverter], *, content):
         is_reminder = False if time == [] else True
-        note_id = await self.bot.db_pool.fetchval("INSERT INTO notes(user_id, raw_note, reminder) VALUES($1, $2, $3) RETURNING note_id", ctx.author.id, content, is_reminder)
+        if is_reminder:
+            now = datetime.utcnow()
+            exec_time = now + time
+        else:
+            exec_time = None
+        note_id = await self.bot.db_pool.fetchval("INSERT INTO notes(user_id, raw_note, reminder) VALUES($1, $2, $3, $4) RETURNING note_id", ctx.author.id, content, is_reminder, exec_time)
         embed = em.CrajyEmbed(title=f"Note Creation: ID {note_id}", embed_type=EmbedType.SUCCESS)
         embed.quick_set_author(ctx.author)
         embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
@@ -120,7 +125,7 @@ class Notes(commands.Cog):
         embeds = []
         for chunk in chunked:
             embed = em.CrajyEmbed(title="Reminders", embed_type=EmbedType.INFO)
-            out_as_list = [f"__**Note ID:{i['note_id']}**__\n{i['raw_note'][:30]}..." for i in chunk]
+            out_as_list = [f"__**Note ID:{i['note_id']}**__\n{i['raw_note'][:30]}...\nin {i['reminder_time'] - datetime.utcnow()}" for i in chunk]
             embed.description = "\n".join(out_as_list)
             embed.quick_set_author(ctx.author)
             embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
