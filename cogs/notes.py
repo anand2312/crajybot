@@ -41,7 +41,7 @@ class Notes(commands.Cog):
             exec_time = now + time
         else:
             exec_time = None
-        note_id = await self.bot.db_pool.fetchval("INSERT INTO notes(user_id, raw_note, reminder) VALUES($1, $2, $3, $4) RETURNING note_id", ctx.author.id, content, is_reminder, exec_time)
+        note_id = await self.bot.db_pool.fetchval("INSERT INTO notes(user_id, raw_note, reminder, reminder_time) VALUES($1, $2, $3, $4) RETURNING note_id", ctx.author.id, content, is_reminder, exec_time)
         embed = em.CrajyEmbed(title=f"Note Creation: ID {note_id}", embed_type=EmbedType.SUCCESS)
         embed.quick_set_author(ctx.author)
         embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
