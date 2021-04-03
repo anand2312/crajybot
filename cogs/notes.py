@@ -120,7 +120,7 @@ class Notes(commands.Cog):
                               
     @create_reminder.command(name="list", help="Returns a list of all reminders you have.")
     async def reminder_list(self, ctx):
-        data = await self.bot.db_pool.fetch("SELECT note_id, raw_note FROM notes WHERE user_id = $1 AND reminder", ctx.author.id)    # retrieve only those notes that have been marked as reminders.
+        data = await self.bot.db_pool.fetch("SELECT note_id, raw_note, reminder_time FROM notes WHERE user_id = $1 AND reminder", ctx.author.id)    # retrieve only those notes that have been marked as reminders.
         chunked = mitertools.chunked(data, 4)
         embeds = []
         for chunk in chunked:
