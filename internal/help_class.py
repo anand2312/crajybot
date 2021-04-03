@@ -33,7 +33,7 @@ class HelpCommand(commands.HelpCommand):
         ctx = self.context
         bot = ctx.bot
 
-        embed = discord.Embed(title=f"Module **{cog.qualified_name}**", description=cog.description, embed_type=enums.EmbedType.INFO)
+        embed = em.CrajyEmbed(title=f"Module **{cog.qualified_name}**", description=cog.description, embed_type=enums.EmbedType.INFO)
         commands_in_cog = ""
         for command in cog.get_commands():
             commands_in_cog += command.name + "\n"
@@ -47,7 +47,8 @@ class HelpCommand(commands.HelpCommand):
         ctx = self.context
         embed = em.CrajyEmbed(title=f"Group - {group.name}",
                               description=f"{group.help} \n **Usage** `{self.get_command_signature(group)}`",
-                              color=discord.Color.blue())
+                              color=discord.Color.blue(),
+                              embed_type=enums.EmbedType.INFO)
         for cmd in group.commands:
             embed.add_field(name=cmd.name if cmd.name is not None else group.name, value=f"**Usage** `{self.get_command_signature(cmd)}`", inline=False)
     
