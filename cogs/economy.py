@@ -178,12 +178,11 @@ class Economy(commands.Cog):
             response = EconomyEmbed(title="Crajy Leaderboard", description="", embed_type=enums.EmbedType.INFO)
             for person in chunk:
                 person_obj = ctx.guild.get_member(person['user_id'])
+                counter =+ 1
                 if person_obj is None:
                     continue
                 response.add_field(name=f"{counter}. {person_obj.display_name}", value=f"Net Worth: {person['networth']}", inline=False)
-				counter += 1
             embeds.append(response)
-
         pages = em.quick_embed_paginate(embeds)
         return await pages.start(ctx)
 
