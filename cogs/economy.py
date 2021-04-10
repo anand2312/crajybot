@@ -173,7 +173,7 @@ class Economy(commands.Cog):
     async def leaderboard(self, ctx):
         leaderboard_data = await self.bot.db_pool.fetch("SELECT user_id, bank + cash - debt AS networth FROM economy ORDER BY networth DESC")
         embeds = []
-        counter += 1
+        counter = 1
         for chunk in mitertools.chunked(leaderboard_data, 6):
             response = EconomyEmbed(title="Crajy Leaderboard", description="", embed_type=enums.EmbedType.INFO)
             for person in chunk:
@@ -181,6 +181,7 @@ class Economy(commands.Cog):
                 if person_obj is None:
                     continue
                 response.add_field(name=f"{counter}. {person_obj.display_name}", value=f"Net Worth: {person['networth']}", inline=False)
+				counter += 1
             embeds.append(response)
 
         pages = em.quick_embed_paginate(embeds)
