@@ -181,6 +181,7 @@ class Economy(commands.Cog):
                 if person_obj is None:
                     continue
                 response.add_field(name=f"{counter}. {person_obj.display_name}", value=f"Net Worth: {person['networth']}", inline=False)
+				counter += 1
             embeds.append(response)
 
         pages = em.quick_embed_paginate(embeds)
