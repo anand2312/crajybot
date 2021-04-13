@@ -83,5 +83,5 @@ class Miscellaneous(commands.Cog):
             embed.description += f"\n{link}"
         await ctx.send(embed=embed)
 
-def setup(bot: Bot):
+def setup(bot: CrajyBot):
     bot.add_cog(Miscellaneous(bot))
