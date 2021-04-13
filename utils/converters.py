@@ -1,7 +1,14 @@
+import re
 from datetime import timedelta  
 
 from discord.ext import commands
 from utils import timezone
+
+
+FORMATTED_CODE_REGEX = re.compile(
+    r"```(?P<lang>[a-z+]+)?\s*" r"(?P<code>.*)" r"\s*" r"```", re.DOTALL | re.IGNORECASE
+)
+
 
 class CustomTimeConverter(commands.Converter):
     """Returns a timedelta object."""
@@ -15,3 +22,19 @@ class KwargConverter(commands.Converter):
     async def convert(self, ctx, arg: str) -> dict:
         return dict([arg.split("=")])
     
+
+class LanguageConverter(Converter):
+    async def convert(self, ctx: commands.Context, argument: str):
+        if argument.lower() not in {"python", "rust", "javascript", "go"}:
+            raise commands.BadArgument("Not a valid language")
+        return argument.lower()
+    
+
+class CodeBlockConverter(Converter):
+    async def convert(self, ctx: commands.Context, code: str):
+
+        match = FORMATTED_CODE_REGEX.search(code)
+        if match:
+            code = match.group("code")
+
+        return match, code
