@@ -23,14 +23,14 @@ class KwargConverter(commands.Converter):
         return dict([arg.split("=")])
     
 
-class LanguageConverter(Converter):
+class LanguageConverter(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str):
         if argument.lower() not in {"python", "rust", "javascript", "go"}:
             raise commands.BadArgument("Not a valid language")
         return argument.lower()
     
 
-class CodeBlockConverter(Converter):
+class CodeBlockConverter(commands.Converter):
     async def convert(self, ctx: commands.Context, code: str):
 
         match = FORMATTED_CODE_REGEX.search(code)
