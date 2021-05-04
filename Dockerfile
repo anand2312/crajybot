@@ -2,10 +2,9 @@ FROM python:3.8-slim
 
 ENV PYTHONUNBUFFERED=1
 
-RUN apt-get -y update \
-    && apt-get install -y \
-        git \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y git
 
 WORKDIR /bot
 
