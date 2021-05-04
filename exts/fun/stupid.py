@@ -355,7 +355,7 @@ class Stupid(commands.Cog):
         guild = self.bot.get_guild(GUILD_ID)
         role = guild.get_role(ROLE_NAME)
         existing = await self.bot.db_pool.fetch("SELECT role_name FROM role_names")
-        new_name_data = random.choice(data)
+        new_name_data = random.choice(existing)
         await role.edit(name=new_name_data["role_name"])
 
     @role_name_loop.before_loop
