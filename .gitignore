@@ -3,3 +3,5 @@ cogs/__pycache__/
 __pycache__/
 secret/*
 discord.log
+.vscode
+.env
