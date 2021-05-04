@@ -4,7 +4,7 @@ from typing import Optional
 import more_itertools as mitertools
 
 import discord
-from discord.ext import commands, menus
+from discord.ext import commands
 
 from utils.converters import CustomTimeConverter
 from internal.enumerations import EmbedType

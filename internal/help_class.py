@@ -1,4 +1,3 @@
-import discord
 from discord.ext import commands
 
 from utils import embed as em
