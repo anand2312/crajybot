@@ -2,6 +2,7 @@ import asyncio
 from typing import cast
 
 from discord import TextChannel
+from loguru import logger
 
 from bot import bot, main
 from secret.constants import BOT_TEST_CHANNEL
@@ -19,7 +20,7 @@ def debug() -> None:
         channel = cast(TextChannel, bot.get_channel(BOT_TEST_CHANNEL))
 
         if channel is None:
-            bot.logger.warning("Bot test channel not found in cache")
+            logger.warning("Bot test channel not found in cache")
             return
 
         await channel.send(

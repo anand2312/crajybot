@@ -1,9 +1,9 @@
 from __future__ import annotations
-import asyncio
 from pathlib import Path
 
 import discord
 from discord.ext import commands
+from loguru import logger
 
 from internal.bot import CrajyBot
 from secret.TOKEN import TOKEN
@@ -30,8 +30,14 @@ async def main(exts: list[str] | None = None) -> None:
         for ext in Path("./exts").iterdir():
             await bot.load_extension(f"exts.{ext.name}")
 
-    await bot.load_extension("jishaku")
-    bot.logger.info("Finished loading extensions")
+    try:
+        await bot.load_extension("jishaku")
+    except Exception as e:
+        logger.info(
+            "Can't load jishaku; jishaku doesn't yet support async setup/teardown"
+        )
+
+    logger.info("Finished loading extensions")
 
     async with bot:
         await bot.start(TOKEN)

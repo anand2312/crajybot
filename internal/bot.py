@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import traceback
 import typing
 from io import StringIO
@@ -10,7 +9,8 @@ import discord
 from aiohttp import ClientSession
 from aioscheduler import TimedScheduler
 from discord.ext import commands, tasks
-from prisma import Prisma
+from loguru import logger
+from prisma import Prisma, register
 from prisma.models import User, Guild, Tag
 
 from internal.help_class import HelpCommand
@@ -30,7 +30,6 @@ class CrajyBot(commands.Bot):
     db: Prisma
     session: ClientSession
     scheduler: TimedScheduler
-    logger: logging.Logger
     vars: dict[str, object]
     task_loops: dict[str, tasks.Loop]
 
@@ -44,26 +43,27 @@ class CrajyBot(commands.Bot):
         self.task_loops = dict()
         self.scheduler = TimedScheduler()  # task scheduler for reminders/notes
         self.vars = {}  # set all other misc bot vars here
-        self.logger = logging.getLogger(__name__)
 
     async def setup_hook(self) -> None:
         # Initialize all connections here
-        self.logger.info("Running setup hook")
+        logger.info("Running setup hook")
         await self.db.connect()
-        self.logger.info("Connected to database")
+        register(self.db)
+
+        logger.info("Connected to database")
         self.session = ClientSession()
 
         for name, loop in self.task_loops.items():
             loop.start()
-            self.logger.info(f"Started task loop: {name}")
+            logger.info(f"Started task loop: {name}")
 
         self.scheduler.start()
 
     async def on_ready(self) -> None:
-        self.logger.info("Bot Online!")
+        logger.info("Bot Online!")
 
         if self.user is None:
-            self.logger.warning("on-ready terminated early as self.user was None")
+            logger.warning("on-ready terminated early as self.user was None")
             return
 
         embed = CrajyEmbed(embed_type=EmbedType.BOT, description="Ready!")
@@ -72,7 +72,7 @@ class CrajyBot(commands.Bot):
         channel = typing.cast(discord.TextChannel, self.get_channel(BOT_TEST_CHANNEL))
 
         if channel is None:
-            self.logger.warning("Bot test channel not found")
+            logger.warning("Bot test channel not found")
             return
 
         m = await channel.send(embed=embed)
@@ -80,7 +80,7 @@ class CrajyBot(commands.Bot):
     async def on_member_join(self, member: discord.Member) -> None:
         """When a new member joins, add them to the database."""
         await User.prisma().create(
-            {"id": str(member.id), "guilds": {"connect": {"id": str(member.guild.id)}}}
+            {"id": str(member.id), "Guild": {"connect": {"id": str(member.guild.id)}}}
         )
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
@@ -94,7 +94,7 @@ class CrajyBot(commands.Bot):
     async def on_member_remove(self, member: discord.Member) -> None:
         """When a member leaves, quietly remove them from the database."""
         await User.prisma().update(
-            data={"guilds": {"disconnect": [{"id": str(member.guild.id)}]}},
+            data={"Guild": {"disconnect": [{"id": str(member.guild.id)}]}},
             where={"id": str(member.id)},
         )
 
@@ -147,7 +147,7 @@ class CrajyBot(commands.Bot):
             await ctx.send(
                 "whoops", file=discord.File(buffer, "traceback.txt")  # type: ignore
             )
-            self.logger.error(buffer.getvalue())
+            logger.error(buffer.getvalue())
             raise error
 
     async def get_context(
@@ -169,17 +169,17 @@ class CrajyBot(commands.Bot):
     async def load_extension(
         self, name: str, *, package: typing.Optional[str] = None
     ) -> None:
-        self.logger.info(f"Loading extesion: {name}")
+        logger.info(f"Loading extesion: {name}")
         return await super().load_extension(name, package=package)
 
     async def unload_extension(
         self, name: str, *, package: typing.Optional[str] = None
     ) -> None:
-        self.logger.info(f"Unloading extesion: {name}")
+        logger.info(f"Unloading extesion: {name}")
         return await super().unload_extension(name, package=package)
 
     async def reload_extension(
         self, name: str, *, package: typing.Optional[str] = None
     ) -> None:
-        self.logger.info(f"Reloading extesion: {name}")
+        logger.info(f"Reloading extesion: {name}")
         return await super().reload_extension(name, package=package)

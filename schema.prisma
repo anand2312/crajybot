@@ -4,14 +4,15 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-py"
+  provider  = "prisma-client-py"
   interface = "asyncio"
 }
 
 model Guild {
-  id   String @id
-  Tag  Tag[]
-  User User[]
+  id          String @id
+  bot_channel String?
+  Tag         Tag[]
+  User        User[]
 }
 
 model Note {
