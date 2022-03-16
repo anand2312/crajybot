@@ -9,18 +9,20 @@ generator client {
 }
 
 model Guild {
-  id          String @id
+  id          String  @id
   bot_channel String?
   Tag         Tag[]
   User        User[]
 }
 
 model Note {
-  id       Int     @id @default(autoincrement())
-  raw_note String
-  userId   String
-  reminder Boolean @default(false)
-  User     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            Int       @id @default(autoincrement())
+  created_at    DateTime  @default(now())
+  raw_note      String
+  userId        String
+  reminder      Boolean   @default(false)
+  reminder_time DateTime?
+  User          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Tag {

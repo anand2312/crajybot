@@ -44,25 +44,6 @@ class Moderator(commands.Cog):
             await ask.edit(embed=confirm_embed)
             await ctx.x_mark()
 
-    @commands.command(
-        name="versions",
-        aliases=["ver"],
-        help="Returns CrajyBot and discord.py versions being used.",
-    )
-    async def versions(self, ctx: CrajyContext) -> None:
-        # TODO: move this to some other cog
-        embed = em.CrajyEmbed(
-            title="Versions",
-            description=(
-                f"[discord.py version: {discord.__version__}](https://github.com/Rapptz/discord.py)\n"
-                f"[Bot version: {self.bot.__version__}](https://github.com/anand2312/crajybot)\n"
-                f"[Python version: {sys.version}](https://python.org)"
-            ),
-            embed_type=enums.EmbedType.INFO,
-        )
-        embed.set_thumbnail(url=self.bot.user.avatar.url)
-        await ctx.reply(embed=embed)
-
     @commands.is_owner()
     @commands.command(name="reload-module", aliases=["reloadm"])
     async def reload_module(self, ctx: CrajyContext, module: str) -> None:

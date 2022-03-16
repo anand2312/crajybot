@@ -1,33 +1,46 @@
 """Some commands to store user notes."""
-from datetime import datetime
-from typing import Optional
-import more_itertools as mitertools
+from __future__ import annotations
+
+from datetime import datetime, timedelta
+from typing import cast, TYPE_CHECKING
 
 import discord
 from discord.ext import commands
+import more_itertools as mitertools
 
-from utils.converters import CustomTimeConverter
+from internal.context import CrajyContext
 from internal.enumerations import EmbedType
+from logic.notes import (
+    create_note,
+    delete_note,
+    delete_notes,
+    fetch_notes,
+    fetch_reminders,
+)
+from utils.converters import CustomTimeConverter
 from utils import embed as em
+
+if TYPE_CHECKING:
+    from internal.bot import CrajyBot
+else:
+    CrajyBot = "CrajyBot"
 
 
 class Notes(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: CrajyBot) -> None:
         self.bot = bot
 
-    async def remind(self, user: discord.Member, about: int) -> None:
+    async def remind(self, user: discord.Member | discord.User, about: int) -> None:
         """Function that will remind the user about the note with ID `about`."""
-        data = await self.bot.db_pool.fetchval(
-            "DELETE FROM notes WHERE note_id = $1 RETURNING raw_note", about
-        )
+        note = await delete_note(about)
         embed = em.CrajyEmbed(title=f"You reminder is here.", embed_type=EmbedType.INFO)
-        embed.description = data
+        embed.description = note.raw_note
         embed.quick_set_author(user)
         embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
-        return await user.send(embed=embed)
+        await user.send(embed=embed)
 
     @commands.group(help="Note making commands.")
-    async def notes(self, ctx):
+    async def notes(self, ctx: CrajyContext) -> None:
         if ctx.invoked_subcommand is None:
             await ctx.send_help("notes")
 
@@ -39,23 +52,23 @@ class Notes(commands.Cog):
         "You can also specify a `time`, after which the bot should remind you about a note.",
     )
     async def notes_create(
-        self, ctx, time: commands.Greedy[CustomTimeConverter], *, content
+        self,
+        ctx: CrajyContext,
+        time: commands.Greedy[CustomTimeConverter],
+        *,
+        content: str,
     ):
         is_reminder = False if time == [] else True
+        td = cast(timedelta, time)
         if is_reminder:
             now = datetime.utcnow()
-            exec_time = now + time
+            exec_time = now + td
         else:
             exec_time = None
-        note_id = await self.bot.db_pool.fetchval(
-            "INSERT INTO notes(user_id, raw_note, reminder, reminder_time) VALUES($1, $2, $3, $4) RETURNING note_id",
-            ctx.author.id,
-            content,
-            is_reminder,
-            exec_time,
-        )
+
+        note = await create_note(ctx.author, content, exec_time, is_reminder)
         embed = em.CrajyEmbed(
-            title=f"Note Creation: ID {note_id}", embed_type=EmbedType.SUCCESS
+            title=f"Note Creation: ID {note.id}", embed_type=EmbedType.SUCCESS
         )
         embed.quick_set_author(ctx.author)
         embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
@@ -65,13 +78,8 @@ class Notes(commands.Cog):
             embed.description = f"Added to your notes! Use `.notes return` to get all your stored notes."
         else:
             now = datetime.utcnow()
-            self.bot.scheduler.schedule(self.remind(ctx.author, note_id), now + time)
-            self.bot.db_pool.execute(
-                "INSERT INTO tasks(task_id, exec_time) VALUES($1, $2)",
-                note_id,
-                now + time,
-            )
-            embed.description = f"You will be reminded about this in {time}. Use `.notes return` to get all your stored notes."
+            self.bot.scheduler.schedule(self.remind(ctx.author, note.id), now + td)
+            embed.description = f"You will be reminded about this in {td}. Use `.notes return` to get all your stored notes."
 
         await ctx.maybe_reply(embed=embed)
 
@@ -80,33 +88,31 @@ class Notes(commands.Cog):
         aliases=["-r"],
         help="DMs you all the notes that you have saved, or the specific note that you asked for. ",
     )
-    async def notes_return(self, ctx, note_id: commands.Greedy[int] = None):
+    async def notes_return(
+        self, ctx: CrajyContext, note_id: commands.Greedy[int] | None = None
+    ) -> None:
         if note_id is None:
-            data = await self.bot.db_pool.fetch(
-                "SELECT note_id, raw_note FROM notes WHERE user_id=$1", ctx.author.id
-            )
+            notes = await fetch_notes(ctx.author)
         else:
-            data = await self.bot.db_pool.fetch(
-                "SELECT note_id, raw_note FROM notes WHERE user_id=$1 AND note_id=ANY($2::INT[])",
-                ctx.author.id,
-                note_id,
-            )
-        if not data:  # if no records
+            ids = cast(list[int], note_id)
+            notes = await fetch_notes(ctx.author, *ids)
+        if len(notes) == 0:
             embed = em.CrajyEmbed(title="Fetched Notes", embed_type=EmbedType.WARNING)
+
+            assert self.bot.user
+
             embed.quick_set_author(self.bot.user)
             embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
             embed.description = (
                 "You have no notes stored. Add a note with `.notes create`."
             )
             await ctx.check_mark()
-            return await ctx.author.send(embed=embed)
+            await ctx.author.send(embed=embed)
 
         embeds = []
-        for row in data:
-            e = em.CrajyEmbed(
-                title=f"Note: ID {row['note_id']}", embed_type=EmbedType.SUCCESS
-            )
-            e.description = row["raw_note"]
+        for row in notes:
+            e = em.CrajyEmbed(title=f"Note: ID {row.id}", embed_type=EmbedType.SUCCESS)
+            e.description = row.raw_note
             e.quick_set_author(ctx.author)
             e.set_thumbnail(url=em.EmbedResource.NOTES.value)
             embeds.append(e)
@@ -121,11 +127,17 @@ class Notes(commands.Cog):
         aliases=["-p"],
         help="Deletes notes from the database; deletes all notes or the specific note you asked for.",
     )
-    async def notes_pop(self, ctx, note_id: commands.Greedy[int] = None):
+    async def notes_pop(self, ctx, note_id: commands.Greedy[int] | None = None) -> None:
+        ids = cast(list[int], note_id)
+        quantifier = "all" if note_id is None else len(ids)
+        plural = len(ids) > 1 or quantifier == "all"
         confirm_embed = em.CrajyEmbed(
-            title="Clearing all notes", embed_type=EmbedType.WARNING
+            title=f"Clearing {quantifier} note{'s' if plural else ''}",
+            embed_type=EmbedType.WARNING,
         )
-        confirm_embed.description = "Are you sure you want to clear your notes?"
+        confirm_embed.description = (
+            f"Are you sure you want to clear your note{'s' if plural else ''}?"
+        )
         confirm_embed.quick_set_author(ctx.author)
         confirm_embed.set_thumbnail(url=em.EmbedResource.NOTES.value)
         ask = await ctx.maybe_reply(embed=confirm_embed, mention_author=True)
@@ -134,15 +146,9 @@ class Notes(commands.Cog):
 
         if decision:
             if note_id is None:
-                await self.bot.db_pool.execute(
-                    "DELETE FROM notes WHERE user_id=$1", ctx.author.id
-                )
+                await delete_notes(ctx.author)
             else:
-                await self.bot.db_pool.execute(
-                    "DELETE FROM notes WHERE user_id=$1 AND note_id=ANY($2::INT[])",
-                    ctx.author.id,
-                    note_id,
-                )
+                await delete_notes(ctx.author, *ids)
             out = em.CrajyEmbed(title="Deleted Notes", embed_type=EmbedType.SUCCESS)
             out.description = "Deleted notes."
         else:
@@ -159,24 +165,22 @@ class Notes(commands.Cog):
         invoke_without_command=True,
         help="Alias for `.notes create`, but the `time` argument is compulsory now.",
     )
-    async def create_reminder(self, ctx, time: CustomTimeConverter, *, content):
-        return await self.notes_create(ctx, time, content=content)
+    async def create_reminder(
+        self, ctx: CrajyContext, time: CustomTimeConverter, *, content: str
+    ) -> None:
+        return await self.notes_create(ctx, time, content=content)  # type: ignore
 
     @create_reminder.command(
         name="list", help="Returns a list of all reminders you have."
     )
-    async def reminder_list(self, ctx):
-        data = await self.bot.db_pool.fetch(
-            "SELECT note_id, raw_note FROM notes WHERE user_id = $1 AND reminder",
-            ctx.author.id,
-        )  # retrieve only those notes that have been marked as reminders.
+    async def reminder_list(self, ctx: CrajyContext) -> None:
+        data = await fetch_reminders(ctx.author)
         chunked = mitertools.chunked(data, 4)
         embeds = []
         for chunk in chunked:
             embed = em.CrajyEmbed(title="Reminders", embed_type=EmbedType.INFO)
             out_as_list = [
-                f"__**Note ID:{i['note_id']}**__\n{i['raw_note'][:30]}..."
-                for i in chunk
+                f"__**Note ID:{i.id}**__\n{i.raw_note[:30]}..." for i in chunk
             ]
             embed.description = "\n".join(out_as_list)
             embed.quick_set_author(ctx.author)
