@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import cast, TYPE_CHECKING
+from typing import Optional, cast, TYPE_CHECKING
 
 import discord
 from discord.ext import commands
@@ -89,7 +89,7 @@ class Notes(commands.Cog):
         help="DMs you all the notes that you have saved, or the specific note that you asked for. ",
     )
     async def notes_return(
-        self, ctx: CrajyContext, note_id: commands.Greedy[int] | None = None
+        self, ctx: CrajyContext, note_id: commands.Greedy[int] = None  # type: ignore
     ) -> None:
         if note_id is None:
             notes = await fetch_notes(ctx.author)
@@ -127,10 +127,10 @@ class Notes(commands.Cog):
         aliases=["-p"],
         help="Deletes notes from the database; deletes all notes or the specific note you asked for.",
     )
-    async def notes_pop(self, ctx, note_id: commands.Greedy[int] | None = None) -> None:
+    async def notes_pop(self, ctx, note_id: commands.Greedy[int] = None) -> None:  # type: ignore
         ids = cast(list[int], note_id)
         quantifier = "all" if note_id is None else len(ids)
-        plural = len(ids) > 1 or quantifier == "all"
+        plural = quantifier == "all" or len(ids) > 1
         confirm_embed = em.CrajyEmbed(
             title=f"Clearing {quantifier} note{'s' if plural else ''}",
             embed_type=EmbedType.WARNING,
