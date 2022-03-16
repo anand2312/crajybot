@@ -1,13 +1,12 @@
-import os
-import dotenv
+from __future__ import annotations
+import asyncio
+from pathlib import Path
 
 import discord
 from discord.ext import commands
 
 from internal.bot import CrajyBot
-
-
-dotenv.load_dotenv(dotenv.find_dotenv())
+from secret.TOKEN import TOKEN
 
 
 intents = discord.Intents.default()
@@ -22,21 +21,17 @@ bot = CrajyBot(
     owner_id=271586885346918400,
 )
 
-bot.environ = os.environ  # use bot.environ.get wherever needed
 
-if __name__ == "__main__":
-    if os.environ.get("PRODUCTION"):
-        bot.logger.info(f"Began Loading Extensions")
-        for ext in os.listdir("./exts"):
-            bot.load_extension(f"exts.{ext}")
-            bot.logger.info(f"Loaded Extension: {ext}")
-        bot.load_extension("jishaku")
-        bot.logger.info(f"Finished Loading Extensions.")
-
-        for loop in bot.task_loops.values():
-            loop.start()
-
+async def main(exts: list[str] | None = None) -> None:
+    if exts is not None:
+        for ext in exts:
+            await bot.load_extension(ext)
     else:
-        raise RuntimeError("Use the manage.py interface to run code while debugging.")
+        for ext in Path("./exts").iterdir():
+            await bot.load_extension(f"exts.{ext.name}")
 
-    bot.run(bot.environ.get("TOKEN"))
+    await bot.load_extension("jishaku")
+    bot.logger.info("Finished loading extensions")
+
+    async with bot:
+        await bot.start(TOKEN)

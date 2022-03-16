@@ -1,19 +1,28 @@
-import discord
-from discord.ext import menus
 import datetime
 import enum
+from typing import Any, Union
+
+import discord
+from discord.ext import menus
+
 from internal.enumerations import EmbedType
 
 
 class CrajyEmbed(discord.Embed):
-    def __init__(self, embed_type: EmbedType, **kwargs) -> None:
+    def __init__(self, embed_type: EmbedType, **kwargs: Any) -> None:
         """Both quick_set_author and footer modify the existing Embed object, and not return a new one."""
         super().__init__(**kwargs)
         self.colour = embed_type.value
         self.timestamp = datetime.datetime.utcnow()
 
-    def quick_set_author(self, member: discord.Member) -> None:
-        self.set_author(name=member.name, icon_url=member.avatar_url)
+    def quick_set_author(
+        self, member: Union[discord.user.BaseUser, discord.Member]
+    ) -> None:
+        if member.avatar is None:
+            av = member.default_avatar
+        else:
+            av = member.avatar
+        self.set_author(name=member.name, icon_url=av.url)
 
     def quick_set_footer(self, embed_type: EmbedType) -> None:
         # implement different footers for different embed types.

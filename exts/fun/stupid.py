@@ -226,7 +226,7 @@ class Stupid(commands.Cog):
         embed.set_thumbnail(url=em.EmbedResource.TAG)
         embed.set_footer(
             text=f"Requested by {ctx.author.nick}. Click on the embed title to go to the message.",
-            icon_url=ctx.author.avatar_url,
+            icon_url=ctx.author.avatar.url,
         )
         return await ctx.maybe_reply(embed=embed)
 
@@ -355,7 +355,7 @@ class Stupid(commands.Cog):
         role = guild.get_role(ROLE_NAME)
         existing = await self.bot.db_pool.fetch("SELECT role_name FROM role_names")
         new_name_data = random.choice(existing)
-        await role.edit(name=new_name_data['role_name'])
+        await role.edit(name=new_name_data["role_name"])
 
     @role_name_loop.before_loop
     async def rolename_before(self):

@@ -1,0 +1,41 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:database.db"
+}
+
+generator client {
+  provider = "prisma-client-py"
+  interface = "asyncio"
+}
+
+model Guild {
+  id   String @id
+  Tag  Tag[]
+  User User[]
+}
+
+model Note {
+  id       Int     @id @default(autoincrement())
+  raw_note String
+  userId   String
+  reminder Boolean @default(false)
+  User     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Tag {
+  id       Int    @id @default(autoincrement())
+  tag_name String
+  content  String
+  userId   String
+  guildId  String
+  Guild    Guild  @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  User     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id       String    @id
+  birthday DateTime?
+  Note     Note[]
+  Tag      Tag[]
+  Guild    Guild[]
+}

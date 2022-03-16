@@ -1,5 +1,5 @@
 """BOT moderator commands. Not to be confused with server moderation commands, like muting or kicking.
-There are a gazillion bots out there that can do those functions perfectly well. These commands are for 
+There are a gazillion bots out there that can do those functions perfectly well. These commands are for
 control of the bot."""
 import sys
 
@@ -183,7 +183,7 @@ class Moderator(commands.Cog):
             description=f"[discord.py version: {discord.__version__}](https://github.com/Rapptz/discord.py)\n[Bot version: {self.bot.__version__}](https://github.com/anand2312/CrajyBot-private)",
             embed_type=enums.EmbedType.INFO,
         )
-        embed.set_thumbnail(url=self.bot.user.avatar_url)
+        embed.set_thumbnail(url=self.bot.user.avatar.url)
         return await ctx.reply(embed=embed)
 
     @commands.command(name="clear-pin", aliases=["clearpins", "clear-pins", "unpin"])
@@ -247,7 +247,7 @@ class Moderator(commands.Cog):
         reply_embed.set_thumbnail(url=em.EmbedResource.PIN.value)
         reply_embed.quick_set_author(self.bot.user)
         reply_embed.set_footer(
-            text=f"Pinned by {ctx.author.display_name}", icon_url=ctx.author.avatar_url
+            text=f"Pinned by {ctx.author.display_name}", icon_url=ctx.author.avatar.url
         )
         await ctx.send(embed=reply_embed)
 

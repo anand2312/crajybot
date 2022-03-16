@@ -1,52 +1,35 @@
-# TO DO: Switch manage.py to argparse and delete this.
+from __future__ import annotations
+
+from typing import Callable
 
 
 class Menu:
-    """Pass in all the functions that has to be run in the menu
-    For eg, if you had defined three functions
-    def push():
-        ...
-    def pull():
-        ...
-    def pop():
-        ...
-    While making the Menu object, pass them all in as arguments, like
-    menu_object = Menu(push, pull, pop)
-    The other arguments the Menu takes are:
-        1. Heading - heading for the menu
-        2. Format Symbol - for making it look PrEtTy, Menu class will spam print this symbol all the time.
-        3. Continue Prompt: Whether the menu should keep asking the user if they want to continue, or end execution after one loop.
-
-    For eg, (using the above defined function) the way you would use this Menu class is;
-    menu_object = Menu(push, pull, pop, heading="EXAMPLE!", format_symbol="=", continue_prompt=True)
-    menu_object.run()
-    """
+    """Tiny CLI helper"""
 
     def __init__(
         self,
-        *methods: tuple,
+        *methods: Callable[[], None],
         heading: str = "MENU!",
         format_symbol: str = "#",
         continue_prompt: bool = True,
-        variables: dict = None,
-    ) -> "Menu":
+        variables: dict | None = None,
+    ) -> None:
         self.variables = variables
         self.methods = methods
         self.heading = heading
         self.continue_prompt = continue_prompt
         self.format_symbol = format_symbol
 
-    def bullshit(self) -> None:
+    def br(self) -> None:
         print(self.format_symbol * 20)
 
     def show_options(self) -> None:
-        number = len(self.methods)
-        self.bullshit()
+        self.br()
         print("Pick your option")
-        self.bullshit()
+        self.br()
         for i, j in enumerate(self.methods):
             print(f"{i+1}. {j.__name__}")
-        self.bullshit()
+        self.br()
 
     def execute(self, choice: int) -> None:
         self.methods[choice - 1]()
@@ -56,9 +39,9 @@ class Menu:
         return choice
 
     def run(self) -> None:
-        self.bullshit()
+        self.br()
         print(self.heading.upper())
-        self.bullshit()
+        self.br()
 
         go_on = "y"
 
@@ -69,10 +52,10 @@ class Menu:
                 self.execute(choice)
             except IndexError:
                 print("Invalid choice.")
-            self.bullshit()
+            self.br()
             if self.continue_prompt:
                 go_on = input("Do you want to continue? (y/n)")
             else:
                 go_on = "n"
         else:
-            self.bullshit()
+            self.br()

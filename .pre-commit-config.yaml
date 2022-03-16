@@ -9,14 +9,8 @@ repos:
     -   id: mixed-line-ending
 -   repo: local
     hooks:
-    -   id: flake8
-        name: Flake8
-        description: Run flake8 in the local environment
-        entry: poetry run flake8
+    -   id: black
+        name: Black
+        entry: poetry run black .
         language: system
         types: [python]
-        require_serial: true
--   repo: https://github.com/psf/black
-    rev: 19.3b0
-    hooks:
-    -   id: black

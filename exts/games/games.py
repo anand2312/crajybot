@@ -54,10 +54,10 @@ class Games(commands.Cog):
             url=r"https://media.discordapp.net/attachments/749227065512820736/755093446263439540/download.png"
         )
         main_message_embed.set_author(
-            name=ctx.author.name, icon_url=ctx.author.avatar_url
+            name=ctx.author.name, icon_url=ctx.author.avatar.url
         )
         main_message_embed.set_footer(
-            text=opponent.display_name, icon_url=opponent.avatar_url
+            text=opponent.display_name, icon_url=opponent.avatar.url
         )
         main_message_embed.color = discord.Color.blue()
         main_message = await ctx.send(embed=main_message_embed)
@@ -124,7 +124,7 @@ class Games(commands.Cog):
                 url=r"https://media.discordapp.net/attachments/749227065512820736/755093446263439540/download.png"
             )
             message_embed.set_author(
-                name=ctx.author.name, icon_url=ctx.author.avatar_url
+                name=ctx.author.name, icon_url=ctx.author.avatar.url
             )
             message_embed.color = discord.Color.red()
             return await ctx.send(embed=message_embed)
@@ -139,7 +139,7 @@ class Games(commands.Cog):
                 url=r"https://media.discordapp.net/attachments/749227065512820736/755093446263439540/download.png"
             )
             message_embed.set_author(
-                name=ctx.author.name, icon_url=ctx.author.avatar_url
+                name=ctx.author.name, icon_url=ctx.author.avatar.url
             )
             message_embed.color = discord.Color.red()
             ctx.command.reset_cooldown(ctx)
