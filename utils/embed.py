@@ -50,8 +50,8 @@ class EmbedResource(enum.Enum):
     ROBBER_1 = r"https://media.discordapp.net/attachments/612638234782072882/801124352539099218/robbery-removebg-preview.png?width=448&height=314"
     ROBBER_2 = r"https://media.discordapp.net/attachments/612638234782072882/801124817810096149/robber1.png?width=433&height=325"
     LOSS = r"https://media.discordapp.net/attachments/703141348131471440/801170491825586186/f32b53ccfc1d7994dd6489b71068e55be6-loss-thumb.png?width=143&height=143"
-    CHECK_EMOJI = "<:check:800771830116909066>"
-    XMARK_EMOJI = "<:xmark:800773561093849119>"
+    CHECK_EMOJI = "<:check:953656748915433503>"
+    XMARK_EMOJI = "<:xmark:953656789310799892>"
 
 
 class __ListEmbedSource(menus.ListPageSource):

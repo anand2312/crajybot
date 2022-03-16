@@ -75,24 +75,56 @@ class CrajyBot(commands.Bot):
             logger.warning("Bot test channel not found")
             return
 
-        m = await channel.send(embed=embed)
+        await channel.send(embed=embed)
 
     async def on_member_join(self, member: discord.Member) -> None:
         """When a new member joins, add them to the database."""
+        if member.bot:
+            return
+        logger.info(f"{member.id} joined {member.guild.id}, adding to database")
         await User.prisma().create(
             {"id": str(member.id), "Guild": {"connect": {"id": str(member.guild.id)}}}
         )
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         """Register a guild to the database."""
-        await Guild.prisma().create({"id": str(guild.id)})
+        logger.info(f"Joined {guild.id=}")
+        await Guild.prisma().create(
+            {
+                "id": str(guild.id),
+            }
+        )
+        for member in guild.members:
+            if member.bot:
+                continue
+            # you might be thinking why i'm doing a query in a loop here
+            # "are you stupid? that's n queries that could be done in 1!"
+            # prisma client py doesn't support create_many with SQLite
+            # and i don't want to set up postgres
+
+            # this query creates a new row in the users table if it doesn't already exists
+            # after that, it links that row to the guild
+            # otherwise, it updates the existing member, linking it with the guild
+            await User.prisma().upsert(
+                where={"id": str(member.id)},
+                data={
+                    "update": {"Guild": {"connect": [{"id": str(guild.id)}]}},
+                    "create": {
+                        "id": str(member.id),
+                        "Guild": {"connect": [{"id": str(guild.id)}]},
+                    },
+                },
+            )
+        logger.success(f"Finished adding data for guild {guild.id}")
 
     async def on_guild_remove(self, guild: discord.Guild) -> None:
         """Remove the guild from the database"""
+        logger.info(f"Removed from {guild.id=}")
         await Guild.prisma().delete(where={"id": str(guild.id)})
 
     async def on_member_remove(self, member: discord.Member) -> None:
         """When a member leaves, quietly remove them from the database."""
+        logger.info(f"Removing {member.id=} from database")
         await User.prisma().update(
             data={"Guild": {"disconnect": [{"id": str(member.guild.id)}]}},
             where={"id": str(member.id)},
@@ -155,16 +187,6 @@ class CrajyBot(commands.Bot):
     ) -> ContextT:
         """Overriding get_context to use custom context."""
         return await super().get_context(message, cls=cls)  # type: ignore
-
-    async def process_commands(self, message: discord.Message) -> None:
-        """Triggers typing in channels before sending a message."""
-        if message.author.bot:
-            return
-
-        ctx = await self.get_context(message)
-        if ctx.valid and getattr(ctx.cog, "qualified_name", None) != "Jishaku":
-            await ctx.trigger_typing()
-        await self.invoke(ctx)
 
     async def load_extension(
         self, name: str, *, package: typing.Optional[str] = None

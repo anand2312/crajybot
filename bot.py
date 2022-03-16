@@ -11,7 +11,8 @@ from secret.TOKEN import TOKEN
 
 intents = discord.Intents.default()
 intents.members = True  # TO DO: Investigate feature-loss with Member intents disabled
-intents.messages = True
+intents.message_content = True
+
 bot = CrajyBot(
     command_prefix=commands.when_mentioned_or("."),
     activity=discord.Activity(
@@ -33,7 +34,7 @@ async def main(exts: list[str] | None = None) -> None:
     try:
         await bot.load_extension("jishaku")
     except Exception as e:
-        logger.info(
+        logger.warning(
             "Can't load jishaku; jishaku doesn't yet support async setup/teardown"
         )
 

@@ -26,6 +26,7 @@ def debug() -> None:
         await channel.send(
             f"Bot running in debug mode! Cogs loaded - {', '.join(cogs)}, jishaku."
         )
+        logger.info("Bot ready!")
 
     asyncio.run(main(cogs))
 
