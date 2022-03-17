@@ -1,43 +1,23 @@
 import asyncio
-from typing import cast
+from argparse import ArgumentParser
 
-from discord import TextChannel
 from loguru import logger
 
-from bot import bot, main
-from secret.constants import BOT_TEST_CHANNEL
-from utils.menu import Menu
+from bot import main
 
 
-def debug() -> None:
-    print("DEBUG MODE")
-    print("Enter extension(s) to load: ")
-    func = lambda x: f"exts.{x}"
-    cogs = list(map(func, input().split()))
+parser = ArgumentParser(prog="CrajyBot", description="Run CrajyBot")
+parser.add_argument("-e", "--exts", help="List of extensions to load", nargs="*")
 
-    @bot.event
-    async def on_ready() -> None:
-        channel = cast(TextChannel, bot.get_channel(BOT_TEST_CHANNEL))
+args = parser.parse_args()
 
-        if channel is None:
-            logger.warning("Bot test channel not found in cache")
-            return
-
-        await channel.send(
-            f"Bot running in debug mode! Cogs loaded - {', '.join(cogs)}, jishaku."
-        )
-        logger.info("Bot ready!")
-
-    asyncio.run(main(cogs))
+func = lambda x: f"exts.{x}"
+exts = list(map(func, args.exts))
 
 
-def run() -> None:
+logger.info(f"Starting bot")
+
+if len(exts) == 0:
     asyncio.run(main())
-
-
-if __name__ == "__main__":
-    functions = [debug, run]
-    menu = Menu(
-        *functions, heading="CrajyBot runner", format_symbol="=", continue_prompt=False
-    )
-    menu.run()
+else:
+    asyncio.run(main(exts))
