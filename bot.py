@@ -29,7 +29,7 @@ for cmd in cmds:
     bot.tree.add_command(cmd, guild=discord.Object(BOT_TEST_SERVER))
 
 for group in groups:
-    bot.tree.add_command(group(), guild=discord.Object(BOT_TEST_SERVER))
+    bot.tree.add_command(group, guild=discord.Object(BOT_TEST_SERVER))
 
 
 async def main(exts: list[str] | None = None) -> None:
