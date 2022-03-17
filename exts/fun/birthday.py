@@ -1,8 +1,9 @@
 """Some functions to remember and wish your server members."""
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import cast, TYPE_CHECKING, Optional, Union
 
 import discord
+import pytz
 from discord import Member, User
 from discord.ext import commands, tasks
 from loguru import logger
@@ -11,7 +12,7 @@ from internal import enumerations as enums
 from internal.context import CrajyContext
 from internal.enumerations import EmbedType
 from logic.birthday import (
-    birthdays_in_timedelta,
+    birthdays_today,
     fetch_birthday,
     list_guild_birthdays,
     update_birthday,
@@ -47,6 +48,7 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
         aliases=["-a"],
         help="Add a birthday date. Could be your own if no user is specified, or a specified user.",
     )
+    @commands.guild_only()
     async def bday_add(self, ctx: CrajyContext, person: Optional[Member] = None):
         if person is None:
             person = cast(Member, ctx.author)
@@ -61,15 +63,24 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
 
         ask_message = await ctx.maybe_reply(embed=ask_embed)
 
-        def check(m):
+        def check(m: discord.Message) -> bool:
             return (
                 m.author == ctx.author
                 and len(m.content.split("-")) == 3
                 and m.guild is not None
             )
 
+        def tz_check(m: discord.Message) -> bool:
+            return m.content in pytz.all_timezones_set
+
         reply = await self.bot.wait_for("message", check=check, timeout=30)
         date = datetime.strptime(reply.content, "%d-%m-%Y")
+
+        tz_prompt = await ctx.send("Enter your timezone")
+
+        tz_message = await self.bot.wait_for("message", check=tz_check, timeout=30)
+        tz = pytz.timezone(tz_message.content)
+        date = tz.localize(date)
 
         await update_birthday(person, date)
 
@@ -80,6 +91,7 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
         out.set_thumbnail(url=em.EmbedResource.BDAY.value)
         out.quick_set_author(person)
 
+        await tz_prompt.delete()
         return await ask_message.edit(embed=out)
 
     @bday.command(
@@ -114,13 +126,25 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
             )
         await ctx.maybe_reply(embed=response)
 
+    async def send_wish(
+        self, channel: discord.TextChannel, person: discord.Member
+    ) -> None:
+        embed = em.CrajyEmbed(
+            title=f"Happy Birthday {person.display_name}!",
+            embed_type=EmbedType.SUCCESS,
+        )
+        embed.quick_set_author(person)
+        await channel.send(embed=embed)
+
     @tasks.loop(hours=24)
     async def birthday_loop(self):
         # TO DO: Make more fine-tuned loop which will schedule a wish in case it isn't the exact time at loop execution.
         logger.info("Started birthday loop")
-        users = await birthdays_in_timedelta()
+        users = await birthdays_today()
+        logger.debug(users)
 
         for user in users:
+            now = datetime.now(timezone.utc)
             if user.Guild is None:
                 logger.warning(
                     f"BDAY LOOP: No guilds found for user {user.id}; inconsistency"
@@ -168,7 +192,13 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
                     )
                     continue
 
-                await channel.send(embed=embed)
+                assert user.birthday
+                user_birthday = user.birthday.replace(year=now.year)
+                difference = user_birthday - now
+
+                self.bot.scheduler.schedule(
+                    self.send_wish(channel, person_obj), datetime.utcnow() + difference
+                )
 
     @birthday_loop.before_loop
     async def birthdayloop_before(self):

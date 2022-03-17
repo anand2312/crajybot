@@ -62,10 +62,8 @@ async def list_guild_birthdays(guild: Guild) -> list[DbUser]:
     return db_guild.User or []
 
 
-async def birthdays_in_timedelta(td: timedelta = timedelta(days=1)) -> list[DbUser]:
-    bound = datetime.utcnow() + td
-    return await DbUser.prisma().find_many(
-        where={"birthday": {"lte": bound}},
-        order={"birthday": "asc"},
-        include={"Guild": True},
-    )
+async def birthdays_today() -> list[DbUser]:
+    bound = datetime.utcnow()
+
+    query = r"SELECT * FROM User WHERE strftime('%d', birthday) = ? AND strftime('%m', birthday) = ?"
+    return await DbUser.prisma().query_raw(query, str(bound.day), str(bound.month))

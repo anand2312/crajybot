@@ -1,7 +1,11 @@
+from datetime import datetime
 from discord import Interaction, Member
-from discord.app_commands import command, context_menu
+from discord.app_commands import context_menu, describe, Group, Namespace, Choice
+from pytz import common_timezones_set, timezone as _timezone
 
-from logic.birthday import fetch_birthday
+from internal import enumerations as enums
+from logic.birthday import fetch_birthday, update_birthday
+from utils import embed as em
 
 
 __all__ = [
@@ -14,3 +18,38 @@ async def fetch_birthday_user_cmd(interaction: Interaction, member: Member) -> N
     print("hi", interaction)
     embed = await fetch_birthday(member)
     await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+bday_group = Group(name="bday", description="Commands related to users birthdays")
+
+
+@bday_group.command(name="set", description="Set a user's birthday")
+@describe()
+async def bday_set_slash_cmd(
+    interaction: Interaction, date: str, timezone: str
+) -> None:
+    await interaction.response.defer(ephemeral=True, thinking=True)
+    tz = _timezone(timezone)
+    bday = datetime.strptime(date, "%d-%m-%Y")
+    bday = tz.localize(bday)
+
+    await update_birthday(interaction.user, bday)
+
+    out = em.CrajyEmbed(title=f"Birthday Set!", embed_type=enums.EmbedType.SUCCESS)
+    out.description = (
+        f"{interaction.user.display_name}'s birthday is saved. They shall be wished."
+    )
+    out.set_thumbnail(url=em.EmbedResource.BDAY.value)
+    out.quick_set_author(interaction.user)
+    await interaction.followup.send(embed=out)
+
+
+@bday_set_slash_cmd.autocomplete("timezone")
+async def timezone_autocomplete(
+    interaction: Interaction, current: str, namespace: Namespace
+) -> list[Choice[str]]:
+    return [
+        Choice(name=i, value=i)
+        for i in common_timezones_set
+        if current.lower() in i.lower()
+    ][0:10]
