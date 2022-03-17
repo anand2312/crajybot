@@ -141,7 +141,7 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
         # TO DO: Make more fine-tuned loop which will schedule a wish in case it isn't the exact time at loop execution.
         logger.info("Started birthday loop")
         users = await birthdays_today()
-        logger.debug(users)
+        logger.debug(f"Today's birthdays: {users}")
 
         for user in users:
             now = datetime.now(timezone.utc)

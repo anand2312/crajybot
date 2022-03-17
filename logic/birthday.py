@@ -63,7 +63,14 @@ async def list_guild_birthdays(guild: Guild) -> list[DbUser]:
 
 
 async def birthdays_today() -> list[DbUser]:
-    bound = datetime.utcnow()
-
-    query = r"SELECT * FROM User WHERE strftime('%d', birthday) = ? AND strftime('%m', birthday) = ?"
-    return await DbUser.prisma().query_raw(query, str(bound.day), str(bound.month))
+    today = datetime.utcnow()
+    query = (
+        "SELECT t1.*, t3.* FROM User t1 "
+        "INNER JOIN _GuildToUser t2 ON t1.id = t2.B "
+        "INNER JOIN Guild t3 on t2.A = t3.id "
+        "WHERE strftime('%d', DATETIME(ROUND(birthday / 1000), 'unixepoch')) = ? "
+        "AND strftime('%m', DATETIME(ROUND(birthday / 1000), 'unixepoch')) = ?"
+    )
+    return await DbUser.prisma().query_raw(
+        query, f"{today.day:02}", f"{today.month:02}"
+    )
