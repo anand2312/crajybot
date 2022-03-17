@@ -1,6 +1,5 @@
-from exts.games import amongus, games
+from exts.games import games
 
 
 def setup(bot):
-    bot.add_cog(amongus.AmongUs(bot))
     bot.add_cog(games.Games(bot))

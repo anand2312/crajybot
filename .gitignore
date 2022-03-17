@@ -6,3 +6,4 @@ discord.log
 .vscode
 .env
 database.db
+*.pem

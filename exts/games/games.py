@@ -61,7 +61,7 @@ class Games(commands.Cog):
         )
         main_message_embed.color = discord.Color.blue()
         main_message = await ctx.send(embed=main_message_embed)
-        main_message_embed.set_thumbnail(url=discord.Embed.Empty)
+        main_message_embed.set_thumbnail(url=None)
 
         top_row_message = await ctx.send("*top row*")
         for i in ["↖", "⬆", "↗"]:
