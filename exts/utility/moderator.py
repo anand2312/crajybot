@@ -1,17 +1,24 @@
 import sys
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
-from prisma.models import Guild
+from loguru import logger
+from prisma.models import Guild, User
 
 from internal.context import CrajyContext
-
-from utils import embed as em
 from internal import enumerations as enums
+from secret.constants import BOT_TEST_SERVER
+from utils import embed as em
+
+if TYPE_CHECKING:
+    from internal.bot import CrajyBot
+else:
+    CrajyBot = "CrajyBot"
 
 
 class Moderator(commands.Cog):
-    def __init__(self, bot) -> None:
+    def __init__(self, bot: CrajyBot) -> None:
         self.bot = bot
 
     async def cog_check(self, ctx: CrajyContext) -> bool:
@@ -21,6 +28,8 @@ class Moderator(commands.Cog):
     @commands.is_owner()
     @commands.command(name="remove-user", help="Remove a user from the bot database.")
     async def remove_user(self, ctx: CrajyContext, member: discord.Member) -> None:
+        assert self.bot.user
+
         confirm_embed = em.CrajyEmbed(
             title="Deleting User Data",
             description=f"Are you sure you want to delete all of {member.display_name}'s data?",
@@ -33,7 +42,7 @@ class Moderator(commands.Cog):
         response = await ctx.get_confirmation(ask)
 
         if response:
-            await self.bot.delete_member(member)
+            await User.prisma().delete({"id": str(member.id)})
             confirm_embed.description = f"Deleted data for user: {member.display_name}."
             confirm_embed.color = enums.EmbedType.SUCCESS.value
             await ask.edit(embed=confirm_embed)
@@ -69,3 +78,15 @@ class Moderator(commands.Cog):
         )
 
         await ctx.reply("Announcement channel set ✅")
+
+    @commands.command(name="sync-app-cmds", hidden=True)
+    async def sync_app_cmds(self, ctx: CrajyContext, test: bool = True) -> None:
+        logger.info("Syncing application commands")
+        if test:
+            logger.info("Syncing to test server")
+            await self.bot.tree.sync(guild=discord.Object(BOT_TEST_SERVER))
+        else:
+            logger.info("Syncing globally...")
+            await self.bot.tree.sync()
+        logger.success("Finished syncing app commands")
+        await ctx.check_mark()

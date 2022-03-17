@@ -35,7 +35,11 @@ class CrajyBot(commands.Bot):
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
         super().__init__(
-            *args, help_command=HelpCommand(), case_insensitive=True, **kwargs
+            *args,
+            application_id=709407268487037019,
+            help_command=HelpCommand(),
+            case_insensitive=True,
+            **kwargs,
         )
         self.__version__ = "5.0a"
 

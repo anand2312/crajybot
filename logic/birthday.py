@@ -6,8 +6,11 @@ from typing import Union
 from discord import Guild, Member, User
 from prisma.models import User as DbUser, Guild as DbGuild
 
+from internal import enumerations as enums
+from utils import embed as em
 
-async def fetch_birthday(member: Member) -> datetime:
+
+async def _fetch_birthday(member: Member) -> datetime:
     db_member = await DbUser.prisma().find_first(
         where={"id": {"equals": str(member.id)}}
     )
@@ -20,6 +23,27 @@ async def fetch_birthday(member: Member) -> datetime:
         raise ValueError("User's birthday has not been registered yet.")
 
     return db_member.birthday
+
+
+async def fetch_birthday(member: Member) -> em.CrajyEmbed:
+    date = await _fetch_birthday(member)
+    embed = em.CrajyEmbed(
+        title=f"{member.display_name}'s birthday",
+        description=date.strftime("%d %B %Y"),
+        embed_type=enums.EmbedType.INFO,
+    )
+    embed.set_thumbnail(url=em.EmbedResource.BDAY.value)
+    embed.quick_set_author(member)
+
+    today = datetime.today()
+    this_year_date = datetime(
+        year=today.year, month=date.month, day=date.day, hour=0, minute=0, second=0
+    )
+    remaining = this_year_date - today
+
+    embed.set_footer(text=f"Their birthday is in {remaining}")
+
+    return embed
 
 
 async def update_birthday(member: Union[Member, User], bday: datetime) -> None:

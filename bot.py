@@ -6,8 +6,10 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from app_cmds import cmds, groups
 from internal.bot import CrajyBot
 from secret.TOKEN import TOKEN
+from secret.constants import BOT_TEST_SERVER
 
 
 intents = discord.Intents.default()
@@ -22,6 +24,12 @@ bot = CrajyBot(
     intents=intents,
     owner_id=271586885346918400,
 )
+
+for cmd in cmds:
+    bot.tree.add_command(cmd, guild=discord.Object(BOT_TEST_SERVER))
+
+for group in groups:
+    bot.tree.add_command(group(), guild=discord.Object(BOT_TEST_SERVER))
 
 
 async def main(exts: list[str] | None = None) -> None:

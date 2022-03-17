@@ -39,23 +39,7 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
         self, ctx: CrajyContext, person: Union[Member, User, None] = None
     ) -> None:
         person = person or ctx.author
-        date = await fetch_birthday(cast(Member, person))
-        embed = em.CrajyEmbed(
-            title=f"{person.display_name}'s birthday",
-            description=date.strftime("%d %B %Y"),
-            embed_type=enums.EmbedType.INFO,
-        )
-        embed.set_thumbnail(url=em.EmbedResource.BDAY.value)
-        embed.quick_set_author(person)
-
-        today = datetime.today()
-        this_year_date = datetime(
-            year=today.year, month=date.month, day=date.day, hour=0, minute=0, second=0
-        )
-        remaining = this_year_date - today
-
-        embed.set_footer(text=f"Their birthday is in {remaining}")
-
+        embed = await fetch_birthday(cast(Member, person))
         await ctx.maybe_reply(embed=embed)
 
     @bday.command(
