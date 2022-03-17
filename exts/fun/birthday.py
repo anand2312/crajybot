@@ -115,7 +115,7 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
         all_data = await list_guild_birthdays(ctx.guild)
 
         for person in all_data:
-            person_obj = discord.utils.get(ctx.guild.members, id=person.id)
+            person_obj = ctx.guild.get_member(int(person.id))
 
             if person_obj is None:
                 continue
@@ -133,6 +133,7 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
     @tasks.loop(hours=24)
     async def birthday_loop(self):
         # TO DO: Make more fine-tuned loop which will schedule a wish in case it isn't the exact time at loop execution.
+        logger.info("Started birthday loop")
         users = await birthdays_in_timedelta()
 
         for user in users:

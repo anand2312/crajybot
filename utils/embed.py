@@ -13,7 +13,7 @@ class CrajyEmbed(discord.Embed):
         """Both quick_set_author and footer modify the existing Embed object, and not return a new one."""
         super().__init__(**kwargs)
         self.colour = embed_type.value
-        self.timestamp = datetime.datetime.utcnow()
+        self.timestamp = discord.utils.utcnow()
 
     def quick_set_author(
         self, member: Union[discord.user.BaseUser, discord.Member]

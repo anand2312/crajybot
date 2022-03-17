@@ -1,5 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
+from traceback import print_exception
 
 import discord
 from discord.ext import commands
@@ -27,9 +28,17 @@ async def main(exts: list[str] | None = None) -> None:
     if exts is not None:
         for ext in exts:
             await bot.load_extension(ext)
+
     else:
         for ext in Path("./exts").iterdir():
-            await bot.load_extension(f"exts.{ext.name}")
+            if ext.name in ["__pycache__", "__init__.py"]:
+                continue
+            try:
+                await bot.load_extension(f"exts.{ext.name}")
+            except Exception as e:
+                logger.error(f"Error occurred while loading {ext=}")
+                print_exception(type(e), e, e.__traceback__)
+                continue
 
     try:
         await bot.load_extension("jishaku")

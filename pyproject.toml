@@ -12,13 +12,12 @@ discord-ext-menus = {git = "https://github.com/Rapptz/discord-ext-menus.git"}
 "akinator.py" = {extras = ["async"], version = "5.0.0"}
 pytz = "^2021.1"
 yarl = "1.4.2"
-jishaku = "2.3.2"
-asyncpg = "^0.22.0"
 aioscheduler = "^1.4.2"
 more-itertools = "^8.7.0"
 prisma = "^0.6.3"
 "discord.py" = {git = "https://github.com/Rapptz/discord.py.git"}
 loguru = "^0.6.0"
+jishaku = {git = "https://github.com/Gorialis/jishaku"}
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.10.1"
