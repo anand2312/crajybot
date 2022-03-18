@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Mapping, Optional
+from typing import TYPE_CHECKING, List, Mapping, Optional
 from discord.ext import commands
 
 from utils import embed as em
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 else:
     CrajyBot = "CrajyBot"
 
-BotHelpMapping = Mapping[Optional[commands.Cog], list[commands.Command]]
+BotHelpMapping = Mapping[Optional[commands.Cog], List[commands.Command]]
 
 
 class HelpCommand(commands.HelpCommand):
