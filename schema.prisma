@@ -36,9 +36,15 @@ model Tag {
 }
 
 model User {
-  id       String    @id
-  birthday DateTime?
-  Note     Note[]
-  Tag      Tag[]
-  Guild    Guild[]
+  id        String    @id
+  birthday  DateTime?
+  birthdate String?
+  Note      Note[]
+  Tag       Tag[]
+  Guild     Guild[]
 }
+
+// the separate birthdate field exists as every birthday is converted to UTC before inserting to the database
+// which would possibly change the date part of the timestamp
+// this does not matter to the birthday-wishing task loop; it only needs to know WHEN to wish
+// however in places that need the birthdate to be displayed to users, we need the correct date

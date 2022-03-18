@@ -10,7 +10,7 @@ from internal import enumerations as enums
 from utils import embed as em
 
 
-async def _fetch_birthday(member: Member) -> datetime:
+async def _fetch_birthday(member: Member) -> DbUser:
     db_member = await DbUser.prisma().find_first(
         where={"id": {"equals": str(member.id)}}
     )
@@ -22,24 +22,33 @@ async def _fetch_birthday(member: Member) -> datetime:
     if db_member.birthday is None:
         raise ValueError("User's birthday has not been registered yet.")
 
-    return db_member.birthday
+    return db_member
 
 
 async def fetch_birthday(member: Member) -> em.CrajyEmbed:
-    date = await _fetch_birthday(member)
+    user_data = await _fetch_birthday(member)
+
+    assert user_data.birthdate
+    assert user_data.birthday
+
     embed = em.CrajyEmbed(
         title=f"{member.display_name}'s birthday",
-        description=date.strftime("%d %B %Y"),
+        description=user_data.birthdate,
         embed_type=enums.EmbedType.INFO,
     )
     embed.set_thumbnail(url=em.EmbedResource.BDAY.value)
     embed.quick_set_author(member)
 
     today = datetime.today()
-    this_year_date = datetime(
-        year=today.year, month=date.month, day=date.day, hour=0, minute=0, second=0
+    this_year_date = datetime.strptime(
+        user_data.birthdate + f" {today.year}", "%d %B %Y"
     )
     remaining = this_year_date - today
+
+    if remaining < timedelta(seconds=0):
+        # birthday is in the past; get next birthday
+        next_birthday = this_year_date.replace(year=today.year + 1)
+        remaining = next_birthday - today
 
     embed.set_footer(text=f"Their birthday is in {remaining}")
 
@@ -47,7 +56,10 @@ async def fetch_birthday(member: Member) -> em.CrajyEmbed:
 
 
 async def update_birthday(member: Union[Member, User], bday: datetime) -> None:
-    await DbUser.prisma().update({"birthday": bday}, {"id": str(member.id)})
+    date = bday.strftime("%d %B")
+    await DbUser.prisma().update(
+        {"birthday": bday, "birthdate": date}, {"id": str(member.id)}
+    )
 
 
 async def list_guild_birthdays(guild: Guild) -> list[DbUser]:

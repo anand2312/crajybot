@@ -125,7 +125,7 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
 
             response.add_field(
                 name=person_obj.display_name,
-                value=person.birthday.strftime("%d %B %Y"),
+                value=person.birthdate,
                 inline=False,
             )
         await ctx.maybe_reply(embed=response)
@@ -141,9 +141,8 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
         embed.quick_set_author(person)
         await channel.send(embed=embed)
 
-    @tasks.loop(hours=24)
+    @tasks.loop(hours=2)
     async def birthday_loop(self):
-        # TO DO: Make more fine-tuned loop which will schedule a wish in case it isn't the exact time at loop execution.
         logger.info("Started birthday loop")
         users = await birthdays_today()
         logger.debug(f"Today's birthdays: {users}")

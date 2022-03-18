@@ -15,9 +15,11 @@ __all__ = [
 
 @context_menu(name="Fetch birthday")
 async def fetch_birthday_user_cmd(interaction: Interaction, member: Member) -> None:
-    print("hi", interaction)
-    embed = await fetch_birthday(member)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    try:
+        embed = await fetch_birthday(member)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+    except ValueError as e:
+        await interaction.response.send_message(e.args[0])
 
 
 bday_group = Group(name="bday", description="Commands related to users birthdays")

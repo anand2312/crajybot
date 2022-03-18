@@ -62,6 +62,7 @@ class Moderator(commands.Cog):
                 removes.append(name)
         for name in removes:
             sys.modules.pop(name)
+        logger.info(f"Reloaded module: {module}")
         await ctx.send(f"Reloaded {module}")
 
     @commands.guild_only()
