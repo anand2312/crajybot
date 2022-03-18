@@ -14,5 +14,5 @@ A Discord Bot.
     - add the ID of the testing channel as a constant named `BOT_TEST_CHANNEL` in `secret/constants.py`
 
 ## Running
-`python manage.py` -> Runs the bot and attempts to load all extensions
+`python manage.py` -> Runs the bot and attempts to load all extensions \
 `python manage.py --exts ext1 ext2 ext3` -> Runs the bot and only loads `ext1`, `ext2`, `ext3`
