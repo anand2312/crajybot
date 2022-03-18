@@ -1,5 +1,7 @@
 """Some functions to remember and wish your server members."""
-from datetime import datetime, timezone
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
 from typing import cast, TYPE_CHECKING, Optional, Union
 
 import discord
@@ -29,6 +31,8 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
     def __init__(self, bot: CrajyBot) -> None:
         self.bot = bot
         self.bot.task_loops["bday"] = self.birthday_loop
+        self.bot.vars["scheduled_birthdays"] = set[str]()
+        self.scheduled_birthdays = self.bot.vars["scheduled_birthdays"]
 
     @commands.group(
         name="bday",
@@ -129,6 +133,7 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
     async def send_wish(
         self, channel: discord.TextChannel, person: discord.Member
     ) -> None:
+        self.scheduled_birthdays.remove(str(person.id))
         embed = em.CrajyEmbed(
             title=f"Happy Birthday {person.display_name}!",
             embed_type=EmbedType.SUCCESS,
@@ -144,25 +149,25 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
         logger.debug(f"Today's birthdays: {users}")
 
         for user in users:
+            if user.id in self.scheduled_birthdays:
+                logger.info(f"Already scheduled wish for {user.id=}")
+                continue
+
             now = datetime.now(timezone.utc)
             if user.Guild is None:
-                logger.warning(
-                    f"BDAY LOOP: No guilds found for user {user.id}; inconsistency"
-                )
+                logger.warning(f"No guilds saved for user {user.id}; inconsistency")
                 return
 
             guild = self.bot.get_guild(int(user.Guild[0].id))
 
             if guild is None:
-                logger.warning(
-                    f"BDAY LOOP: Guild {user.Guild[0].id} could not be found"
-                )
+                logger.warning(f"Guild {user.Guild[0].id} could not be found")
                 return
 
             person_obj = guild.get_member(int(user.id))
 
             if person_obj is None:
-                logger.warning(f"BDAY LOOP: User object not found for {user.id}")
+                logger.warning(f"User object not found for {user.id}")
                 return
 
             embed = em.CrajyEmbed(
@@ -174,12 +179,10 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
             for guild in user.Guild:
                 guild_obj = self.bot.get_guild(int(guild.id))
                 if guild_obj is None:
-                    logger.info(f"BDAY LOOP: Guild object {guild.id=} not found ")
+                    logger.info(f"Guild object {guild.id=} not found ")
                     continue
                 if guild.bot_channel is None:
-                    logger.info(
-                        f"BDAY LOOP: Bot channel not registered for guild {guild.id}"
-                    )
+                    logger.info(f"Bot channel not registered for guild {guild.id}")
                     continue
 
                 channel = cast(
@@ -188,7 +191,7 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
 
                 if channel is None:
                     logger.info(
-                        f"BDAY LOOP: Channel not found {guild.bot_channel=} for {guild.id=}"
+                        f"Channel not found {guild.bot_channel=} for {guild.id=}"
                     )
                     continue
 
@@ -196,9 +199,16 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
                 user_birthday = user.birthday.replace(year=now.year)
                 difference = user_birthday - now
 
+                if difference < timedelta(seconds=0):
+                    logger.warning(
+                        f"Birthday of {user.id=} is in the past; could not wish"
+                    )
+                    break
+
                 self.bot.scheduler.schedule(
                     self.send_wish(channel, person_obj), datetime.utcnow() + difference
                 )
+                self.scheduled_birthdays.add(user.id)  # set will handle duplicates
 
     @birthday_loop.before_loop
     async def birthdayloop_before(self):
