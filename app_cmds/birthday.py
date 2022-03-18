@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 from discord import Interaction, Member
 from discord.app_commands import context_menu, describe, Group, Namespace, Choice
