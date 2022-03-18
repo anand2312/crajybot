@@ -29,7 +29,8 @@ bday_group = Group(name="bday", description="Commands related to users birthdays
 
 
 @bday_group.command(name="set", description="Set a user's birthday")
-@describe()
+@describe(date="Your birthdate, in DD-MM-YYYY format")
+@describe(timezone="Your timezone")
 async def bday_set_slash_cmd(
     interaction: Interaction, date: str, timezone: str
 ) -> None:
