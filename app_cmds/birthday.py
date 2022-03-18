@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from re import M
 from discord import Interaction, Member
 from discord.app_commands import context_menu, describe, Group, Namespace, Choice
 from pytz import common_timezones_set, timezone as _timezone
@@ -52,6 +53,14 @@ async def bday_set_slash_cmd(
 async def timezone_autocomplete(
     interaction: Interaction, current: str
 ) -> list[Choice[str]]:
+    choices = [Choice(name=i, value=i) for i in common_timezones_set]
+    choices.extend(
+        [
+            Choice(name=i, value="Asia/Kolkata")
+            for i in ["India", "IST"]  # special case these because we use it more
+        ]
+    )
+
     return [
         Choice(name=i, value=i)
         for i in common_timezones_set
