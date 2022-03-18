@@ -50,7 +50,7 @@ async def bday_set_slash_cmd(
 
 @bday_set_slash_cmd.autocomplete("timezone")
 async def timezone_autocomplete(
-    interaction: Interaction, current: str, namespace: Namespace
+    interaction: Interaction, current: str
 ) -> list[Choice[str]]:
     return [
         Choice(name=i, value=i)
