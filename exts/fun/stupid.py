@@ -1,6 +1,8 @@
 """Some fun commands."""
+from __future__ import annotations
+
 import random
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
 from discord.ext import commands
@@ -48,7 +50,7 @@ class Stupid(commands.Cog):
             await ctx.check_mark(sent_message)
 
     @commands.command(name="weird", aliases=["w"])
-    async def weird(self, ctx, *, message):
+    async def weird(self, ctx: CrajyContext, *, message: str) -> None:
         out = ""
         curr_func = "lower"
         for i in message:
@@ -61,7 +63,7 @@ class Stupid(commands.Cog):
         await ctx.maybe_reply(out)
 
     @commands.command(name="emojify")
-    async def emojify(self, ctx, *, message):
+    async def emojify(self, ctx: CrajyContext, *, message: str) -> None:
         emojis = {
             "a": "🇦",
             "b": "🇧",
@@ -99,7 +101,7 @@ class Stupid(commands.Cog):
         await ctx.maybe_reply(out)
 
     @commands.command(name="owo", aliases=["uwu"])
-    async def owo(self, ctx, *, text):
+    async def owo(self, ctx: CrajyContext, *, text: str) -> None:
         out = ""
         for i in text:
             case = "upper" if i.isupper() else "lower"
@@ -116,12 +118,13 @@ class Stupid(commands.Cog):
         help="Change the bot's status.",
     )
     @commands.cooldown(1, 600)
-    async def change_presence(self, ctx, activity: str, *, status: str):
-        if activity.lower() not in ["playing", "watching", "listening", "streaming"]:
-            raise ValueError(
-                'Status has to be one of `"playing", "watching", "listening", "streaming"`'
-            )
-
+    async def change_presence(
+        self,
+        ctx: CrajyContext,
+        activity: Literal["playing", "watching", "listening", "streaming"],
+        *,
+        status: str,
+    ) -> None:
         if len(status) > 30 and activity != "streaming":
             raise ValueError(
                 f"Inputted status ({len(status)}) longer than 30 characters."
