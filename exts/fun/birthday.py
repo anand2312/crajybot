@@ -31,8 +31,8 @@ class Birthday(commands.Cog):  # TO DO: Make this public-workable
     def __init__(self, bot: CrajyBot) -> None:
         self.bot = bot
         self.bot.task_loops["bday"] = self.birthday_loop
-        self.bot.vars["scheduled_birthdays"] = set[str]()
-        self.scheduled_birthdays = self.bot.vars["scheduled_birthdays"]
+        self.bot.vars["scheduled_birthdays"] = set()
+        self.scheduled_birthdays: set[str] = self.bot.vars["scheduled_birthdays"]
 
     @commands.group(
         name="bday",
