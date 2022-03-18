@@ -1,0 +1,50 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:database.db"
+}
+
+generator client {
+  provider  = "prisma-client-py"
+  interface = "asyncio"
+}
+
+model Guild {
+  id          String  @id
+  bot_channel String?
+  Tag         Tag[]
+  User        User[]
+}
+
+model Note {
+  id            Int       @id @default(autoincrement())
+  created_at    DateTime  @default(now())
+  raw_note      String
+  userId        String
+  reminder      Boolean   @default(false)
+  reminder_time DateTime?
+  User          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Tag {
+  id       Int    @id @default(autoincrement())
+  tag_name String
+  content  String
+  userId   String
+  guildId  String
+  Guild    Guild  @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  User     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id        String    @id
+  birthday  DateTime?
+  birthdate String?
+  Note      Note[]
+  Tag       Tag[]
+  Guild     Guild[]
+}
+
+// the separate birthdate field exists as every birthday is converted to UTC before inserting to the database
+// which would possibly change the date part of the timestamp
+// this does not matter to the birthday-wishing task loop; it only needs to know WHEN to wish
+// however in places that need the birthdate to be displayed to users, we need the correct date

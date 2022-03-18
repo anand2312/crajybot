@@ -1,18 +1,38 @@
 """Some functions to remember and wish your server members."""
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
+from typing import cast, TYPE_CHECKING, Optional, Union
+
 import discord
-from discord.ext import commands
-import datetime
+import pytz
+from discord import Member, User
+from discord.ext import commands, tasks
+from loguru import logger
 
 from internal import enumerations as enums
+from internal.context import CrajyContext
+from internal.enumerations import EmbedType
+from logic.birthday import (
+    birthdays_today,
+    fetch_birthday,
+    list_guild_birthdays,
+    update_birthday,
+)
 from utils import embed as em
 
+if TYPE_CHECKING:
+    from internal.bot import CrajyBot
+else:
+    CrajyBot = "CrajyBot"
 
-class Birthday(
-    commands.Cog, commands_attrs=dict(hidden=True)
-):  # TO DO: Make this public-workable
-    def __init__(self, bot):
+
+class Birthday(commands.Cog):  # TO DO: Make this public-workable
+    def __init__(self, bot: CrajyBot) -> None:
         self.bot = bot
         self.bot.task_loops["bday"] = self.birthday_loop
+        self.bot.vars["scheduled_birthdays"] = set[str]()
+        self.scheduled_birthdays = self.bot.vars["scheduled_birthdays"]
 
     @commands.group(
         name="bday",
@@ -20,27 +40,11 @@ class Birthday(
         help="Retrieve a birthday date. Could be your own if no user is specified, or a specified user.",
         invoke_without_command=True,
     )
-    async def bday(self, ctx, person: discord.Member = None):
+    async def bday(
+        self, ctx: CrajyContext, person: Union[Member, User, None] = None
+    ) -> None:
         person = person or ctx.author
-        date = await self.bot.db_pool.fetchval(
-            "SELECT bday FROM user_details WHERE user_id=$1", person.id
-        )
-        embed = em.CrajyEmbed(
-            title=f"{person.display_name}'s birthday",
-            description=date.strftime("%d %B %Y"),
-            embed_type=enums.EmbedType.INFO,
-        )
-        embed.set_thumbnail(url=em.EmbedResource.BDAY.value)
-        embed.quick_set_author(person)
-
-        today = datetime.datetime.today()
-        this_year_date = datetime.datetime(
-            year=today.year, month=date.month, day=date.day, hour=0, minute=0, second=0
-        )
-        remaining = this_year_date - today
-
-        embed.set_footer(text=f"Their birthday is in {remaining}")
-
+        embed = await fetch_birthday(cast(Member, person))
         await ctx.maybe_reply(embed=embed)
 
     @bday.command(
@@ -48,9 +52,10 @@ class Birthday(
         aliases=["-a"],
         help="Add a birthday date. Could be your own if no user is specified, or a specified user.",
     )
-    async def bday_add(self, ctx, person: discord.Member = None):
+    @commands.guild_only()
+    async def bday_add(self, ctx: CrajyContext, person: Optional[Member] = None):
         if person is None:
-            person = ctx.author
+            person = cast(Member, ctx.author)
 
         ask_embed = em.CrajyEmbed(
             title=f"Setting Birthday for {person.display_name}",
@@ -62,22 +67,26 @@ class Birthday(
 
         ask_message = await ctx.maybe_reply(embed=ask_embed)
 
-        def check(m):
+        def check(m: discord.Message) -> bool:
             return (
                 m.author == ctx.author
                 and len(m.content.split("-")) == 3
                 and m.guild is not None
             )
 
-        reply = await self.bot.wait_for("message", check=check, timeout=30)
-        date_vals = [int(i) for i in reply.content.split("-")]
-        kwargs = ("day", "month", "year")
+        def tz_check(m: discord.Message) -> bool:
+            return m.content in pytz.all_timezones_set
 
-        await self.bot.db_pool.execute(
-            "INSERT INTO user_details(bday, user_id) VALUES($1, $2) ON CONFLICT (user_id) DO UPDATE SET bday=$1",
-            datetime.date(**dict(zip(kwargs, date_vals))),
-            person.id,
-        )
+        reply = await self.bot.wait_for("message", check=check, timeout=30)
+        date = datetime.strptime(reply.content, "%d-%m-%Y")
+
+        tz_prompt = await ctx.send("Enter your timezone")
+
+        tz_message = await self.bot.wait_for("message", check=tz_check, timeout=30)
+        tz = pytz.timezone(tz_message.content)
+        date = tz.localize(date)
+
+        await update_birthday(person, date)
 
         out = em.CrajyEmbed(title=f"Birthday Set!", embed_type=enums.EmbedType.SUCCESS)
         out.description = (
@@ -86,54 +95,119 @@ class Birthday(
         out.set_thumbnail(url=em.EmbedResource.BDAY.value)
         out.quick_set_author(person)
 
+        await tz_prompt.delete()
         return await ask_message.edit(embed=out)
 
     @bday.command(
         name="all", aliases=["list"], help="Get a list of all birthdays saved."
     )
-    async def bday_all(self, ctx):
+    @commands.guild_only()
+    async def bday_all(self, ctx: CrajyContext):
+        if ctx.guild is None:
+            # will be caught by the deco, but done here for type checking
+            return
+
         response = em.CrajyEmbed(
             title="Everyone's birthdays", embed_type=enums.EmbedType.INFO
         )
         response.set_thumbnail(url=em.EmbedResource.BDAY.value)
 
-        all_data = await self.bot.db_pool.fetch(
-            "SELECT user_id, bday FROM user_details ORDER BY bday ASC"
-        )
+        all_data = await list_guild_birthdays(ctx.guild)
 
         for person in all_data:
-            person_obj = discord.utils.get(ctx.guild.members, id=person["user_id"])
+            person_obj = ctx.guild.get_member(int(person.id))
+
             if person_obj is None:
                 continue
+
+            if person.birthday is None:
+                continue
+
             response.add_field(
                 name=person_obj.display_name,
-                value=person["bday"].strftime("%d %B %Y"),
+                value=person.birthdate,
                 inline=False,
             )
         await ctx.maybe_reply(embed=response)
 
-    def find_horoscope_sign(self, date: datetime.datetime) -> str:
-        """WIP for future functionality."""
-        str_date = date.strftime("%d %B").split()
-        pass
-
-    @tasks.loop(hours=24)
-    async def birthday_loop(self):
-        # TO DO: Make more fine-tuned loop which will schedule a wish in case it isn't the exact time at loop execution.
-        guild = self.bot.get_guild(int(self.bot.environ.get("CRAJY_GUILD_ID")))
-        wishchannel = guild.get_channel(int(self.bot.environ.get("CRAJY_GENERAL_CHAT")))
-        data = await bot.db_pool.fetch(
-            "SELECT user_id FROM user_details WHERE EXTRACT(day FROM bday)=EXTRACT(day FROM current_date) AND EXTRACT(month FROM bday)=EXTRACT(month FROM current_date)"
+    async def send_wish(
+        self, channel: discord.TextChannel, person: discord.Member
+    ) -> None:
+        self.scheduled_birthdays.remove(str(person.id))
+        embed = em.CrajyEmbed(
+            title=f"Happy Birthday {person.display_name}!",
+            embed_type=EmbedType.SUCCESS,
         )
+        embed.quick_set_author(person)
+        await channel.send(embed=embed)
 
-        for person in data:
-            person_obj = discord.utils.get(guild.members, id=person["user_id"])
+    @tasks.loop(hours=2)
+    async def birthday_loop(self):
+        logger.info("Started birthday loop")
+        users = await birthdays_today()
+        logger.debug(f"Today's birthdays: {users}")
+
+        for user in users:
+            if user.id in self.scheduled_birthdays:
+                logger.info(f"Already scheduled wish for {user.id=}")
+                continue
+
+            now = datetime.now(timezone.utc)
+            if user.Guild is None:
+                logger.warning(f"No guilds saved for user {user.id}; inconsistency")
+                return
+
+            guild = self.bot.get_guild(int(user.Guild[0].id))
+
+            if guild is None:
+                logger.warning(f"Guild {user.Guild[0].id} could not be found")
+                return
+
+            person_obj = guild.get_member(int(user.id))
+
+            if person_obj is None:
+                logger.warning(f"User object not found for {user.id}")
+                return
+
             embed = em.CrajyEmbed(
                 title=f"Happy Birthday {person_obj.display_name}!",
                 embed_type=EmbedType.SUCCESS,
             )
             embed.quick_set_author(person_obj)
-            await wishchannel.send(content="@here", embed=embed)
+
+            for guild in user.Guild:
+                guild_obj = self.bot.get_guild(int(guild.id))
+                if guild_obj is None:
+                    logger.info(f"Guild object {guild.id=} not found ")
+                    continue
+                if guild.bot_channel is None:
+                    logger.info(f"Bot channel not registered for guild {guild.id}")
+                    continue
+
+                channel = cast(
+                    discord.TextChannel, guild_obj.get_channel(int(guild.bot_channel))
+                )
+
+                if channel is None:
+                    logger.info(
+                        f"Channel not found {guild.bot_channel=} for {guild.id=}"
+                    )
+                    continue
+
+                assert user.birthday
+                user_birthday = user.birthday.replace(year=now.year)
+                difference = user_birthday - now
+
+                if difference < timedelta(seconds=0):
+                    logger.warning(
+                        f"Birthday of {user.id=} is in the past; could not wish"
+                    )
+                    break
+
+                self.bot.scheduler.schedule(
+                    self.send_wish(channel, person_obj), datetime.utcnow() + difference
+                )
+                self.scheduled_birthdays.add(user.id)  # set will handle duplicates
 
     @birthday_loop.before_loop
     async def birthdayloop_before(self):

@@ -1,19 +1,28 @@
-import discord
-from discord.ext import menus
 import datetime
 import enum
+from typing import Any, Union
+
+import discord
+from discord.ext import menus
+
 from internal.enumerations import EmbedType
 
 
 class CrajyEmbed(discord.Embed):
-    def __init__(self, embed_type: EmbedType, **kwargs) -> None:
+    def __init__(self, embed_type: EmbedType, **kwargs: Any) -> None:
         """Both quick_set_author and footer modify the existing Embed object, and not return a new one."""
         super().__init__(**kwargs)
         self.colour = embed_type.value
-        self.timestamp = datetime.datetime.utcnow()
+        self.timestamp = discord.utils.utcnow()
 
-    def quick_set_author(self, member: discord.Member) -> None:
-        self.set_author(name=member.name, icon_url=member.avatar_url)
+    def quick_set_author(
+        self, member: Union[discord.user.BaseUser, discord.Member]
+    ) -> None:
+        if member.avatar is None:
+            av = member.default_avatar
+        else:
+            av = member.avatar
+        self.set_author(name=member.name, icon_url=av.url)
 
     def quick_set_footer(self, embed_type: EmbedType) -> None:
         # implement different footers for different embed types.
@@ -41,8 +50,8 @@ class EmbedResource(enum.Enum):
     ROBBER_1 = r"https://media.discordapp.net/attachments/612638234782072882/801124352539099218/robbery-removebg-preview.png?width=448&height=314"
     ROBBER_2 = r"https://media.discordapp.net/attachments/612638234782072882/801124817810096149/robber1.png?width=433&height=325"
     LOSS = r"https://media.discordapp.net/attachments/703141348131471440/801170491825586186/f32b53ccfc1d7994dd6489b71068e55be6-loss-thumb.png?width=143&height=143"
-    CHECK_EMOJI = "<:check:800771830116909066>"
-    XMARK_EMOJI = "<:xmark:800773561093849119>"
+    CHECK_EMOJI = "<:check:953656748915433503>"
+    XMARK_EMOJI = "<:xmark:953656789310799892>"
 
 
 class __ListEmbedSource(menus.ListPageSource):

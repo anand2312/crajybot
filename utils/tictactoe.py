@@ -145,9 +145,4 @@ def minimax(board):  # MIGHT DEVELOP LATER
     """
     Returns the optimal action for the current player on the board.
     """
-    if terminal(board):
-        return None
-
-    turn = player(board)
-
-    return random.choice([action for action in actions(board)])
+    ...
