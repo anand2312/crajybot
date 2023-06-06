@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from re import M
 from discord import Interaction, Member
-from discord.app_commands import context_menu, describe, Group, Namespace, Choice
+from discord.app_commands import context_menu, describe, Group, Choice
 from pytz import common_timezones_set, timezone as _timezone
 
 from internal import enumerations as enums

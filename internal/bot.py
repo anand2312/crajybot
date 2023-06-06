@@ -41,7 +41,7 @@ class CrajyBot(commands.Bot):
             case_insensitive=True,
             **kwargs,
         )
-        self.__version__ = "5.0a"
+        self.__version__ = "5.0"
 
         self.db = Prisma()
         self.task_loops = dict()
@@ -73,7 +73,7 @@ class CrajyBot(commands.Bot):
         embed = CrajyEmbed(embed_type=EmbedType.BOT, description="Ready!")
         embed.quick_set_author(self.user)
 
-        channel = typing.cast(discord.TextChannel, self.get_channel(BOT_TEST_CHANNEL))
+        channel = self.get_channel(BOT_TEST_CHANNEL)
 
         if channel is None:
             logger.warning("Bot test channel not found")
