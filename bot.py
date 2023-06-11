@@ -51,6 +51,7 @@ async def main(exts: list[str] | None = None) -> None:
     try:
         await bot.load_extension("jishaku")
     except Exception as e:
+        print_exception(type(e), e, e.__traceback__)
         logger.warning(f"Couldn't load jishaku: {e}")
 
     logger.info("Finished loading extensions")
