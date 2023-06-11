@@ -51,9 +51,7 @@ async def main(exts: list[str] | None = None) -> None:
     try:
         await bot.load_extension("jishaku")
     except Exception as e:
-        logger.warning(
-            "Can't load jishaku; jishaku doesn't yet support async setup/teardown"
-        )
+        logger.warning(f"Couldn't load jishaku: {e}")
 
     logger.info("Finished loading extensions")
 

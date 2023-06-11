@@ -53,7 +53,6 @@ class Miscellaneous(commands.Cog):
             title="Versions",
             description=(
                 f"[discord.py version: {discord.__version__}](https://github.com/Rapptz/discord.py)\n"
-                f"[Bot version: {self.bot.__version__}](https://github.com/anand2312/crajybot)\n"
                 f"[Python version: {sys.version}](https://python.org)"
             ),
             embed_type=EmbedType.INFO,
