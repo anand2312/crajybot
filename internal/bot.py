@@ -195,13 +195,13 @@ class CrajyBot(commands.Bot):
     async def load_extension(
         self, name: str, *, package: typing.Optional[str] = None
     ) -> None:
-        logger.info(f"Loading extesion: {name}")
+        logger.info(f"Loading extension: {name}")
         return await super().load_extension(name, package=package)
 
     async def unload_extension(
         self, name: str, *, package: typing.Optional[str] = None
     ) -> None:
-        logger.info(f"Unloading extesion: {name}")
+        logger.info(f"Unloading extension: {name}")
         return await super().unload_extension(name, package=package)
 
     async def reload_extension(

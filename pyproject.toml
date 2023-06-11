@@ -6,7 +6,7 @@ authors = ["Anand Krishna <anandkrishna2312@gmail.com>"]
 license = "GPL-3"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 aiohttp = "^3.7.3"
 discord-ext-menus = {git = "https://github.com/Rapptz/discord-ext-menus.git"}
 akinator = {extras = ["async"], version = "1.0.3"}
