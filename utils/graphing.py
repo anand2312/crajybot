@@ -44,7 +44,8 @@ ImageEmbed = namedtuple("ImageEmbed", "file embed")
 
 def parse_data(db_response: dict) -> InstantaneousMetrics:
     """Convert the mongodb response dictionary into the dataclass instance.
-    The dictionary is in the form `{datetime: <time inserted>, author_counts: <dict containing message count for each user>, channel_counts: >dict containing message counts for each channel>}`."""
+    The dictionary is in the form `{datetime: <time inserted>, author_counts: <dict containing message count for each user>, channel_counts: >dict containing message counts for each channel>}`.
+    """
     return InstantaneousMetrics(
         time=db_response["datetime"],
         author_counts=db_response["author_counts"],

@@ -17,6 +17,7 @@ BotHelpMapping = Mapping[Optional[commands.Cog], List[commands.Command]]
 
 class HelpCommand(commands.HelpCommand):
     context: CrajyContext
+
     # TO DO: remake
     def __init__(self):
         super().__init__(

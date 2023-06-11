@@ -76,7 +76,6 @@ class Miscellaneous(commands.Cog):
         *,
         code: CodeBlockConverter,
     ):
-
         if not language:
             if code[0]:  # type: ignore
                 language = code[0].group("lang")  # type: ignore

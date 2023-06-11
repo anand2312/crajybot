@@ -34,7 +34,6 @@ class LanguageConverter(commands.Converter):
 
 class CodeBlockConverter(commands.Converter):
     async def convert(self, _: commands.Context, code: str):
-
         match = FORMATTED_CODE_REGEX.search(code)
         if match:
             code = match.group("code")

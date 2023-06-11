@@ -149,6 +149,7 @@ class Games(commands.Cog):
     @commands.command(name="guess", help="Start a word guess game.")
     async def guess(self, ctx):
         await ctx.send(f"{ctx.author.mention}, check your DMs!")
+
         # wait_for checks
         def reply_check(m):
             if m.author == ctx.message.author and m.guild is None:
@@ -238,7 +239,6 @@ class Games(commands.Cog):
         name="akinator", aliases=["aki"], help="Start a game of Akinator."
     )
     async def akinator_game(self, ctx):
-
         aki = Akinator()
         first = await ctx.send(
             "Processing... \n**This command is in beta, don't complain.**"
