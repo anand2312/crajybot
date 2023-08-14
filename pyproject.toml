@@ -15,7 +15,7 @@ yarl = "1.9.2"
 aioscheduler = "^1.4.2"
 more-itertools = "^8.7.0"
 prisma = "^0.6.3"
-"discord.py" = "2.3.0"
+"discord.py" = "2.3.2"
 loguru = "^0.6.0"
 jishaku = "2.5.1"
 
